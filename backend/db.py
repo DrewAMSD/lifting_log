@@ -54,9 +54,36 @@ def create_exercises_table():
     """)
     conn.commit()
 
+def create_exercise_muscle_tables():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS exercise_primary_muscles (
+        exercise_id INTEGER NOT NULL,
+        muscle_id INTEGER NOT NULL,
+        FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE,
+        FOREIGN KEY (muscle_id) REFERENCES muscles (id),
+        PRIMARY KEY (exercise_id, muscle_id)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS exercise_secondary_muscles (
+        exercise_id INTEGER NOT NULL,
+        muscle_id INTEGER NOT NULL,
+        FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE,
+        FOREIGN KEY (muscle_id) REFERENCES muscles (id),
+        PRIMARY KEY (exercise_id, muscle_id)
+    )
+    """)
+
+    conn.commit()
+
 def create_from_scratch():
     create_muscles_table()
     create_exercises_table()
+    create_exercise_muscle_tables()
 
 #if __name__ == "__main__":
 #    create_from_scratch()
