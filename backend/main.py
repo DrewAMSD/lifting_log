@@ -30,6 +30,63 @@ def root_message() -> dict:
 def root_icon() -> FileResponse:
     return FileResponse("./favicon.ico")
 
+@app.post("/users/", status_code=status.HTTP_201_CREATED)
+def create_user(user: User, conn: sqlite3.Connection = Depends(get_db)):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE user = ?", (user.user,))
+    if cursor.fetchone():
+        message = f"User '{user.user}' already exists"
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
+
+    cursor.execute("""
+                INSERT INTO users (user, password_hash)
+                VALUES (?, ?)
+                   """, (user.user, user.password_hash))
+    conn.commit()
+    return user
+
+@app.get("/users/", response_model=List[User])
+def get_users(conn: sqlite3.Connection = Depends(get_db)):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users")
+    user_rows = cursor.fetchall()
+    if user_rows is None:
+        message: str = f"Users not found"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
+    users: list[User] = []
+    for user_row in user_rows:
+        users.append({
+            "user": user_row["user"],
+            "password_hash": user_row["password_hash"]
+        })
+    return users
+
+@app.get("/users/{user}", response_model=User)
+def get_user(user: str, conn: sqlite3.Connection = Depends(get_db)):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE user = ?", (user,))
+    user_row = cursor.fetchone()
+    if user_row is None:
+        message: str = f"User '{user}' not found"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
+    return {
+            "user": user_row["user"],
+            "password_hash": user_row["password_hash"]
+        }
+
+@app.delete("/users/{user}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user: str, conn: sqlite3.Connection = Depends(get_db)):
+    cursor: sqlite3.Cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE user = ?", (user,))
+    if cursor.fetchone() is None:
+        message: str = f"User '{user}' not found"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
+    cursor.execute("DELETE FROM users WHERE user = ?", (user,))
+    conn.commit()
+
 def convert_row_to_exercise(cursor, exercise_row) -> Exercise:
     exercise_id: int = exercise_row["id"]
 
@@ -60,6 +117,7 @@ def convert_row_to_exercise(cursor, exercise_row) -> Exercise:
 
     return {
             "name": exercise_row["name"],
+            "user": exercise_row["user"],
             "primary_muscles": primary_muscles,
             "secondary_muscles": secondary_muscles,
             "description": exercise_row["description"],

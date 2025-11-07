@@ -11,6 +11,19 @@ def get_db():
     finally:
         conn.close()
 
+def create_users_table():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT UNIQUE,
+        password_hash TEXT
+    )
+    """)
+    conn.commit()
+    conn.close()
+
 def create_muscles_table():
     conn: sqlite3.Connection = sqlite3.connect(get_db_path())
     cursor: sqlite3.Cursor = conn.cursor()
@@ -38,6 +51,7 @@ def create_muscles_table():
         cursor.execute("INSERT INTO muscles (name) VALUES (?)", (muscle,))
 
     conn.commit()
+    conn.close()
 
 def create_exercises_table():
     conn: sqlite3.Connection = sqlite3.connect(get_db_path())
@@ -46,6 +60,7 @@ def create_exercises_table():
     CREATE TABLE IF NOT EXISTS exercises (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
+        user TEXT NOT NULL UNIQUE,
         description TEXT,
         weight BOOLEAN NOT NULL DEFAULT 0,
         reps BOOLEAN NOT NULL DEFAULT 0,
@@ -53,6 +68,7 @@ def create_exercises_table():
     )
     """)
     conn.commit()
+    conn.close()
 
 def create_exercise_muscle_tables():
     conn: sqlite3.Connection = sqlite3.connect(get_db_path())
@@ -79,11 +95,13 @@ def create_exercise_muscle_tables():
     """)
 
     conn.commit()
+    conn.close()
 
 def create_from_scratch():
+    create_users_table()
     create_muscles_table()
     create_exercises_table()
     create_exercise_muscle_tables()
 
-#if __name__ == "__main__":
-#    create_from_scratch()
+if __name__ == "__main__":
+    create_from_scratch()
