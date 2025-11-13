@@ -17,8 +17,11 @@ def create_users_table():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT UNIQUE,
-        password_hash TEXT
+        username TEXT NOT NULL UNIQUE,
+        email TEXT,
+        full_name TEXT,
+        disabled BOOLEAN,
+        hashed_password TEXT NOT NULL
     )
     """)
     conn.commit()
@@ -60,7 +63,7 @@ def create_exercises_table():
     CREATE TABLE IF NOT EXISTS exercises (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
-        user TEXT NOT NULL UNIQUE,
+        username TEXT NOT NULL,
         description TEXT,
         weight BOOLEAN NOT NULL DEFAULT 0,
         reps BOOLEAN NOT NULL DEFAULT 0,

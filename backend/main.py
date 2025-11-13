@@ -1,10 +1,26 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from typing import Optional, List
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from dotenv import load_dotenv
+import os
+from datetime import datetime, timedelta, timezone
+import jwt
+from jwt.exceptions import InvalidTokenError
+from pwdlib import PasswordHash
+from typing import Annotated, Optional, List
 from models import *
-from db import *
+from database import *
 import sqlite3
+from sqlite3 import Connection, Cursor
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY not found. Ensure a .env file with SECRET KEY exists")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 app = FastAPI()
 
@@ -22,203 +38,134 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-def root_message() -> dict:
-    return {"message": "Hello World!"}
+password_hash = PasswordHash.recommended()
 
-@app.get("/favicon.ico")
-def root_icon() -> FileResponse:
-    return FileResponse("./favicon.ico")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-@app.post("/users/", status_code=status.HTTP_201_CREATED)
-def create_user(user: User, conn: sqlite3.Connection = Depends(get_db)):
+
+def verify_password(plain_password: str, hashed_password: str):
+    return password_hash.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str):
+    return password_hash.hash(password)
+
+
+def get_user(username: str):
+    conn = sqlite3.connect(get_db_path())
+    conn.row_factory = sqlite3.Row
+    cursor: Cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user_row = cursor.fetchone()
+    conn.close()
+    if user_row:
+        user = UserInDB(
+            username=user_row["username"],
+            email=user_row["email"],
+            full_name=user_row["full_name"],
+            disabled=user_row["disabled"],
+            hashed_password=user_row["hashed_password"]
+        )
+        return user
+    return None
+
+
+def authenticate_user(username: str, password: str):
+    user = get_user(username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except InvalidTokenError:
+        raise credentials_exception
+    user = get_user(username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
+    if current_user.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+    return current_user
+
+
+@app.post("/token")
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    ) -> Token:
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
+
+@app.post("/users/", response_model=UsernameResponse)
+def create_user(user: CreateUser, conn: Connection = Depends(get_db)):
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE user = ?", (user.user,))
+    cursor.execute("SELECT * FROM users WHERE username = ?", (user.username,))
     if cursor.fetchone():
-        message = f"User '{user.user}' already exists"
+        message = f"User '{user.username}' already exists"
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
     cursor.execute("""
-                INSERT INTO users (user, password_hash)
-                VALUES (?, ?)
-                   """, (user.user, user.password_hash))
+                INSERT INTO users (username, email, full_name, hashed_password)
+                VALUES (?, ?, ?, ?)
+                   """, (user.username, user.email, user.full_name, password_hash.hash(user.password)))
     conn.commit()
-    return user
+    return { "username": user.username }
 
-@app.get("/users/", response_model=List[User])
-def get_users(conn: sqlite3.Connection = Depends(get_db)):
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users")
-    user_rows = cursor.fetchall()
-    if user_rows is None:
-        message: str = f"Users not found"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
-    users: list[User] = []
-    for user_row in user_rows:
-        users.append({
-            "user": user_row["user"],
-            "password_hash": user_row["password_hash"]
-        })
-    return users
 
-@app.get("/users/{user}", response_model=User)
-def get_user(user: str, conn: sqlite3.Connection = Depends(get_db)):
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE user = ?", (user,))
-    user_row = cursor.fetchone()
-    if user_row is None:
-        message: str = f"User '{user}' not found"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+@app.get("/users/me")
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+    ):
+    return current_user
 
-    return {
-            "user": user_row["user"],
-            "password_hash": user_row["password_hash"]
-        }
 
-@app.delete("/users/{user}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user: str, conn: sqlite3.Connection = Depends(get_db)):
-    cursor: sqlite3.Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE user = ?", (user,))
-    if cursor.fetchone() is None:
-        message: str = f"User '{user}' not found"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+@app.get("/")
+def root_message():
+    return {"message": "Hello World!"}
 
-    cursor.execute("DELETE FROM users WHERE user = ?", (user,))
-    conn.commit()
 
-def convert_row_to_exercise(cursor, exercise_row) -> Exercise:
-    exercise_id: int = exercise_row["id"]
-
-    primary_muscles: list[str] = []
-    cursor.execute("SELECT muscle_id FROM exercise_primary_muscles WHERE exercise_id = ?", (exercise_id,))
-    primary_muscle_rows = cursor.fetchall()
-    if primary_muscle_rows is None:
-        message = f"Exercise {exercise_row["name"]} has no primary muscle"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-    for primary_muscle_row in primary_muscle_rows:
-        muscle_id: int = primary_muscle_row["muscle_id"]
-        cursor.execute("SELECT name FROM muscles WHERE id = ?", (muscle_id,))
-        muscles_rows = cursor.fetchall()
-        for muscles_row in muscles_rows:
-            primary_muscles.append(muscles_row["name"])
-
-    secondary_muscles: list[str] = None
-    cursor.execute("SELECT muscle_id FROM exercise_secondary_muscles WHERE exercise_id = ?", (exercise_id,))
-    secondary_muscle_rows = cursor.fetchall()
-    if secondary_muscle_rows is not None:
-        secondary_muscles = []
-        for secondary_muscle_row in secondary_muscle_rows:
-            muscle_id: int = secondary_muscle_row["muscle_id"]
-            cursor.execute("SELECT name FROM muscles WHERE id = ?", (muscle_id,))
-            muscles_rows = cursor.fetchall()
-            for muscles_row in muscles_rows:
-                secondary_muscles.append(muscles_row["name"])
-
-    return {
-            "name": exercise_row["name"],
-            "user": exercise_row["user"],
-            "primary_muscles": primary_muscles,
-            "secondary_muscles": secondary_muscles,
-            "description": exercise_row["description"],
-            "weight": exercise_row["weight"],
-            "reps": exercise_row["reps"],
-            "time": exercise_row["time"]
-        }
-
-@app.get("/exercises/", response_model=List[Exercise])
-def get_exercises(conn: sqlite3.Connection = Depends(get_db)) -> list[Exercise]:
-    cursor: sqlite3.Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM exercises")
-    exercise_rows = cursor.fetchall()
-    if exercise_rows is None:
-        message: str = f"Exercises not found"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-    
-    exercises: list[Exercise] = []
-    for exercise_row in exercise_rows:
-        exercises.append(convert_row_to_exercise(cursor, exercise_row))
-    return exercises
-
-@app.get("/exercises/{exercise_name}", response_model=Exercise)
-def get_exercise(exercise_name: str, conn: sqlite3.Connection = Depends(get_db)) -> Exercise:
-    cursor: sqlite3.Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM exercises WHERE name = ? COLLATE NOCASE", (exercise_name,))
-    exercise_row = cursor.fetchone()
-
-    if exercise_row is None:
-        message: str = f"Exercise '{exercise_name}' not found"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-
-    return convert_row_to_exercise(cursor, exercise_row)
-
-@app.post("/exercises/", status_code=status.HTTP_201_CREATED)
-def create_exercise(exercise: Exercise, conn: sqlite3.Connection = Depends(get_db)):
-    cursor: sqlite3.Cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM exercises WHERE name = ? COLLATE NOCASE", (exercise.name,))
-    if cursor.fetchone():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exercise already exists")
-
-    name: str = exercise.name
-    primary_muscles: list[str] = exercise.primary_muscles
-    secondary_muscles: list[str] = exercise.secondary_muscles
-    description: Optional[str] = exercise.description
-    weight: bool = exercise.weight
-    reps: bool = exercise.reps
-    time: bool = exercise.time
-    
-    cursor.execute("""
-        INSERT INTO exercises (name, description, weight, reps, time) 
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (name, description, weight, reps, time)
-    )
-    exercise_id: int = cursor.lastrowid
-
-    for muscle in primary_muscles:
-        cursor.execute("SELECT * FROM muscles WHERE name = ?", (muscle,))
-        muscle_row = cursor.fetchone()
-        if muscle_row is None:
-            message: str = f"Exercise '{muscle}' not found"
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-        muscle_id: int = muscle_row["id"]
-        cursor.execute("""
-                       INSERT INTO exercise_primary_muscles (exercise_id, muscle_id)
-                       VALUES (?, ?)
-                       """, (exercise_id, muscle_id))
-    for muscle in secondary_muscles:
-        cursor.execute("SELECT * FROM muscles WHERE name = ?", (muscle,))
-        muscle_row = cursor.fetchone()
-        if muscle_row is None:
-            message: str = f"Exercise '{muscle}' not found"
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-        muscle_id: int = muscle_row["id"]
-        cursor.execute("""
-                       INSERT INTO exercise_secondary_muscles (exercise_id, muscle_id)
-                       VALUES (?, ?)
-                       """, (exercise_id, muscle_id))
-
-    conn.commit()
-    return exercise
-
-@app.delete("/exercises/{exercise_name}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_exercise(exercise_name: str, conn: sqlite3.Connection = Depends(get_db)):
-    cursor: sqlite3.Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM exercises WHERE name = ? COLLATE NOCASE", (exercise_name,))
-    if cursor.fetchone() is None:
-        message: str = f"Exercise '{exercise_name}' not found"
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
-
-    cursor.execute("DELETE FROM exercises WHERE name = ? COLLATE NOCASE", (exercise_name,))
-    conn.commit()
-
-@app.get("/muscles/", response_model=List[str])
-def get_muscles(conn: sqlite3.Connection = Depends(get_db)):
-    cursor: sqlite3.Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM muscles")
-    rows = cursor.fetchall()
-    muscles: list[str] = []
-    for row in rows:
-        muscles.append(row["name"])
-    return muscles
+@app.get("/favicon.ico")
+def root_icon():
+    return FileResponse("./favicon.ico")
