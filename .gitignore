@@ -8,7 +8,7 @@ __pycache__/
 *.pyc
 *.db
 
-# Node / frontend
+# Node
 node_modules/
 dist/
 build/

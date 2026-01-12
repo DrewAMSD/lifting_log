@@ -28,7 +28,7 @@ class UserInDB(User):
 
 class Exercise(BaseModel):
     name: str
-    username: str
+    username: Optional[str] = None
     primary_muscles: list[str]
     secondary_muscles: Optional[list[str]] = None
     description: Optional[str] = None

@@ -160,6 +160,19 @@ async def read_users_me(
     ):
     return current_user
 
+@app.post("/users/me/exercises", status_code=status.HTTP_201_CREATED)
+async def create_exercise(
+    exercise: Exercise, 
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn = Annotated[Connection, Depends(get_db)]
+    ):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM exercises WHERE name = ? and username = ?",(exercise.name, current_user.username))
+    if cursor.fetchone():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Exercise already exists")
+    
+    # unfinished here
+
 
 @app.get("/")
 def root_message():
