@@ -36,3 +36,6 @@ class Exercise(BaseModel):
     weight: bool = False
     reps: bool = False
     time: bool = False
+
+class ExerciseInDB(Exercise):
+    id: int

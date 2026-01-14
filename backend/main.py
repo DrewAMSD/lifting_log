@@ -153,7 +153,7 @@ def create_user(user: CreateUser, conn: Connection = Depends(get_db)):
     return { "username": user.username }
 
 
-@app.get("/users/me")
+@app.get("/users/me", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
     ):
@@ -173,7 +173,29 @@ def insert_exercise_muscles_row(cursor: Cursor, muscle: str, exercise_id: int, i
                    (exercise_id, muscle_id, is_primary_muscle))
 
 
-@app.post("/users/me/exercises", status_code=status.HTTP_201_CREATED)
+def convert_exercise_to_exerciseInDB(exercise: Exercise, exercise_id: int):
+    return ExerciseInDB(
+        name=exercise.name,
+        username=exercise.username,
+        primary_muscles=exercise.primary_muscles,
+        secondary_muscles=exercise.secondary_muscles,
+        description=exercise.description,
+        weight=exercise.weight,
+        reps=exercise.reps,
+        time=exercise.time,
+        id=exercise_id
+        )
+
+
+def insert_into_exercise_muscles(exercise: Exercise, cursor: Cursor, exercise_id: int):
+    for primary_muscle in exercise.primary_muscles:
+        insert_exercise_muscles_row(cursor, primary_muscle, exercise_id, True)
+    if exercise.secondary_muscles is not None:
+        for secondary_muscle in exercise.secondary_muscles:
+            insert_exercise_muscles_row(cursor, secondary_muscle, exercise_id, False)
+
+
+@app.post("/users/me/exercises", response_model=ExerciseInDB, status_code=status.HTTP_201_CREATED)
 def create_exercise(
     exercise: Exercise, 
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -195,14 +217,11 @@ def create_exercise(
     cursor.execute("INSERT INTO exercises (name, username, description, weight, reps, time) VALUES (?, ?, ?, ?, ?, ?)",
                    (exercise.name, current_user.username, exercise.description, exercise.weight, exercise.reps, exercise.time))
     exercise_id: int = cursor.lastrowid
-    for primary_muscle in exercise.primary_muscles:
-        insert_exercise_muscles_row(cursor, primary_muscle, exercise_id, True)
-    if exercise.secondary_muscles is not None:
-        for secondary_muscle in exercise.secondary_muscles:
-            insert_exercise_muscles_row(cursor, secondary_muscle, exercise_id, False)
+    insert_into_exercise_muscles(exercise, cursor, exercise_id)
 
     conn.commit()
-    return exercise
+    exerciseInDB: ExerciseInDB = convert_exercise_to_exerciseInDB(exercise, exercise_id)
+    return exerciseInDB
 
 
 def get_exercise_muscles(cursor: Cursor, exercise_id: int, is_primary: bool):
@@ -219,10 +238,12 @@ def get_exercise_muscles(cursor: Cursor, exercise_id: int, is_primary: bool):
 
 
 def convert_exercises_row_to_exercise(cursor: Cursor, exercises_row: sqlite3.Row):
-    primary_muscles: list[str] = get_exercise_muscles(cursor, exercises_row["id"], True)
-    secondary_muscles: list[str] = get_exercise_muscles(cursor, exercises_row["id"], False)
+    exercise_id: int = exercises_row["id"]
+    primary_muscles: list[str] = get_exercise_muscles(cursor, exercise_id, True)
+    secondary_muscles: list[str] = get_exercise_muscles(cursor, exercise_id, False)
 
     return {
+        "id": exercise_id,
         "name": exercises_row["name"],
         "username": exercises_row["username"],
         "primary_muscles": primary_muscles,
@@ -246,7 +267,7 @@ def get_exercises(cursor: Cursor, username: str = None):
     return exercises
 
 
-@app.get("/users/me/exercises")
+@app.get("/users/me/exercises", response_model=List[ExerciseInDB])
 def get_user_exercises(
     current_user: Annotated[User, Depends(get_current_active_user)],
     conn: Connection = Depends(get_db)
@@ -255,7 +276,57 @@ def get_user_exercises(
     return get_exercises(cursor, current_user.username)
 
 
-@app.get("/defaults/muscles")
+@app.put("/users/me/exercises/{exercise_id}", response_model=ExerciseInDB)
+def update_exercise(
+    exercise_id: int,
+    exercise: Exercise,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]
+    ):
+    cursor: Cursor = conn.cursor()
+    cursor.execute("SELECT * FROM exercises WHERE id = ? AND username = ?", (exercise_id, current_user.username))
+    exercise_row: sqlite3.Row = cursor.fetchone()
+    if not exercise_row:
+        raise HTTPException(status_code = 404, detail = f"Exercise '{exercise.name}' not found")
+    
+    for primary_muscle in exercise.primary_muscles:
+        if not muscle_in_db(cursor, primary_muscle):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Muscle '{primary_muscle}' does not exist")
+    if exercise.secondary_muscles is not None:
+        for secondary_muscle in exercise.secondary_muscles:
+            if not muscle_in_db(cursor, secondary_muscle):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Muscle '{secondary_muscle}' does not exist")
+
+    cursor.execute("""
+                   UPDATE exercises
+                   SET name = ?, description = ?, weight = ?, reps = ?, time = ?
+                   WHERE id = ?
+                   """,
+                   (exercise.name, exercise.description, exercise.weight, exercise.reps, exercise.time, exercise_id))
+    
+    cursor.execute("DELETE FROM exercise_muscles WHERE exercise_id = ?",(exercise_id,))
+    insert_into_exercise_muscles(exercise, cursor, exercise_id)
+
+    conn.commit()
+    exerciseInDB: ExerciseInDB = convert_exercise_to_exerciseInDB(exercise, exercise_id)
+    return exerciseInDB
+
+
+@app.delete("/users/me/exercises/{exercise_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_exercise(
+    exercise_id: int, 
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Connection = Depends(get_db)
+    ):
+    cursor: Cursor = conn.cursor()
+    cursor.execute("SELECT * FROM exercises WHERE id = ? AND username = ?", (exercise_id, current_user.username))
+    if not cursor.fetchone():
+        raise HTTPException(status_code = 404, detail = f"Exercise not found")
+    cursor.execute("DELETE FROM exercises WHERE id = ?", (exercise_id,))
+    conn.commit()
+
+
+@app.get("/defaults/muscles", response_model=list[str])
 def get_muscles(conn: Connection = Depends(get_db)):
     cursor: Cursor = conn.cursor()
     cursor.execute("SELECT * FROM muscles")
@@ -267,7 +338,7 @@ def get_muscles(conn: Connection = Depends(get_db)):
     return muscles
 
 
-@app.get("/defaults/exercises")
+@app.get("/defaults/exercises", response_model=List[Exercise])
 def get_default_exercises(conn: Connection = Depends(get_db)):
     cursor: Cursor = conn.cursor()
     return get_exercises(cursor)
