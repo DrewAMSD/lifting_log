@@ -19,6 +19,7 @@ MUSCLES: list[str] = [
         "Neck"
         ]
 
+#replace this with a json file holding exercises, and then change this to a method returning a parse of the json file
 EXERCISES: list[Exercise] = [
     {
         "name": "Bench Press(Barbell)",
