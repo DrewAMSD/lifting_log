@@ -41,12 +41,202 @@ EXERCISES: list[Exercise] = [
         "time": False
     },
     {
+        "name": "Incline Bench Press(Barbell)",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": True,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Incline Bench Press(Dumbell)",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": True,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Chest Dips",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Chest Dips(Weighted)",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": True,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Chest Dips(Assisted)",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": True,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Triceps Dips",
+        "username": None,
+        "primary_muscles": ["Triceps"],
+        "secondary_muscles": ["Chest", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Triceps Dips(Weighted)",
+        "username": None,
+        "primary_muscles": ["Triceps"],
+        "secondary_muscles": ["Chest", "Shoulders"],
+        "description": None,
+        "weight": True,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Triceps Dips(Assisted)",
+        "username": None,
+        "primary_muscles": ["Triceps"],
+        "secondary_muscles": ["Chest", "Shoulders"],
+        "description": None,
+        "weight": True,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Push Ups",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Push Ups(Weighted)",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": True,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Incline Push Ups",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Decline Push Ups",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Diamond Push Ups",
+        "username": None,
+        "primary_muscles": ["Triceps"],
+        "secondary_muscles": ["Chest", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Archer Push Ups",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "One Arm Push Ups",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Pike Push Ups",
+        "username": None,
+        "primary_muscles": ["Shoulders"],
+        "secondary_muscles": ["Triceps", "Chest"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Ring Push Ups",
+        "username": None,
+        "primary_muscles": ["Chest"],
+        "secondary_muscles": ["Triceps", "Shoulders"],
+        "description": None,
+        "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
         "name": "Pull Ups",
         "username": None,
         "primary_muscles": ["Lats"],
         "secondary_muscles": ["Biceps", "Forearms", "Upper Back"],
         "description": "Begin by gripping an overhead bar shoulder-width or a little wider and enter into a dead hang. One rep is completed by pulling chin over the bar and returning to initial hang.",
         "weight": False,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Pull Ups(Weighted)",
+        "username": None,
+        "primary_muscles": ["Lats"],
+        "secondary_muscles": ["Biceps", "Forearms", "Upper Back"],
+        "description": "Begin by gripping an overhead bar shoulder-width or a little wider and enter into a dead hang. One rep is completed by pulling chin over the bar and returning to initial hang.",
+        "weight": True,
+        "reps": True,
+        "time": False
+    },
+    {
+        "name": "Pull Ups(Assisted)",
+        "username": None,
+        "primary_muscles": ["Lats"],
+        "secondary_muscles": ["Biceps", "Forearms", "Upper Back"],
+        "description": "Using a resistance band or pull up assistaed station, begin by gripping an overhead bar shoulder-width or a little wider and enter into a dead hang. One rep is completed by pulling chin over the bar and returning to initial hang.",
+        "weight": True,
         "reps": True,
         "time": False
     }
