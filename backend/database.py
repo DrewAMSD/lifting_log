@@ -1,5 +1,5 @@
 import sqlite3
-import defaults
+import backend.routers.defaults as defaults
 from models import *
 
 def get_db_path():

@@ -1,4 +1,32 @@
-from models import Exercise
+from fastapi import APIRouter, HTTPException, Depends, status
+from ..models import Exercise
+from ..database import *
+from .exercises import get_exercises
+from typing import List
+import sqlite3
+from sqlite3 import Connection, Cursor
+
+
+router = APIRouter()
+
+
+@router.get("/defaults/muscles", response_model=list[str])
+def get_muscles(conn: Connection = Depends(get_db)):
+    cursor: Cursor = conn.cursor()
+    cursor.execute("SELECT * FROM muscles")
+    muscles_rows = cursor.fetchall()
+    muscles: list[str] = []
+    for muscles_row in muscles_rows:
+        muscles.append(muscles_row["name"])
+
+    return muscles
+
+
+@router.get("/defaults/exercises", response_model=List[Exercise])
+def get_default_exercises(conn: Connection = Depends(get_db)):
+    cursor: Cursor = conn.cursor()
+    return get_exercises(cursor)
+
 
 MUSCLES: list[str] = [
         "Chest", 
