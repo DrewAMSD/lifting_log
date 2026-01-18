@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from .routers import users, exercises, defaults
+from backend.routers import muscles, users, exercises
 
 app = FastAPI()
 
-app.include(users.router)
-app.include(exercises.router)
-app.include(defaults.router)
+app.include_router(users.router)
+app.include_router(exercises.router)
+app.include_router(muscles.router)
 
 origins = [
     "http://localhost:3000",

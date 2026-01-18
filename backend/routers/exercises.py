@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Annotated, Optional, List
-from ..models import *
-from ..database import *
 import sqlite3
 from sqlite3 import Connection, Cursor
-from .users import get_current_active_user
+from backend.auth import get_current_active_user
+from backend.models import *
+from backend.database.db import get_db
 
 
 router = APIRouter()
@@ -45,7 +45,7 @@ def insert_into_exercise_muscles(exercise: Exercise, cursor: Cursor, exercise_id
             insert_exercise_muscles_row(cursor, secondary_muscle, exercise_id, False)
 
 
-@router.post("exercises/me/", response_model=ExerciseInDB, status_code=status.HTTP_201_CREATED)
+@router.post("/exercises/me/", response_model=ExerciseInDB, status_code=status.HTTP_201_CREATED)
 def create_exercise(
     exercise: Exercise, 
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -174,3 +174,9 @@ def delete_exercise(
         raise HTTPException(status_code = 404, detail = f"Exercise not found")
     cursor.execute("DELETE FROM exercises WHERE id = ?", (exercise_id,))
     conn.commit()
+
+
+@router.get("/exercises/defaults", response_model=List[Exercise])
+def get_default_exercises(conn: Connection = Depends(get_db)):
+    cursor: Cursor = conn.cursor()
+    return get_exercises(cursor)

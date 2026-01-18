@@ -1,1 +1,0 @@
-remember to activate python venv
