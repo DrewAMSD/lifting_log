@@ -176,7 +176,7 @@ def delete_exercise(
     conn.commit()
 
 
-@router.get("/exercises/defaults", response_model=List[Exercise])
+@router.get("/exercises/defaults", response_model=List[ExerciseInDB])
 def get_default_exercises(conn: Connection = Depends(get_db)):
     cursor: Cursor = conn.cursor()
     return get_exercises(cursor)

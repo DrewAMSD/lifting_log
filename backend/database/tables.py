@@ -19,6 +19,7 @@ def create_users_table():
     conn.commit()
     conn.close()
 
+
 def create_muscles_table():
     conn: sqlite3.Connection = sqlite3.connect(get_db_path())
     cursor: sqlite3.Cursor = conn.cursor()
@@ -32,6 +33,7 @@ def create_muscles_table():
     conn.commit()
     conn.close()
 
+
 def populate_muscles_table():
     conn: sqlite3.Connection = sqlite3.connect(get_db_path())
     cursor: sqlite3.Cursor = conn.cursor()
@@ -42,6 +44,7 @@ def populate_muscles_table():
 
     conn.commit()
     conn.close()
+
 
 def create_exercises_table():
     conn: sqlite3.Connection = sqlite3.connect(get_db_path())
@@ -60,7 +63,6 @@ def create_exercises_table():
 
     conn.commit()
     conn.close()
-
 
 
 def create_exercise_muscles_table():
@@ -140,6 +142,7 @@ MUSCLES: list[str] = [
         "Abductors",
         "Neck"
         ]
+
 
 #replace this with a json file holding exercises, and then change this to a method returning a parse of the json file
 EXERCISES: list[Exercise] = [
