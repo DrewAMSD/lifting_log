@@ -49,7 +49,7 @@ def insert_into_exercise_muscles(exercise: Exercise, cursor: Cursor, exercise_id
 def create_exercise(
     exercise: Exercise, 
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Connection = Depends(get_db)
+    conn: Annotated[Connection, Depends(get_db)]
     ):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM exercises WHERE name = ? and username = ?",(exercise.name, current_user.username))
@@ -87,7 +87,7 @@ def get_exercise_muscles(cursor: Cursor, exercise_id: int, is_primary: bool):
     return muscles
 
 
-def convert_exercises_row_to_exercise(cursor: Cursor, exercises_row: sqlite3.Row):
+def convert_exercises_row_to_exerciseInDB(cursor: Cursor, exercises_row: sqlite3.Row):
     exercise_id: int = exercises_row["id"]
     primary_muscles: list[str] = get_exercise_muscles(cursor, exercise_id, True)
     secondary_muscles: list[str] = get_exercise_muscles(cursor, exercise_id, False)
@@ -109,21 +109,44 @@ def get_exercises(cursor: Cursor, username: str = None):
     if username is None:
         cursor.execute("SELECT * FROM exercises WHERE username IS NULL")
     else:
-        cursor.execute("SELECT * FROM exercises WHERE username = ?", (username,))
+        cursor.execute("SELECT * FROM exercises WHERE username IS NULL OR username = ?", (username,))
     exercises_rows = cursor.fetchall()
     exercises: list[Exercise] = []
     for exercises_row in exercises_rows:
-        exercises.append(convert_exercises_row_to_exercise(cursor, exercises_row))
+        exercises.append(convert_exercises_row_to_exerciseInDB(cursor, exercises_row))
     return exercises
 
 
 @router.get("/exercises/me/", response_model=List[ExerciseInDB])
 def get_user_exercises(
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Connection = Depends(get_db)
+    conn: Annotated[Connection, Depends(get_db)]
     ):
     cursor: Cursor = conn.cursor()
     return get_exercises(cursor, current_user.username)
+
+
+def get_exerciseInDB(cursor: Cursor, exercise_id: int, username: str = None):
+    if not username:
+        cursor.execute("SELECT * FROM exercises WHERE id = ? AND username IS NULL", (exercise_id,))
+    else:   
+        cursor.execute("""SELECT * FROM exercises
+                   WHERE id = ? AND username IS NULL
+                   OR id = ? AND username = ?
+                   """, (exercise_id, exercise_id, username))
+    exercises_row: sqlite3.Row = cursor.fetchone()
+    if not exercises_row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exercise not found")
+    return convert_exercises_row_to_exerciseInDB(cursor, exercises_row)
+
+
+@router.get("/exercises/me/{exercise_id}", response_model=ExerciseInDB)
+def get_exercise(
+    exercise_id: int,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]):
+    cursor: Cursor = conn.cursor()
+    return get_exerciseInDB(cursor, exercise_id, current_user.username)
 
 
 @router.put("/exercises/me/{exercise_id}", response_model=ExerciseInDB)
@@ -166,7 +189,7 @@ def update_exercise(
 def delete_exercise(
     exercise_id: int, 
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Connection = Depends(get_db)
+    conn: Annotated[Connection, Depends(get_db)]
     ):
     cursor: Cursor = conn.cursor()
     cursor.execute("SELECT * FROM exercises WHERE id = ? AND username = ?", (exercise_id, current_user.username))
@@ -177,6 +200,12 @@ def delete_exercise(
 
 
 @router.get("/exercises/defaults", response_model=List[ExerciseInDB])
-def get_default_exercises(conn: Connection = Depends(get_db)):
+def get_default_exercises(conn: Annotated[Connection, Depends(get_db)]):
     cursor: Cursor = conn.cursor()
     return get_exercises(cursor)
+
+
+@router.get("/exercises/defaults/{exercise_id}")
+def get_default_exercise(exercise_id: int, conn: Annotated[Connection, Depends(get_db)]):
+    cursor: Cursor = conn.cursor()
+    return get_exerciseInDB(cursor, exercise_id)

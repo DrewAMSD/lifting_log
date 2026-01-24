@@ -23,7 +23,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 password_hash = PasswordHash.recommended()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token") # needs to be the same as 'token' api name found in backend/routers/users.py
 
 
 def verify_password(plain_password: str, hashed_password: str):
