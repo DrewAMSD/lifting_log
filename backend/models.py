@@ -50,9 +50,9 @@ class ExerciseInDB(Exercise):
 
 
 class Set_Entry(BaseModel):
-    weight: Optional[float]
-    reps: Optional[int]
-    time: Optional[str] # 'HH:MM:SS'
+    weight: Optional[float] = None
+    reps: Optional[int] = None
+    time: Optional[str] = None # 'HH:MM:SS'
 
 
 class Exercise_Entry(BaseModel):
