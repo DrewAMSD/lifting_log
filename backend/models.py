@@ -34,6 +34,7 @@ class UsernameResponse(BaseModel):
 
 
 class Exercise(BaseModel):
+    id: Optional[int] = None
     name: str
     username: Optional[str] = None
     primary_muscles: list[str]
@@ -43,10 +44,6 @@ class Exercise(BaseModel):
     weight: bool = False
     reps: bool = False
     time: bool = False
-
-
-class ExerciseInDB(Exercise):
-    id: int
 
 
 class Set_Entry(BaseModel):
@@ -61,6 +58,7 @@ class Exercise_Entry(BaseModel):
 
 
 class Workout(BaseModel):
+    id: Optional[int] = None
     name: str
     description: Optional[str] = None
     datetime: str # 'YYYY-MM-DD HH:MM:SS', start of workout time
@@ -70,7 +68,3 @@ class Workout(BaseModel):
     reps: Optional[int] = None
     volume: Optional[int] = None # lbs
     exercise_entries: list[Exercise_Entry]
-
-
-class WorkoutInDB(Workout):
-    id: int
