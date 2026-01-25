@@ -16,6 +16,15 @@ def create_workout(
     current_user: Annotated[User, Depends(get_current_active_user)],
     conn: Annotated[Connection, Depends(get_db)]
     ):
-    workout_id: int = 123456789
+    exercise_count: int = len(workout.exercise_entries)
+    sets: int = sum(len(exercise_entry.set_entries) for exercise_entry in workout.exercise_entries)
+    reps: int = sum((set_entry.reps if set_entry.reps is not None else 0) for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
+    volume: float = sum((set_entry.weight * set_entry.reps if set_entry.weight and set_entry.reps else 0) for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
+    workout_id: int = 123456789 # replace with auto generated id from sql table
+
+    workout.exercise_count = exercise_count
+    workout.sets = sets
+    workout.reps = reps
+    workout.volume = volume
     workout.id = workout_id
     return workout

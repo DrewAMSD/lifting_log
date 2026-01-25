@@ -3,23 +3,17 @@
   "description": "example description",
   "datetime": "2025-01-23 19:41:29",
   "duration": "01:15:42",
-  "exercise_count": 2,
-  "sets": 4,
-  "reps": 24,
-  "volume": 1165,
   "exercise_entries": [
     {
       "exercise_id": 4,
       "set_entries": [
         {
           "weight": 70,
-          "reps": 7,
-          "time": null
+          "reps": 7
         },
         {
           "weight": 60,
-          "reps": 8,
-          "time": null
+          "reps": 8
         }
       ]
     },
@@ -28,13 +22,11 @@
       "set_entries": [
         {
           "weight": 35,
-          "reps": 5,
-          "time": null
+          "reps": 5
         },
         {
           "weight": 35,
-          "reps": 4,
-          "time": null
+          "reps": 4
         }
       ]
     }
