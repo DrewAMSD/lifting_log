@@ -67,5 +67,5 @@ class Workout(BaseModel):
     sets: Optional[int] = None
     reps: Optional[int] = None
     volume: Optional[float] = None # lbs
-    muscle_distribution: Optional[dict[str, float]] # [Muscle, %]
+    muscle_distribution: Optional[dict[str, float]] = None # [Muscle, %]
     exercise_entries: list[Exercise_Entry]

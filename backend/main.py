@@ -32,4 +32,4 @@ def root_message():
 
 @app.get("/favicon.ico")
 def root_icon():
-    return FileResponse("./favicon.ico")
+    return FileResponse("backend/favicon.ico")

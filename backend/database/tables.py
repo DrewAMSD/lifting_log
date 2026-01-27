@@ -8,7 +8,7 @@ def create_users_table():
     cursor: sqlite3.Cursor = conn.cursor()
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         username TEXT NOT NULL UNIQUE,
         email TEXT,
         full_name TEXT,
@@ -25,7 +25,7 @@ def create_muscles_table():
     cursor: sqlite3.Cursor = conn.cursor()
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS muscles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT NOT NULL UNIQUE
     )
     """)
@@ -51,7 +51,7 @@ def create_exercises_table():
     cursor: sqlite3.Cursor = conn.cursor()
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS exercises (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
         username TEXT,
         description TEXT,
@@ -110,17 +110,59 @@ def populate_exercise_defaults():
     conn.close()
 
 
+def create_workout_tables():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS workouts (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        username TEXT NOT NULL,
+        dt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        duration TIME NOT NULL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS workout_exercise_entries (
+        id INTEGER PRIMARY KEY,
+        workout_id INTEGER NOT NULL,
+        exercise_id INTEGER NOT NULL,
+        position INTEGER NOT NULL,
+        FOREIGN KEY (workout_id) REFERENCES workouts (id) ON DELETE CASCADE,
+        FOREIGN KEY (exercise_id) REFERENCES exercises (id)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS workout_set_entries (
+        id INTEGER PRIMARY KEY,
+        exercise_entry_id INTEGER NOT NULL,
+        weight REAL,
+        reps INTEGER,
+        t TIME,
+        position INTEGER NOT NULL,
+        FOREIGN KEY (exercise_entry_id) REFERENCES workout_exercise_entries (id) ON DELETE CASCADE
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 def create_tables():
-    create_users_table()
-    create_muscles_table()
-    create_exercises_table()
-    create_exercise_muscles_table()
+    # create_users_table()
+    # create_muscles_table()
+    # create_exercises_table()
+    # create_exercise_muscles_table()
+    create_workout_tables()
     pass
 
 
 def populate_default_data():
-    populate_muscles_table()
-    populate_exercise_defaults()
+    # populate_muscles_table()
+    # populate_exercise_defaults()
     pass
 
 

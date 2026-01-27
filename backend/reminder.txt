@@ -1,0 +1,5 @@
+Start venv: source backend/venv/bin/activate
+Run backend: uvicorn --reload backend.main:app
+Make tables: pyhton3 -m backend.database.tables
+
+create .env with SECRET_KEY for authentication
