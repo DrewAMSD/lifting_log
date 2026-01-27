@@ -69,6 +69,8 @@ def create_workout(
                     (not time and set_entry.time)
                     ):
                     raise HTTPException(status_code=400, detail="Invalid set entries")
+                if (set_entry.time and not is_valid_timestamp(set_entry.time, "%H:%M:%S")):
+                    raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
                 cursor.execute("INSERT INTO workout_set_entries (exercise_entry_id, weight, reps, t, position) VALUES (?, ?, ?, ?, ?)", (exercise_entry_id, set_entry.weight, set_entry.reps, set_entry.time, set_pos))
         conn.commit()
 
