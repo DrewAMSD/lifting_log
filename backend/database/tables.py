@@ -119,6 +119,7 @@ def create_workout_tables():
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
         username TEXT NOT NULL,
+        description TEXT NOT NULL,
         dt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         duration TIME NOT NULL
     )
@@ -129,7 +130,7 @@ def create_workout_tables():
         id INTEGER PRIMARY KEY,
         workout_id INTEGER NOT NULL,
         exercise_id INTEGER NOT NULL,
-        description TEXT,
+        description TEXT NOT NULL,
         position INTEGER NOT NULL,
         FOREIGN KEY (workout_id) REFERENCES workouts (id) ON DELETE CASCADE,
         FOREIGN KEY (exercise_id) REFERENCES exercises (id)

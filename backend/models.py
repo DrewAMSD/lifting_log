@@ -61,6 +61,7 @@ class Exercise_Entry(BaseModel):
 class Workout(BaseModel):
     id: Optional[int] = None
     name: str
+    username: Optional[str] = None
     description: Optional[str] = ""
     datetime: str # 'YYYY-MM-DD HH:MM:SS', start of workout time
     duration: str # 'HH:MM:SS', duration of workout
