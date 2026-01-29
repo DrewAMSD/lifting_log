@@ -39,7 +39,7 @@ class Exercise(BaseModel):
     username: Optional[str] = None
     primary_muscles: list[str]
     secondary_muscles: Optional[list[str]] = None
-    description: Optional[str] = None
+    description: Optional[str] = ""
     # one of these fields must be true to be a valid exercise
     weight: bool = False
     reps: bool = False
@@ -54,18 +54,19 @@ class Set_Entry(BaseModel):
 
 class Exercise_Entry(BaseModel):
     exercise_id: int
+    description: Optional[str] = ""
     set_entries: list[Set_Entry]
 
 
 class Workout(BaseModel):
     id: Optional[int] = None
     name: str
-    description: Optional[str] = None
+    description: Optional[str] = ""
     datetime: str # 'YYYY-MM-DD HH:MM:SS', start of workout time
     duration: str # 'HH:MM:SS', duration of workout
     exercise_count: Optional[int] = None
     sets: Optional[int] = None
     reps: Optional[int] = None
     volume: Optional[float] = None # lbs
-    muscle_distribution: Optional[dict[str, float]] = None # [Muscle, %]
+    muscle_distribution: Optional[dict[str, int]] = None # [Muscle, %]
     exercise_entries: list[Exercise_Entry]

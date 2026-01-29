@@ -78,17 +78,17 @@ def convert_exercises_row_to_exercise(cursor: Cursor, exercises_row: sqlite3.Row
     primary_muscles: list[str] = get_exercise_muscles(cursor, exercise_id, True)
     secondary_muscles: list[str] = get_exercise_muscles(cursor, exercise_id, False)
 
-    return {
-        "id": exercise_id,
-        "name": exercises_row["name"],
-        "username": exercises_row["username"],
-        "primary_muscles": primary_muscles,
-        "secondary_muscles": secondary_muscles,
-        "description": exercises_row["description"],
-        "weight": exercises_row["weight"],
-        "reps": exercises_row["reps"],
-        "time": exercises_row["time"]
-    }
+    return Exercise(
+        id=exercise_id,
+        name=exercises_row["name"],
+        username=exercises_row["username"],
+        primary_muscles=primary_muscles,
+        secondary_muscles=secondary_muscles,
+        description=exercises_row["description"],
+        weight=exercises_row["weight"],
+        reps=exercises_row["reps"],
+        time=exercises_row["time"]
+    )
 
 
 def get_exercises(cursor: Cursor, username: str = None):
