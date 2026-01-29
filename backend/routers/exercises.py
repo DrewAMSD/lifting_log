@@ -163,7 +163,6 @@ def update_exercise(
                    """,
                    (exercise.name, exercise.description, exercise.weight, exercise.reps, exercise.time, exercise_id))
     
-    cursor.execute("PRAGMA foreign_keys = ON")
     cursor.execute("DELETE FROM exercise_muscles WHERE exercise_id = ?",(exercise_id,))
     insert_into_exercise_muscles(exercise, cursor, exercise_id)
 
@@ -182,7 +181,6 @@ def delete_exercise(
     cursor.execute("SELECT * FROM exercises WHERE id = ? AND username = ?", (exercise_id, current_user.username))
     if not cursor.fetchone():
         raise HTTPException(status_code = 404, detail = f"Exercise not found")
-    cursor.execute("PRAGMA foreign_keys = ON")
     cursor.execute("DELETE FROM exercises WHERE id = ?", (exercise_id,))
     conn.commit()
 

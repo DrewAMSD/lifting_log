@@ -67,6 +67,26 @@ def invalid_set_entry(exercise_row: Row, set_entry: Set_Entry):
             (not time and set_entry.time))
 
 
+def insert_workout_exercise_entries(cursor: Cursor, workout: Workout):
+    for pos,exercise_entry in enumerate(workout.exercise_entries):
+            cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_entry.exercise_id,))
+            exercise_row: Row = cursor.fetchone()
+            if not exercise_row:
+                raise HTTPException(status_code=400, detail="Invalid exercise(id) submitted")
+            cursor.execute("INSERT INTO workout_exercise_entries (workout_id, exercise_id, description, position) VALUES (?, ?, ?, ?)", (workout.id, exercise_entry.exercise_id, exercise_entry.description, pos))
+            exercise_entry_id: int = cursor.lastrowid
+
+            if len(exercise_entry.set_entries) == 0:
+                raise HTTPException(status_code=400, detail="Empty set entries array")
+
+            for set_pos,set_entry in enumerate(exercise_entry.set_entries):
+                if (invalid_set_entry(exercise_row, set_entry)):
+                    raise HTTPException(status_code=400, detail="Invalid set entries")
+                if (set_entry.time and not is_valid_timestamp(set_entry.time, "%H:%M:%S")):
+                    raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
+                cursor.execute("INSERT INTO workout_set_entries (exercise_entry_id, weight, reps, t, position) VALUES (?, ?, ?, ?, ?)", (exercise_entry_id, set_entry.weight, set_entry.reps, set_entry.time, set_pos))
+
+
 @router.post("/workouts/me/", response_model=Workout, status_code=status.HTTP_201_CREATED)
 def create_workout(
     workout: Workout, 
@@ -80,29 +100,14 @@ def create_workout(
     if not is_valid_timestamp(workout.duration, "%H:%M:%S"):
         raise HTTPException(status_code=400, detail="Incorrectly formatted duration")
 
+    if len(workout.exercise_entries) == 0:
+        raise HTTPException(status_code=400, detail="Empty exercise entries array")
+
     try:
-        cursor.execute("PRAGMA foreign_keys = ON")
         cursor.execute("INSERT INTO workouts (name, username, description, dt, duration) VALUES (?, ?, ?, ?, ?)", (workout.name, current_user.username, workout.description, workout.datetime, workout.duration))
         workout.id = cursor.lastrowid
 
-        if len(workout.exercise_entries) == 0:
-            raise HTTPException(status_code=400, detail="Empty exercise entries array")
-
-        for pos,exercise_entry in enumerate(workout.exercise_entries):
-            cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_entry.exercise_id,))
-            exercise_row: Row = cursor.fetchone()
-            if not exercise_row:
-                raise HTTPException(status_code=400, detail="Invalid exercise(id) submitted")
-            cursor.execute("INSERT INTO workout_exercise_entries (workout_id, exercise_id, description, position) VALUES (?, ?, ?, ?)", (workout.id, exercise_entry.exercise_id, exercise_entry.description, pos))
-            exercise_entry_id: int = cursor.lastrowid
-
-            
-            for set_pos,set_entry in enumerate(exercise_entry.set_entries):
-                if (invalid_set_entry(exercise_row, set_entry)):
-                    raise HTTPException(status_code=400, detail="Invalid set entries")
-                if (set_entry.time and not is_valid_timestamp(set_entry.time, "%H:%M:%S")):
-                    raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
-                cursor.execute("INSERT INTO workout_set_entries (exercise_entry_id, weight, reps, t, position) VALUES (?, ?, ?, ?, ?)", (exercise_entry_id, set_entry.weight, set_entry.reps, set_entry.time, set_pos))
+        insert_workout_exercise_entries(cursor, workout)
         conn.commit()
 
     except HTTPException:
@@ -110,6 +115,7 @@ def create_workout(
         raise
     except Exception as e:
         conn.rollback()
+        print(e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
     calculate_workout_stats(cursor, workout, current_user.username)
@@ -199,6 +205,49 @@ def get_user_workout(
     return convert_workouts_row_to_workout(cursor, workouts_row, current_user.username)
 
 
+@router.put("/workouts/me/{workout_id}", response_model=Workout)
+def update_user_workout(
+    workout_id: int,
+    workout: Workout,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]
+):
+    cursor: Cursor = conn.cursor()
+    workout.id=workout_id
+
+    cursor.execute("SELECT * FROM workouts WHERE id = ?", (workout_id,))
+    if not cursor.fetchone():
+        raise HTTPException(status_code=404, detail="Workout not found")
+
+    if len(workout.exercise_entries) == 0:
+        raise HTTPException(status_code=400, detail="Empty exercise entries array")
+
+    try:
+        cursor.execute("""
+                       UPDATE workouts
+                       SET name = ?, description = ?, dt = ?, duration = ?
+                       WHERE id = ?
+                       """,
+                       (workout.name, workout.description, workout.datetime, workout.duration, workout_id))
+
+        cursor.execute("DELETE FROM workout_exercise_entries WHERE workout_id = ?", (workout_id,))
+
+        insert_workout_exercise_entries(cursor, workout)
+
+        conn.commit()
+
+    except HTTPException:
+        conn.rollback()
+        raise
+    except Exception as e:
+        conn.rollback()
+        print(e)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+    calculate_workout_stats(cursor, workout, current_user.username)
+    return workout
+
+
 @router.delete("/workouts/me/{workout_id}", status_code=204)
 def delete_user_workout(
     workout_id: int,
@@ -210,6 +259,5 @@ def delete_user_workout(
     if not cursor.fetchone():
         raise HTTPException(status_code=404, detail="Workout not found")
     
-    cursor.execute("PRAGMA FOREIGN_KEYS = ON")
     cursor.execute("DELETE FROM workouts WHERE id = ?", (workout_id,))
     conn.commit()
