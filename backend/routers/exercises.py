@@ -112,9 +112,11 @@ def get_user_exercises(
     return get_exercises(cursor, current_user.username)
 
 
-def get_exercise(cursor: Cursor, exercise_id: int, username: str = None):
+def get_exercise(cursor: Cursor, exercise_id: int, username: str = None, for_workout: bool = False):
     if not username:
         cursor.execute("SELECT * FROM exercises WHERE id = ? AND username IS NULL", (exercise_id,))
+    elif for_workout:
+        cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_id,))
     else:   
         cursor.execute("""SELECT * FROM exercises
                    WHERE id = ? AND username IS NULL
@@ -181,7 +183,22 @@ def delete_exercise(
     cursor.execute("SELECT * FROM exercises WHERE id = ? AND username = ?", (exercise_id, current_user.username))
     if not cursor.fetchone():
         raise HTTPException(status_code = 404, detail = f"Exercise not found")
-    cursor.execute("DELETE FROM exercises WHERE id = ?", (exercise_id,))
+    
+    try:
+        cursor.execute("SELECT * FROM workout_exercise_entries WHERE exercise_id = ?", (exercise_id,))
+        if cursor.fetchone(): # exercise is used in a past workout
+            cursor.execute("UPDATE exercises SET username = 'deleted' WHERE id = ?", (exercise_id,))
+        else: # exercise not used in any workouts, free to delete entirely
+            cursor.execute("DELETE FROM exercises WHERE id = ?", (exercise_id,))
+
+        # automatically remove exercise from workout_templates(if any)
+        cursor.execute("SELECT * FROM template_exercises WHERE exercise_id = ?", (exercise_id,))
+        if cursor.fetchone(): # exercise in workout template
+            cursor.execute("DELETE FROM template_exercises WHERE exercise_id = ?", (exercise_id,))
+    except Exception as e:
+        conn.rollback()
+        print(e)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
     conn.commit()
 
 

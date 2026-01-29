@@ -20,7 +20,8 @@ def calculate_workout_stats(cursor: Cursor, workout: Workout, username: str):
     muscle_set_counts: dict[str, float] = {}
     total_muscle_sets: float = 0.0
     for exercise_entry in workout.exercise_entries:
-        exercise: Exercise = get_exercise(cursor, exercise_entry.exercise_id, username)
+        for_workout: bool = True
+        exercise: Exercise = get_exercise(cursor, exercise_entry.exercise_id, username, for_workout)
         
         for primary_muscle in exercise.primary_muscles:
             if not primary_muscle in muscle_set_counts:
@@ -138,6 +139,13 @@ def get_exercise_entry_set_entries(cursor: Cursor, exercise_entry_id: int):
     return set_entries
 
 
+def get_exercise_name(cursor: Cursor, exercise_id: int):
+    cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_id,))
+    exercises_row: Row = cursor.fetchone()
+    if not exercises_row:
+        raise HTTPException(status_code=404, detail="Exercise in workout not found")
+    return exercises_row["name"]
+
 def get_workout_exercise_entries(cursor: Cursor, workout_id: int):
     cursor.execute("SELECT * FROM workout_exercise_entries WHERE workout_id = ?", (workout_id,))
     exercise_entries_rows: list[Row] = cursor.fetchall()
@@ -148,6 +156,7 @@ def get_workout_exercise_entries(cursor: Cursor, workout_id: int):
     for exercise_entries_row in exercise_entries_rows:
         exercise_entries.append(Exercise_Entry(
             exercise_id=exercise_entries_row["exercise_id"],
+            exercise_name=get_exercise_name(cursor, exercise_entries_row["exercise_id"]),
             description=exercise_entries_row["description"],
             set_entries=get_exercise_entry_set_entries(cursor, exercise_entries_row["id"])
         ))
@@ -243,7 +252,7 @@ def update_user_workout(
         conn.rollback()
         print(e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
-
+    
     calculate_workout_stats(cursor, workout, current_user.username)
     return workout
 

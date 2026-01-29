@@ -54,6 +54,7 @@ class Set_Entry(BaseModel):
 
 class Exercise_Entry(BaseModel):
     exercise_id: int
+    exercise_name: Optional[str] = None
     description: Optional[str] = ""
     set_entries: list[Set_Entry]
 
@@ -71,3 +72,24 @@ class Workout(BaseModel):
     volume: Optional[float] = None # lbs
     muscle_distribution: Optional[dict[str, int]] = None # [Muscle, %]
     exercise_entries: list[Exercise_Entry]
+
+
+class Set_Template(BaseModel):
+    rep_range_start: Optional[int] = None
+    rep_range_end: Optional[int] = None
+    time_range_start: Optional[str] = None # 'HH:MM:SS'
+    time_range_end: Optional[str] = None # 'HH:MM:SS'
+
+
+class Exercise_Template(BaseModel):
+    exercise_id: int
+    exercise_name: Optional[str] = None
+    routine_note: Optional[str] = ""
+    set_templates: list[Set_Template]
+
+
+class Workout_Template(BaseModel):
+    id: Optional[int] = None
+    name: str
+    username: str
+    exercise_templates: list[Exercise_Template]

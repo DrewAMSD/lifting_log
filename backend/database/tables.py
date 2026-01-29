@@ -1,4 +1,5 @@
 import sqlite3
+from sqlite3 import Connection, Cursor, Row
 from backend.models import *
 from backend.database.db import get_db_path
 
@@ -153,12 +154,50 @@ def create_workout_tables():
     conn.close()
 
 
+def create_workout_template_tables():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS template_workouts (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        username TEXT NOT NULL
+    )
+    """)
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS template_exercises (
+        id INTEGER PRIMARY KEY,
+        exercise_id INTEGER NOT NULL,
+        routine_note TEXT NOT NULL,
+        FOREIGN KEY (exercise_id) REFERENCES exercises (id)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS template_sets (
+        id INTEGER PRIMARY KEY,
+        exercise_template_id INTEGER NOT NULL,
+        rep_range_start INTEGER,
+        rep_range_end INTEGER,
+        time_range_start TIME,
+        time_range_end TIME,
+        FOREIGN KEY (exercise_template_id) REFERENCES exercise_templates (id) ON DELETE CASCADE
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 def create_tables():
     create_users_table()
     create_muscles_table()
     create_exercises_table()
     create_exercise_muscles_table()
     create_workout_tables()
+    create_workout_template_tables()
     pass
 
 
