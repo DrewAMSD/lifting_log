@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Annotated
-from datetime import datetime
 from sqlite3 import Connection, Cursor, Row
 from backend.models import *
-from backend.database.db import get_db
+from backend.database.db import get_db, is_valid_timestamp
 from backend.auth import get_current_active_user
 from backend.routers.exercises import get_exercise
 
@@ -46,14 +45,6 @@ def calculate_workout_stats(cursor: Cursor, workout: Workout, username: str):
     workout.sets = sets
     workout.reps = reps
     workout.volume = volume
-
-
-def is_valid_timestamp(timestamp: str, format: str):
-    try:
-        datetime.strptime(timestamp, format)
-        return True
-    except ValueError:
-        return False
 
 
 def invalid_set_entry(exercise_row: Row, set_entry: Set_Entry):

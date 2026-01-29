@@ -75,11 +75,11 @@ class Workout(BaseModel):
 
 
 class Set_Template(BaseModel):
+    reps: Optional[int] = None
     rep_range_start: Optional[int] = None
     rep_range_end: Optional[int] = None
     time_range_start: Optional[str] = None # 'HH:MM:SS'
     time_range_end: Optional[str] = None # 'HH:MM:SS'
-
 
 class Exercise_Template(BaseModel):
     exercise_id: int
@@ -91,5 +91,5 @@ class Exercise_Template(BaseModel):
 class Workout_Template(BaseModel):
     id: Optional[int] = None
     name: str
-    username: str
+    username: Optional[str] = None
     exercise_templates: list[Exercise_Template]

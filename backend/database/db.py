@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 
 def get_db_path():
@@ -13,3 +14,11 @@ def get_db():
         yield conn
     finally:
         conn.close()
+
+
+def is_valid_timestamp(timestamp: str, format: str):
+    try:
+        datetime.strptime(timestamp, format)
+        return True
+    except ValueError:
+        return False

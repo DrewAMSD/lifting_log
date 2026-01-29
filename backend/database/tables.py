@@ -179,11 +179,12 @@ def create_workout_template_tables():
     CREATE TABLE IF NOT EXISTS template_sets (
         id INTEGER PRIMARY KEY,
         exercise_template_id INTEGER NOT NULL,
+        reps INTEGER,
         rep_range_start INTEGER,
         rep_range_end INTEGER,
         time_range_start TIME,
         time_range_end TIME,
-        FOREIGN KEY (exercise_template_id) REFERENCES exercise_templates (id) ON DELETE CASCADE
+        FOREIGN KEY (exercise_template_id) REFERENCES template_exercises (id) ON DELETE CASCADE
     )
     """)
 
@@ -450,6 +451,16 @@ EXERCISES: list[Exercise] = [
         "weight": True,
         "reps": True,
         "time": False
+    },
+    {
+        "name": "Planks",
+        "username": None,
+        "primary_muscles": ["Abdominals"],
+        "secondary_muscles": [],
+        "description": "",
+        "weight": False,
+        "reps": False,
+        "time": True
     }
 ]
 

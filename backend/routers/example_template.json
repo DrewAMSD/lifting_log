@@ -1,0 +1,44 @@
+{
+  "name": "Back/Chest",
+  "exercise_templates": [
+    {
+      "exercise_id": 4,
+      "routine_note": "Make sure to puff chest up and drop elbows as low as possible.",
+      "set_templates": [
+        {
+          "rep_range_start": 8,
+          "rep_range_end": 12
+        },
+        {
+          "rep_range_start": 8,
+          "rep_range_end": 12
+        }
+      ]
+    },
+    {
+      "exercise_id": 20,
+      "routine_note": "Pull as explosively as possible.",
+      "set_templates": [
+        {
+          "reps": 10
+        },
+        {
+          "reps": 5
+        }
+      ]
+    },
+     {
+      "exercise_id": 23,
+      "set_templates": [
+        {
+          "time_range_start": "00:00:30",
+          "time_range_end": "00:01:30"
+        },
+        {
+          "time_range_start": "00:00:30",
+          "time_range_end": "00:01:30"
+        }
+      ]
+    }
+  ]
+}

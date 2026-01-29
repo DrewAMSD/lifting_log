@@ -124,7 +124,7 @@ def get_exercise(cursor: Cursor, exercise_id: int, username: str = None, for_wor
                    """, (exercise_id, exercise_id, username))
     exercises_row: sqlite3.Row = cursor.fetchone()
     if not exercises_row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exercise not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise with id {exercise_id} not found")
     return convert_exercises_row_to_exercise(cursor, exercises_row)
 
 
