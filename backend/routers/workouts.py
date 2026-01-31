@@ -10,12 +10,7 @@ from backend.routers.exercises import get_exercise
 router = APIRouter()
 
 
-def calculate_workout_stats(cursor: Cursor, workout: Workout, username: str):
-    exercise_count: int = len(workout.exercise_entries)
-    sets: int = sum(len(exercise_entry.set_entries) for exercise_entry in workout.exercise_entries)
-    reps: int = sum((set_entry.reps if set_entry.reps is not None else 0) for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
-    volume: float = sum((set_entry.weight * set_entry.reps if set_entry.weight and set_entry.reps else 0) for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
-    
+def get_muscle_distribution(cursor: Cursor, workout: Workout, username: str):
     muscle_set_counts: dict[str, float] = {}
     total_muscle_sets: float = 0.0
     for exercise_entry in workout.exercise_entries:
@@ -39,6 +34,15 @@ def calculate_workout_stats(cursor: Cursor, workout: Workout, username: str):
     for muscle,set_count in muscle_set_counts.items():
         percentage: int = (int) (100 * set_count / total_muscle_sets)
         muscle_distribution[muscle] = percentage
+    return muscle_distribution
+
+
+def calculate_workout_stats(cursor: Cursor, workout: Workout, username: str):
+    exercise_count: int = len(workout.exercise_entries)
+    sets: int = sum(len(exercise_entry.set_entries) for exercise_entry in workout.exercise_entries)
+    reps: int = sum((set_entry.reps if set_entry.reps is not None else 0) for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
+    volume: float = sum((set_entry.weight * set_entry.reps if set_entry.weight and set_entry.reps else 0) for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
+    muscle_distribution: dict[str, int] = get_muscle_distribution(cursor, workout, username)
 
     workout.muscle_distribution = muscle_distribution
     workout.exercise_count = exercise_count
@@ -59,24 +63,50 @@ def invalid_set_entry(exercise_row: Row, set_entry: Set_Entry):
             (not time and set_entry.time))
 
 
-def insert_workout_exercise_entries(cursor: Cursor, workout: Workout):
+def insert_workout_exercise_entry(cursor: Cursor, pos: int, exercise_entry: Exercise_Entry, workout_id: int):
+    cursor.execute("""
+        INSERT INTO workout_exercise_entries 
+        (workout_id, exercise_id, description, position) 
+        VALUES (?, ?, ?, ?)
+        """, 
+        (workout_id, exercise_entry.exercise_id, exercise_entry.description, pos)
+    )
+    return cursor.lastrowid
+
+
+def insert_workout_set_entry(cursor: Cursor, set_pos: int, set_entry: Set_Entry, exercise_entry_id: int, exercise_row: Row):
+    if (invalid_set_entry(exercise_row, set_entry)):
+        raise HTTPException(status_code=400, detail="Invalid set entries")
+    if (set_entry.time and not is_valid_timestamp(set_entry.time, "%H:%M:%S")):
+        raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
+    cursor.execute("INSERT INTO workout_set_entries (exercise_entry_id, weight, reps, t, position) VALUES (?, ?, ?, ?, ?)", (exercise_entry_id, set_entry.weight, set_entry.reps, set_entry.time, set_pos))
+
+
+def validate_workout(workout: Workout):
+    if not is_valid_timestamp(workout.datetime, "%Y-%m-%d %H:%M:%S"):
+        raise HTTPException(status_code=400, detail="Incorrectly formatted datetime")
+    if not is_valid_timestamp(workout.duration, "%H:%M:%S"):
+        raise HTTPException(status_code=400, detail="Incorrectly formatted duration")
+
+    if len(workout.exercise_entries) == 0:
+        raise HTTPException(status_code=400, detail="Empty exercise entries array")
+
+
+def insert_workout_exercise_and_set_entries(cursor: Cursor, workout: Workout):
     for pos,exercise_entry in enumerate(workout.exercise_entries):
-            cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_entry.exercise_id,))
-            exercise_row: Row = cursor.fetchone()
-            if not exercise_row:
-                raise HTTPException(status_code=400, detail="Invalid exercise(id) submitted")
-            cursor.execute("INSERT INTO workout_exercise_entries (workout_id, exercise_id, description, position) VALUES (?, ?, ?, ?)", (workout.id, exercise_entry.exercise_id, exercise_entry.description, pos))
-            exercise_entry_id: int = cursor.lastrowid
+        cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_entry.exercise_id,))
+        exercise_row: Row = cursor.fetchone()
+        if not exercise_row:
+            raise HTTPException(status_code=400, detail="Invalid exercise(id) submitted")
 
-            if len(exercise_entry.set_entries) == 0:
-                raise HTTPException(status_code=400, detail="Empty set entries array")
+        exercise_entry_id: int = insert_workout_exercise_entry(cursor, pos, exercise_entry, workout.id)
+        exercise_entry.exercise_name = exercise_row["name"]
 
-            for set_pos,set_entry in enumerate(exercise_entry.set_entries):
-                if (invalid_set_entry(exercise_row, set_entry)):
-                    raise HTTPException(status_code=400, detail="Invalid set entries")
-                if (set_entry.time and not is_valid_timestamp(set_entry.time, "%H:%M:%S")):
-                    raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
-                cursor.execute("INSERT INTO workout_set_entries (exercise_entry_id, weight, reps, t, position) VALUES (?, ?, ?, ?, ?)", (exercise_entry_id, set_entry.weight, set_entry.reps, set_entry.time, set_pos))
+        if len(exercise_entry.set_entries) == 0:
+            raise HTTPException(status_code=400, detail="Empty set entries array")
+        
+        for set_pos,set_entry in enumerate(exercise_entry.set_entries):
+            insert_workout_set_entry(cursor, set_pos, set_entry, exercise_entry_id, exercise_row)
 
 
 @router.post("/workouts/me/", response_model=Workout, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
@@ -87,21 +117,15 @@ def create_workout(
 ):
     cursor: Cursor = conn.cursor()
 
-    if not is_valid_timestamp(workout.datetime, "%Y-%m-%d %H:%M:%S"):
-        raise HTTPException(status_code=400, detail="Incorrectly formatted datetime")
-    if not is_valid_timestamp(workout.duration, "%H:%M:%S"):
-        raise HTTPException(status_code=400, detail="Incorrectly formatted duration")
-
-    if len(workout.exercise_entries) == 0:
-        raise HTTPException(status_code=400, detail="Empty exercise entries array")
+    validate_workout(workout)
 
     try:
         cursor.execute("INSERT INTO workouts (name, username, description, dt, duration) VALUES (?, ?, ?, ?, ?)", (workout.name, current_user.username, workout.description, workout.datetime, workout.duration))
         workout.id = cursor.lastrowid
 
-        insert_workout_exercise_entries(cursor, workout)
-        conn.commit()
+        insert_workout_exercise_and_set_entries(cursor, workout)
 
+        conn.commit()
     except HTTPException:
         conn.rollback()
         raise
@@ -197,7 +221,7 @@ def get_user_workout(
 ):
     cursor: Cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM workouts WHERE id = ?", (workout_id,))
+    cursor.execute("SELECT * FROM workouts WHERE id = ? AND username = ?", (workout_id, current_user.username))
     workouts_row: Row = cursor.fetchone()
     if not workouts_row:
         raise HTTPException(status_code=404, detail="Workout not found")
@@ -215,7 +239,7 @@ def update_user_workout(
     cursor: Cursor = conn.cursor()
     workout.id=workout_id
 
-    cursor.execute("SELECT * FROM workouts WHERE id = ?", (workout_id,))
+    cursor.execute("SELECT * FROM workouts WHERE id = ? AND username = ?", (workout_id, current_user.username))
     if not cursor.fetchone():
         raise HTTPException(status_code=404, detail="Workout not found")
 
@@ -232,10 +256,9 @@ def update_user_workout(
 
         cursor.execute("DELETE FROM workout_exercise_entries WHERE workout_id = ?", (workout_id,))
 
-        insert_workout_exercise_entries(cursor, workout)
+        insert_workout_exercise_and_set_entries(cursor, workout)
 
         conn.commit()
-
     except HTTPException:
         conn.rollback()
         raise

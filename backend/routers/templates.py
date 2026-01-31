@@ -35,6 +35,40 @@ def validate_set_template(set_template: Set_Template, exercise_row: Row):
             raise HTTPException(status_code=400, detail="Set template has incorrectly formatted time range")
 
 
+def insert_template_workout(cursor: Cursor, template: Workout_Template, username: str):
+    cursor.execute("""
+        INSERT INTO template_workouts
+        (name, username)
+        VALUES (?, ?)
+    """, (template.name, username))
+    return cursor.lastrowid
+
+
+def get_exercise_row(cursor: Cursor, exercise_id: int):
+    cursor.execute("SELECT * FROM exercises WHERE id = ?",(exercise_id,))
+    exercise_row: Row = cursor.fetchone()
+    if not exercise_row:
+        raise HTTPException(status_code=404, detail=f"Exercise with id {exercise_id} not found")
+    return exercise_row
+
+
+def insert_template_exercise(cursor: Cursor, exercise_template: Exercise_Template, template_id: int):
+    cursor.execute("""
+                INSERT INTO template_exercises
+                (workout_template_id, exercise_id, routine_note)
+                VALUES (?, ?, ?)
+            """, (template_id, exercise_template.exercise_id, exercise_template.routine_note))
+    return cursor.lastrowid
+
+
+def insert_template_set(cursor: Cursor, set_template: Set_Template, exercise_template_id: int):
+    cursor.execute("""
+        INSERT INTO template_sets
+        (exercise_template_id, reps, rep_range_start, rep_range_end, time_range_start, time_range_end)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (exercise_template_id, set_template.reps, set_template.rep_range_start, set_template.rep_range_end, set_template.time_range_start, set_template.time_range_end))
+
+
 @router.post("/templates/me/", response_model=Workout_Template, response_model_exclude_none=True)
 def create_user_template(
     template: Workout_Template,
@@ -46,26 +80,13 @@ def create_user_template(
     validate_workout_template(cursor, template, current_user.username)
     
     try:
-        cursor.execute("""
-            INSERT INTO template_workouts
-            (name, username)
-            VALUES (?, ?)
-        """, (template.name, current_user.username))
-        template.id = cursor.lastrowid
+        template.id = insert_template_workout(cursor, template, current_user.username)
         template.username = current_user.username
 
         for exercise_template in template.exercise_templates:
-            cursor.execute("SELECT * FROM exercises WHERE id = ?",(exercise_template.exercise_id,))
-            exercise_row: Row = cursor.fetchone()
-            if not exercise_row:
-                raise HTTPException(status_code=404, detail=f"Exercise with id {exercise_template.exercise_id} not found")
+            exercise_row: Row = get_exercise_row(cursor, exercise_template.exercise_id)
             
-            cursor.execute("""
-                INSERT INTO template_exercises
-                (exercise_id, routine_note)
-                VALUES (?, ?)
-            """, (exercise_template.exercise_id, exercise_template.routine_note))
-            exercise_template_id: int = cursor.lastrowid
+            exercise_template_id: int = insert_template_exercise(cursor, exercise_template, template.id)
             exercise_template.exercise_name = exercise_row["name"]
 
             if not exercise_template.set_templates:
@@ -74,11 +95,7 @@ def create_user_template(
             for set_template in exercise_template.set_templates:
                 validate_set_template(set_template, exercise_row)
                     
-                cursor.execute("""
-                    INSERT INTO template_sets
-                    (exercise_template_id, reps, rep_range_start, rep_range_end, time_range_start, time_range_end)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (exercise_template_id, set_template.reps, set_template.rep_range_start, set_template.rep_range_end, set_template.time_range_start, set_template.time_range_end))
+                insert_template_set(cursor, set_template, exercise_template_id)
 
         conn.commit()
     except HTTPException:
@@ -90,3 +107,19 @@ def create_user_template(
         raise HTTPException(status_code=500, detail="Internal server error")
     
     return template
+
+
+@router.delete("/templates/me/{template_id}", status_code=204)
+def delete_user_template(
+    template_id: int,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]
+):
+    cursor: Cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM template_workouts WHERE id = ? AND username = ?", (template_id, current_user.username))
+    if not cursor.fetchone():
+        raise HTTPException(status_code=404, detail="Workout template not found")
+    
+    cursor.execute("DELETE FROM template_workouts WHERE id = ?", (template_id,))
+    conn.commit()

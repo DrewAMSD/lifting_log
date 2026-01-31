@@ -169,8 +169,10 @@ def create_workout_template_tables():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS template_exercises (
         id INTEGER PRIMARY KEY,
+        workout_template_id INTEGER NOT NULL,
         exercise_id INTEGER NOT NULL,
         routine_note TEXT NOT NULL,
+        FOREIGN KEY (workout_template_id) REFERENCES template_workouts (id) ON DELETE CASCADE,
         FOREIGN KEY (exercise_id) REFERENCES exercises (id)
     )
     """)
