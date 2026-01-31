@@ -79,7 +79,7 @@ def insert_workout_exercise_entries(cursor: Cursor, workout: Workout):
                 cursor.execute("INSERT INTO workout_set_entries (exercise_entry_id, weight, reps, t, position) VALUES (?, ?, ?, ?, ?)", (exercise_entry_id, set_entry.weight, set_entry.reps, set_entry.time, set_pos))
 
 
-@router.post("/workouts/me/", response_model=Workout, status_code=status.HTTP_201_CREATED)
+@router.post("/workouts/me/", response_model=Workout, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
 def create_workout(
     workout: Workout, 
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -170,7 +170,7 @@ def convert_workouts_row_to_workout(cursor: Cursor, workouts_row: Row, username:
     return workout
 
 
-@router.get("/workouts/me/", response_model=list[Workout])
+@router.get("/workouts/me/", response_model=list[Workout], response_model_exclude_none=True)
 def get_user_workouts(
     current_user: Annotated[User, Depends(get_current_active_user)],
     conn: Annotated[Connection, Depends(get_db)]
@@ -189,7 +189,7 @@ def get_user_workouts(
     return workouts
 
 
-@router.get("/workouts/me/{workout_id}", response_model=Workout)
+@router.get("/workouts/me/{workout_id}", response_model=Workout, response_model_exclude_none=True)
 def get_user_workout(
     workout_id: int,
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -205,7 +205,7 @@ def get_user_workout(
     return convert_workouts_row_to_workout(cursor, workouts_row, current_user.username)
 
 
-@router.put("/workouts/me/{workout_id}", response_model=Workout)
+@router.put("/workouts/me/{workout_id}", response_model=Workout, response_model_exclude_none=True)
 def update_user_workout(
     workout_id: int,
     workout: Workout,

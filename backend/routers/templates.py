@@ -35,7 +35,7 @@ def validate_set_template(set_template: Set_Template, exercise_row: Row):
             raise HTTPException(status_code=400, detail="Set template has incorrectly formatted time range")
 
 
-@router.post("/templates/me/", response_model=Workout_Template)
+@router.post("/templates/me/", response_model=Workout_Template, response_model_exclude_none=True)
 def create_user_template(
     template: Workout_Template,
     current_user: Annotated[User, Depends(get_current_active_user)],
