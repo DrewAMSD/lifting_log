@@ -52,21 +52,21 @@ def get_exercise_row(cursor: Cursor, exercise_id: int):
     return exercise_row
 
 
-def insert_template_exercise(cursor: Cursor, exercise_template: Exercise_Template, template_id: int):
+def insert_template_exercise(cursor: Cursor, pos: int, exercise_template: Exercise_Template, template_id: int):
     cursor.execute("""
                 INSERT INTO template_exercises
-                (workout_template_id, exercise_id, routine_note)
-                VALUES (?, ?, ?)
-            """, (template_id, exercise_template.exercise_id, exercise_template.routine_note))
+                (workout_template_id, exercise_id, routine_note, position)
+                VALUES (?, ?, ?, ?)
+            """, (template_id, exercise_template.exercise_id, exercise_template.routine_note, pos))
     return cursor.lastrowid
 
 
-def insert_template_set(cursor: Cursor, set_template: Set_Template, exercise_template_id: int):
+def insert_template_set(cursor: Cursor, set_pos: int, set_template: Set_Template, exercise_template_id: int):
     cursor.execute("""
         INSERT INTO template_sets
-        (exercise_template_id, reps, rep_range_start, rep_range_end, time_range_start, time_range_end)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (exercise_template_id, set_template.reps, set_template.rep_range_start, set_template.rep_range_end, set_template.time_range_start, set_template.time_range_end))
+        (exercise_template_id, reps, rep_range_start, rep_range_end, time_range_start, time_range_end, position)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (exercise_template_id, set_template.reps, set_template.rep_range_start, set_template.rep_range_end, set_template.time_range_start, set_template.time_range_end, set_pos))
 
 
 @router.post("/templates/me/", response_model=Workout_Template, response_model_exclude_none=True)
@@ -83,19 +83,19 @@ def create_user_template(
         template.id = insert_template_workout(cursor, template, current_user.username)
         template.username = current_user.username
 
-        for exercise_template in template.exercise_templates:
+        for pos,exercise_template in enumerate(template.exercise_templates):
             exercise_row: Row = get_exercise_row(cursor, exercise_template.exercise_id)
             
-            exercise_template_id: int = insert_template_exercise(cursor, exercise_template, template.id)
+            exercise_template_id: int = insert_template_exercise(cursor, pos, exercise_template, template.id)
             exercise_template.exercise_name = exercise_row["name"]
 
             if not exercise_template.set_templates:
                 raise HTTPException(status_code=400, detail="Empty or null set templates array")
             
-            for set_template in exercise_template.set_templates:
+            for set_pos,set_template in enumerate(exercise_template.set_templates):
                 validate_set_template(set_template, exercise_row)
                     
-                insert_template_set(cursor, set_template, exercise_template_id)
+                insert_template_set(cursor, set_pos, set_template, exercise_template_id)
 
         conn.commit()
     except HTTPException:

@@ -172,6 +172,7 @@ def create_workout_template_tables():
         workout_template_id INTEGER NOT NULL,
         exercise_id INTEGER NOT NULL,
         routine_note TEXT NOT NULL,
+        position INTEGER NOT NULL,
         FOREIGN KEY (workout_template_id) REFERENCES template_workouts (id) ON DELETE CASCADE,
         FOREIGN KEY (exercise_id) REFERENCES exercises (id)
     )
@@ -186,6 +187,7 @@ def create_workout_template_tables():
         rep_range_end INTEGER,
         time_range_start TIME,
         time_range_end TIME,
+        position INTEGER NOT NULL,
         FOREIGN KEY (exercise_template_id) REFERENCES template_exercises (id) ON DELETE CASCADE
     )
     """)

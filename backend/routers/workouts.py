@@ -139,7 +139,7 @@ def create_workout(
 
 
 def get_exercise_entry_set_entries(cursor: Cursor, exercise_entry_id: int):
-    cursor.execute("SELECT * FROM workout_set_entries WHERE exercise_entry_id = ?", (exercise_entry_id,))
+    cursor.execute("SELECT * FROM workout_set_entries WHERE exercise_entry_id = ? ORDER BY position ASC", (exercise_entry_id,))
     set_entries_rows: list[Row] = cursor.fetchall()
     if not set_entries_rows:
         raise HTTPException(status_code=404, detail="Set entries not found")
@@ -162,7 +162,7 @@ def get_exercise_name(cursor: Cursor, exercise_id: int):
     return exercises_row["name"]
 
 def get_workout_exercise_entries(cursor: Cursor, workout_id: int):
-    cursor.execute("SELECT * FROM workout_exercise_entries WHERE workout_id = ?", (workout_id,))
+    cursor.execute("SELECT * FROM workout_exercise_entries WHERE workout_id = ? ORDER BY position ASC", (workout_id,))
     exercise_entries_rows: list[Row] = cursor.fetchall()
     if not exercise_entries_rows:
         raise HTTPException(status_code=404, detail="Exercise entries not found")
