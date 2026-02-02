@@ -16,7 +16,7 @@ def validate_workout_template(cursor: Cursor, template: Workout_Template, userna
         raise HTTPException(status_code=400, detail="Template name is currently in use")
     
     if len(template.name) == 0:
-        raise HTTPException(status_code=400, detail="Unamed template")
+        raise HTTPException(status_code=400, detail="Unnamed template")
     
     if not template.exercise_templates:
         raise HTTPException(status_code=400, detail="Template missing exercises")
@@ -107,6 +107,99 @@ def create_user_template(
         raise HTTPException(status_code=500, detail="Internal server error")
     
     return template
+
+
+def convert_template_sets_row_to_template(template_sets_row: Row):
+    return Set_Template(
+        reps=template_sets_row["reps"],
+        rep_range_start=template_sets_row["rep_range_start"],
+        rep_range_end=template_sets_row["rep_range_end"],
+        time_range_start=template_sets_row["time_range_start"],
+        time_range_end=template_sets_row["time_range_end"]
+    )
+
+
+def get_set_templates(cursor: Cursor, template_exerciss_row: Row):
+    cursor.execute("SELECT * from template_sets WHERE exercise_template_id = ? ORDER BY position ASC", (template_exerciss_row["id"],))
+    template_sets_rows: list[Row] = cursor.fetchall()
+    if not template_sets_rows:
+        raise HTTPException(status_code=404, detail="Template sets not found")
+    
+    set_templates: list[Set_Template] = []
+    for template_sets_row in template_sets_rows:
+        set_templates.append(convert_template_sets_row_to_template(template_sets_row))
+
+    return set_templates
+
+
+def convert_template_exercises_row_to_template(cursor: Cursor, template_exercises_row: Row):
+    exercise_row: Row = get_exercise_row(cursor, template_exercises_row["exercise_id"])
+    set_templates: list[Set_Template] = get_set_templates(cursor, template_exercises_row)
+
+    return Exercise_Template(
+        exercise_id=template_exercises_row["exercise_id"],
+        exercise_name=exercise_row["name"],
+        routine_note=template_exercises_row["routine_note"],
+        set_templates=set_templates
+    )
+
+
+def get_exercise_templates(cursor: Cursor, template_workouts_row: Row):
+    cursor.execute("SELECT * FROM template_exercises WHERE workout_template_id = ? ORDER BY position ASC", (template_workouts_row["id"],))
+    template_exercises_rows: list[Row] = cursor.fetchall()
+    if not template_exercises_rows:
+        raise HTTPException(status_code=404, detail="Template missing exercises")
+    
+    exercise_templates: list[Exercise_Template] = []
+    for template_exercises_row in template_exercises_rows:
+        exercise_templates.append(convert_template_exercises_row_to_template(cursor, template_exercises_row))
+
+    return exercise_templates
+    
+
+
+def convert_template_workouts_row_to_template(cursor: Cursor, template_workouts_row: Row):
+    exercise_templates: list[Exercise_Template] = get_exercise_templates(cursor, template_workouts_row)
+
+    return Workout_Template(
+        id=template_workouts_row["id"],
+        name=template_workouts_row["name"],
+        username=template_workouts_row["username"],
+        exercise_templates=exercise_templates
+    )
+
+
+@router.get("/templates/me/{template_id}", response_model=Workout_Template, response_model_exclude_none=True)
+def get_user_template(
+    template_id: int,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]
+):
+    cursor: Cursor = conn.cursor()
+    cursor.execute("SELECT * FROM template_workouts WHERE id = ? and username = ?", (template_id, current_user.username))
+    template_workouts_row: Row = cursor.fetchone()
+    if not template_workouts_row:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    return convert_template_workouts_row_to_template(cursor, template_workouts_row)
+
+
+@router.get("/templates/me/", response_model=list[Workout_Template], response_model_exclude_none=True)
+def get_user_templates(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]
+):
+    cursor: Cursor = conn.cursor()
+    cursor.execute("SELECT * FROM template_workouts WHERE username = ?", (current_user.username,))
+    template_workouts_rows: list[Row] = cursor.fetchall()
+
+    if not template_workouts_rows:
+        raise HTTPException(status_code=404, detail="User has no templates")
+    
+    templates: list[Workout_Template] = []
+    for template_workouts_row in template_workouts_rows:
+        templates.append(convert_template_workouts_row_to_template(cursor, template_workouts_row))
+    return templates
 
 
 @router.delete("/templates/me/{template_id}", status_code=204)
