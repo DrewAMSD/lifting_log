@@ -59,6 +59,14 @@ class Exercise_Entry(BaseModel):
     set_entries: list[Set_Entry]
 
 
+class Workout_Stats(BaseModel):
+    exercise_count: Optional[int] = None
+    sets: Optional[int] = None
+    reps: Optional[int] = None
+    volume: Optional[float] = None # lbs
+    distributions: Optional[dict] = None
+
+
 class Workout(BaseModel):
     id: Optional[int] = None
     name: str
@@ -66,11 +74,7 @@ class Workout(BaseModel):
     description: Optional[str] = ""
     datetime: str # 'YYYY-MM-DD HH:MM:SS', start of workout time
     duration: str # 'HH:MM:SS', duration of workout
-    exercise_count: Optional[int] = None
-    sets: Optional[int] = None
-    reps: Optional[int] = None
-    volume: Optional[float] = None # lbs
-    muscle_distribution: Optional[dict[str, int]] = None # [Muscle, %]
+    stats: Optional[Workout_Stats] = None
     exercise_entries: list[Exercise_Entry]
 
 

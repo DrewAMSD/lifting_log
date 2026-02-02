@@ -10,45 +10,66 @@ from backend.routers.exercises import get_exercise
 router = APIRouter()
 
 
-def get_muscle_distribution(cursor: Cursor, workout: Workout, username: str):
-    muscle_set_counts: dict[str, float] = {}
+def get_distributions(cursor: Cursor, workouts: list[Workout], username: str):
+    set_distribution: dict[str, dict[str, float]] = {}
     total_muscle_sets: float = 0.0
-    for exercise_entry in workout.exercise_entries:
-        for_workout: bool = True
-        exercise: Exercise = get_exercise(cursor, exercise_entry.exercise_id, username, for_workout)
-        
-        for primary_muscle in exercise.primary_muscles:
-            if not primary_muscle in muscle_set_counts:
-                muscle_set_counts[primary_muscle] = 1.0
-            else:
-                muscle_set_counts[primary_muscle] += 1.0
-            total_muscle_sets += 1.0
-        if exercise.secondary_muscles:
-            for secondary_muscle in exercise.secondary_muscles:
-                if not secondary_muscle in muscle_set_counts:
-                    muscle_set_counts[secondary_muscle] = 0.5
+    for workout in workouts:
+        for exercise_entry in workout.exercise_entries:
+            for_workout: bool = True
+            exercise: Exercise = get_exercise(cursor, exercise_entry.exercise_id, username, for_workout)
+            
+            for primary_muscle in exercise.primary_muscles:
+                to_add: float = 1.0 * len(exercise_entry.set_entries)
+                if not primary_muscle in set_distribution:
+                    set_distribution[primary_muscle] = {
+                        "primary": to_add,
+                        "secondary": 0.0
+                    }
                 else:
-                    muscle_set_counts[secondary_muscle] += 0.5
-                total_muscle_sets += 0.5
+                    set_distribution[primary_muscle]["primary"] += to_add
+                total_muscle_sets += to_add
+            if exercise.secondary_muscles:
+                for secondary_muscle in exercise.secondary_muscles:
+                    to_add: float = 0.5 * len(exercise_entry.set_entries)
+                    if not secondary_muscle in set_distribution:
+                        set_distribution[secondary_muscle] = {
+                            "primary": 0.0,
+                            "secondary": to_add
+                        }
+                    else:
+                        set_distribution[secondary_muscle]["secondary"] += to_add
+                    total_muscle_sets += to_add
     muscle_distribution: dict[str, int] = {}
-    for muscle,set_count in muscle_set_counts.items():
-        percentage: int = (int) (100 * set_count / total_muscle_sets)
+    for muscle,sets in set_distribution.items():
+        percentage: int = (int) (100 * (sets["primary"] + sets["secondary"]) / total_muscle_sets)
         muscle_distribution[muscle] = percentage
-    return muscle_distribution
+
+    # sort muscle_distribution by percentages
+    muscle_distribution = {m: p for m,p in sorted(muscle_distribution.items(), reverse=True, key=lambda entry: entry[1])}
+    return {
+        "set_distribution": set_distribution,
+        "muscle_distribution": muscle_distribution
+    }
 
 
-def calculate_workout_stats(cursor: Cursor, workout: Workout, username: str):
-    exercise_count: int = len(workout.exercise_entries)
-    sets: int = sum(len(exercise_entry.set_entries) for exercise_entry in workout.exercise_entries)
-    reps: int = sum((set_entry.reps if set_entry.reps is not None else 0) for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
-    volume: float = sum((set_entry.weight * set_entry.reps if set_entry.weight and set_entry.reps else 0) for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
-    muscle_distribution: dict[str, int] = get_muscle_distribution(cursor, workout, username)
+def get_stats(cursor: Cursor, workouts: list[Workout], username: str):
+    exercise_count: int = sum(len(workout.exercise_entries) for workout in workouts)
+    sets: int = sum(len(exercise_entry.set_entries) for workout in workouts for exercise_entry in workout.exercise_entries)
+    reps: int = sum((set_entry.reps if set_entry.reps is not None else 0) for workout in workouts for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
+    volume: float = sum((set_entry.weight * set_entry.reps if set_entry.weight and set_entry.reps else 0) for workout in workouts for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
+    distributions: dict = get_distributions(cursor, workouts, username)
 
-    workout.muscle_distribution = muscle_distribution
-    workout.exercise_count = exercise_count
-    workout.sets = sets
-    workout.reps = reps
-    workout.volume = volume
+    return Workout_Stats(
+        exercise_count=exercise_count,
+        sets=sets,
+        reps=reps,
+        volume=volume,
+        distributions=distributions
+    )
+
+
+def get_workout_stats(cursor: Cursor, workout: Workout, username: str):
+    return get_stats(cursor, [workout], username)
 
 
 def invalid_set_entry(exercise_row: Row, set_entry: Set_Entry):
@@ -134,7 +155,7 @@ def create_workout(
         print(e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-    calculate_workout_stats(cursor, workout, current_user.username)
+    workout.stats = get_workout_stats(cursor, workout, current_user.username)
     return workout
 
 
@@ -190,7 +211,7 @@ def convert_workouts_row_to_workout(cursor: Cursor, workouts_row: Row, username:
         duration=workouts_row["duration"],
         exercise_entries=exercise_entries
     )
-    calculate_workout_stats(cursor, workout, username)
+    workout.stats = get_workout_stats(cursor, workout, username)
     return workout
 
 
@@ -248,11 +269,12 @@ def update_user_workout(
 
     try:
         cursor.execute("""
-                       UPDATE workouts
-                       SET name = ?, description = ?, dt = ?, duration = ?
-                       WHERE id = ?
-                       """,
-                       (workout.name, workout.description, workout.datetime, workout.duration, workout_id))
+            UPDATE workouts
+            SET name = ?, description = ?, dt = ?, duration = ?
+            WHERE id = ?
+            """,
+            (workout.name, workout.description, workout.datetime, workout.duration, workout_id)
+        )
 
         cursor.execute("DELETE FROM workout_exercise_entries WHERE workout_id = ?", (workout_id,))
 
@@ -267,7 +289,7 @@ def update_user_workout(
         print(e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
     
-    calculate_workout_stats(cursor, workout, current_user.username)
+    workout.stats = get_workout_stats(cursor, workout, current_user.username)
     return workout
 
 
@@ -284,3 +306,7 @@ def delete_user_workout(
     
     cursor.execute("DELETE FROM workouts WHERE id = ?", (workout_id,))
     conn.commit()
+
+
+# @router.get("/workouts/me/stats/{}", response_model=Workout_Stats)
+# def get_
