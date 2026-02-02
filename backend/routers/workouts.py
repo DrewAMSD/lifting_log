@@ -308,5 +308,4 @@ def delete_user_workout(
     conn.commit()
 
 
-# @router.get("/workouts/me/stats/{}", response_model=Workout_Stats)
-# def get_
+# TODO: add getting workout stat history
