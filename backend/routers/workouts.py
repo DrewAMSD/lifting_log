@@ -106,7 +106,7 @@ def insert_workout_set_entry(cursor: Cursor, set_pos: int, set_entry: Set_Entry,
 
 def validate_workout(workout: Workout):
     if not is_valid_timestamp(workout.date, is_date=True):
-        raise HTTPException(status_code=400, detail="Incorrectly formatted datetime")
+        raise HTTPException(status_code=400, detail="Incorrectly formatted date")
     if not is_valid_timestamp(workout.start_time, is_time=True):
         raise HTTPException(status_code=400, detail="Incorrectly formatted start_time")
     if not is_valid_timestamp(workout.duration, is_time=True):

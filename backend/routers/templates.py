@@ -27,7 +27,7 @@ def validate_set_template(set_template: Set_Template, exercise_row: Row):
         if not exercise_row["time"]:
             raise HTTPException(status_code=400, detail="Set template has time range when exercise does not support time")
         
-        if not (is_valid_timestamp(set_template.time_range_start, is_time=True) or is_valid_timestamp(set_template.time_range_end, is_time=True)):
+        if not (is_valid_timestamp(set_template.time_range_start, is_time=True) and is_valid_timestamp(set_template.time_range_end, is_time=True)):
             raise HTTPException(status_code=400, detail="Set template has incorrectly formatted time range")
 
 
