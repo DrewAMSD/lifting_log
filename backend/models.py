@@ -72,7 +72,8 @@ class Workout(BaseModel):
     name: str
     username: Optional[str] = None
     description: Optional[str] = ""
-    datetime: str # 'YYYY-MM-DD HH:MM:SS', start of workout time
+    date: int # 'YYYYMMDD'
+    start_time: str # 'HH:MM:SS' time of day when workout started
     duration: str # 'HH:MM:SS', duration of workout
     stats: Optional[Workout_Stats] = None
     exercise_entries: list[Exercise_Entry]

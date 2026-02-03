@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 import sqlite3
 from datetime import datetime
 
@@ -18,9 +19,12 @@ def get_db():
         conn.close()
 
 
-def is_valid_timestamp(timestamp: str, format: str):
-    try:
-        datetime.strptime(timestamp, format)
-        return True
-    except ValueError:
-        return False
+def is_valid_timestamp(timestamp: str, is_date: bool = False, is_time: bool = False):
+    # if is_date:
+    #     if len(is_date) != 8:
+    #         raise HTTPException(status_code=400, detail="")
+        
+    # if is_time:
+    #     pass
+    
+    return True

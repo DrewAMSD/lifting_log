@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Annotated
 from sqlite3 import Connection, Cursor, Row
+from datetime import datetime, timedelta
 from backend.models import *
 from backend.database.db import get_db, is_valid_timestamp
 from backend.auth import get_current_active_user
@@ -98,15 +99,17 @@ def insert_workout_exercise_entry(cursor: Cursor, pos: int, exercise_entry: Exer
 def insert_workout_set_entry(cursor: Cursor, set_pos: int, set_entry: Set_Entry, exercise_entry_id: int, exercise_row: Row):
     if (invalid_set_entry(exercise_row, set_entry)):
         raise HTTPException(status_code=400, detail="Invalid set entries")
-    if (set_entry.time and not is_valid_timestamp(set_entry.time, "%H:%M:%S")):
+    if (set_entry.time and not is_valid_timestamp(set_entry.time, is_time=True)):
         raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
     cursor.execute("INSERT INTO workout_set_entries (exercise_entry_id, weight, reps, t, position) VALUES (?, ?, ?, ?, ?)", (exercise_entry_id, set_entry.weight, set_entry.reps, set_entry.time, set_pos))
 
 
 def validate_workout(workout: Workout):
-    if not is_valid_timestamp(workout.datetime, "%Y-%m-%d %H:%M:%S"):
+    if not is_valid_timestamp(workout.date, is_date=True):
         raise HTTPException(status_code=400, detail="Incorrectly formatted datetime")
-    if not is_valid_timestamp(workout.duration, "%H:%M:%S"):
+    if not is_valid_timestamp(workout.start_time, is_time=True):
+        raise HTTPException(status_code=400, detail="Incorrectly formatted start_time")
+    if not is_valid_timestamp(workout.duration, is_time=True):
         raise HTTPException(status_code=400, detail="Incorrectly formatted duration")
 
     if len(workout.exercise_entries) == 0:
@@ -141,7 +144,7 @@ def create_workout(
     validate_workout(workout)
 
     try:
-        cursor.execute("INSERT INTO workouts (name, username, description, dt, duration) VALUES (?, ?, ?, ?, ?)", (workout.name, current_user.username, workout.description, workout.datetime, workout.duration))
+        cursor.execute("INSERT INTO workouts (name, username, description, workout_date, start_time, duration) VALUES (?, ?, ?, ?, ?, ?)", (workout.name, current_user.username, workout.description, workout.date, workout.start_time, workout.duration))
         workout.id = cursor.lastrowid
 
         insert_workout_exercise_and_set_entries(cursor, workout)
@@ -207,12 +210,41 @@ def convert_workouts_row_to_workout(cursor: Cursor, workouts_row: Row, username:
         name=workouts_row["name"],
         username=workouts_row["username"],
         description=workouts_row["description"],
-        datetime=workouts_row["dt"],
+        date=workouts_row["workout_date"],
+        start_time=workouts_row["start_time"],
         duration=workouts_row["duration"],
         exercise_entries=exercise_entries
     )
     workout.stats = get_workout_stats(cursor, workout, username)
     return workout
+
+
+def get_user_workouts_by_date(cursor: Cursor, username: str, start_date: int = None, end_date: int = None):
+    if start_date:
+        if not is_valid_timestamp(start_date, is_date=True):
+            raise HTTPException(status_code=400, detail="Invalid start date")
+    if end_date:
+        if not is_valid_timestamp(end_date, is_date=True):
+            raise HTTPException(status_code=400, detail="Invalid end date")
+    
+    if not start_date and not end_date:
+        cursor.execute("SELECT * FROM workouts WHERE username = ?", (username,))
+    elif start_date and not end_date:
+        cursor.execute("SELECT * FROM workouts WHERE username = ? AND workout_date >= ?", (username, start_date))
+    elif not start_date and end_date:
+        cursor.execute("SELECT * FROM workouts WHERE username = ? AND workout_date <= ?", (username, end_date))
+    else:
+        cursor.execute("SELECT * FROM workouts WHERE username = ? AND workout_date >= ? AND workout_date <= ?", (username, start_date, end_date))
+    
+    workouts_rows: list[Row] = cursor.fetchall()
+    if not workouts_rows:
+        return []
+    
+    workouts: list[Workout] = []
+    for workouts_row in workouts_rows:
+        workouts.append(convert_workouts_row_to_workout(cursor, workouts_row, username))
+
+    return workouts
 
 
 @router.get("/workouts/me/", response_model=list[Workout], response_model_exclude_none=True)
@@ -221,17 +253,7 @@ def get_user_workouts(
     conn: Annotated[Connection, Depends(get_db)]
 ):
     cursor: Cursor = conn.cursor()
-    
-    cursor.execute("SELECT * FROM workouts WHERE username = ?", (current_user.username,))
-    workouts_rows: list[Row] = cursor.fetchall()
-    if not workouts_rows:
-        return []
-    
-    workouts: list[Workout] = []
-    for workouts_row in workouts_rows:
-        workouts.append(convert_workouts_row_to_workout(cursor, workouts_row, current_user.username))
-
-    return workouts
+    return get_user_workouts_by_date(cursor, current_user.username, start_date=None, end_date=None)
 
 
 @router.get("/workouts/me/{workout_id}", response_model=Workout, response_model_exclude_none=True)
@@ -308,4 +330,9 @@ def delete_user_workout(
     conn.commit()
 
 
-# TODO: add getting workout stat history
+# @router.get("/workouters/me/stats/this-week")
+# def get_user_stats_this_week(
+#     current_user: Annotated[User, Depends(get_current_active_user)],
+#     conn: Annotated[Connection, Depends(get_db)]
+# ):
+#     cursor: Cursor = conn.cursor()

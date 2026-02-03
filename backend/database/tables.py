@@ -120,8 +120,9 @@ def create_workout_tables():
         name TEXT NOT NULL,
         username TEXT NOT NULL,
         description TEXT NOT NULL,
-        dt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        duration TIME NOT NULL
+        workout_date INTEGER NOT NULL,
+        start_time TEXT NOT NULL,
+        duration TEXT NOT NULL
     )
     """)
 

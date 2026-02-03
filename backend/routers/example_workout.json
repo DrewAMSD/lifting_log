@@ -1,7 +1,8 @@
 {
   "name": "Back/Chest",
   "description": "example description",
-  "datetime": "2025-01-23 19:41:29",
+  "date": "20250123",
+  "start_time": "19:41:29",
   "duration": "01:15:42",
   "exercise_entries": [
     {
