@@ -20,6 +20,13 @@ def get_db():
         conn.close()
 
 
+def get_YYYYMMDD(date: int):
+    year: int = int (date / 10000)
+    month: int = int((date / 100) % 100)
+    day: int = int(date % 100)
+    return year, month, day
+
+
 def is_valid_timestamp(timestamp: Union[int, str], is_date: bool = False, is_time: bool = False):
     if is_date:
         if not isinstance(timestamp, int):
@@ -27,11 +34,9 @@ def is_valid_timestamp(timestamp: Union[int, str], is_date: bool = False, is_tim
         if timestamp < 0:
             return False
         
-        year: int = int (timestamp / 10000)
-        month: int = int((timestamp / 100) % 100)
-        day: int = int(timestamp % 100)
+        year, month, day = get_YYYYMMDD(timestamp)
         print(f"{year}-{month}-{day}")
-        if year < 2000 or year > 10000:
+        if year <= 1752 or year > 10000:
             return False
         if month <= 0 or month > 12:
             return False
@@ -51,3 +56,81 @@ def is_valid_timestamp(timestamp: Union[int, str], is_date: bool = False, is_tim
                 return False
     
     return True
+
+
+def get_year_code(year: int):
+    yy: int = year % 100
+    year_code: int = (yy + (yy // 4)) % 7
+    return year_code
+
+
+def get_month_code(month: int):
+    match month:
+        case 1: return 0
+        case 2: return 3
+        case 3: return 3
+        case 4: return 6
+        case 5: return 1
+        case 6: return 4
+        case 7: return 6
+        case 8: return 2
+        case 9: return 5
+        case 10: return 0
+        case 11: return 3
+        case 12: return 5
+
+        case _:
+            return -1
+    return -1
+
+
+def get_century_code(year: int):
+    centuries_since_1700: int = (year - 1700) // 100
+    mod: int = centuries_since_1700 % 4
+    if mod == 0:
+        return 4
+    if mod == 1:
+        return 2
+    if mod == 2:
+        return 0
+    if mod == 3:
+        return 6
+    
+    return -1
+
+
+def get_leap_year_modifier(year: int, month: int):
+    if month > 2:
+        return 0
+    if year % 4 == 0:
+        if year % 100 != 0:
+            return 1
+        elif year % 400 == 0:
+            return 1
+     
+    return 0
+
+
+def get_day_of_the_week(date: int):
+    if not is_valid_timestamp(date, is_date=True):
+        return -1
+    
+    year, month, day = get_YYYYMMDD(date)
+
+    if year <= 1752: # change from julian to gregorian calendar, method only works for gregorian calendar
+        return -1
+    
+    year_code: int = get_year_code(year)
+    month_code: int = get_month_code(month)
+    century_code: int = get_century_code(year)
+    date_number: int = day
+    leap_year_modifier: int = get_leap_year_modifier(year, month)
+    days_in_a_week: int = 7
+    
+    if year_code == -1 or month_code == -1 or century_code == -1 or date_number == -1 or leap_year_modifier == -1:
+        return -1
+    
+    print(f"({year_code}+{month_code}+{century_code}+{date_number}-{leap_year_modifier})%{days_in_a_week}")
+    # 0-6, 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    day_of_week: int = (year_code + month_code + century_code + date_number - leap_year_modifier) % days_in_a_week
+    return day_of_week
