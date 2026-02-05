@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Annotated
 from sqlite3 import Connection, Cursor, Row
-from datetime import datetime, timedelta
+import datetime
 from backend.models import *
-from backend.database.db import get_db, is_valid_timestamp
+from backend.database.db import *
 from backend.auth import get_current_active_user
 from backend.routers.exercises import get_exercise
 
@@ -11,7 +11,7 @@ from backend.routers.exercises import get_exercise
 router = APIRouter()
 
 
-def get_distributions(cursor: Cursor, workouts: list[Workout], username: str):
+def get_distributions(cursor: Cursor, workouts: list[Workout], username: str = None):
     set_distribution: dict[str, dict[str, float]] = {}
     total_muscle_sets: float = 0.0
     for workout in workouts:
@@ -53,7 +53,7 @@ def get_distributions(cursor: Cursor, workouts: list[Workout], username: str):
     }
 
 
-def get_stats(cursor: Cursor, workouts: list[Workout], username: str):
+def get_stats(cursor: Cursor, workouts: list[Workout], username: str = None):
     exercise_count: int = sum(len(workout.exercise_entries) for workout in workouts)
     sets: int = sum(len(exercise_entry.set_entries) for workout in workouts for exercise_entry in workout.exercise_entries)
     reps: int = sum((set_entry.reps if set_entry.reps is not None else 0) for workout in workouts for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
@@ -69,7 +69,7 @@ def get_stats(cursor: Cursor, workouts: list[Workout], username: str):
     )
 
 
-def get_workout_stats(cursor: Cursor, workout: Workout, username: str):
+def get_workout_stats(cursor: Cursor, workout: Workout, username: str = None):
     return get_stats(cursor, [workout], username)
 
 
@@ -330,9 +330,52 @@ def delete_user_workout(
     conn.commit()
 
 
-# @router.get("/workouters/me/stats/this-week")
-# def get_user_stats_this_week(
-#     current_user: Annotated[User, Depends(get_current_active_user)],
-#     conn: Annotated[Connection, Depends(get_db)]
-# ):
-#     cursor: Cursor = conn.cursor()
+@router.get("/workouts/me/stats/this-week", response_model=Workout_Stats)
+def get_user_stats_this_week(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]
+):
+    cursor: Cursor = conn.cursor()
+
+    date: datetime.date = datetime.date.today()
+    day_of_week: int = get_day_of_the_week(int(date.strftime("%Y%m%d")))
+    start_of_week: datetime.date = date - datetime.timedelta(days=day_of_week)
+    start_of_week_int: int = int(start_of_week.strftime("%Y%m%d"))
+
+    workouts: list[Workout] = get_user_workouts_by_date(cursor, current_user.username, start_date=start_of_week_int)
+
+    stats: Workout_Stats = get_stats(cursor, workouts, current_user.username)
+    return stats
+
+
+@router.get("/workouts/me/stats/this-month", response_model=Workout_Stats)
+def get_user_stats_this_month(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]
+):
+    cursor: Cursor = conn.cursor()
+
+    date: int = get_date_today()
+    start_of_month = date - get_day(date) + 1
+
+    workouts: list[Workout] = get_user_workouts_by_date(cursor, current_user.username, start_date=start_of_month)
+
+    stats: Workout_Stats = get_stats(cursor, workouts, current_user.username)
+    return stats
+
+
+@router.get("/workouts/me/stats/this-year", response_model=Workout_Stats)
+def get_user_stats_this_month(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    conn: Annotated[Connection, Depends(get_db)]
+):
+    cursor: Cursor = conn.cursor()
+
+    date: int = 20251128
+    start_of_year: int = date - create_date(month=get_month(date)-1,day=get_day(date)-1)
+    print(start_of_year)
+
+    workouts: list[Workout] = get_user_workouts_by_date(cursor, current_user.username, start_date=start_of_year)
+
+    stats: Workout_Stats = get_stats(cursor, workouts, current_user.username)
+    return stats

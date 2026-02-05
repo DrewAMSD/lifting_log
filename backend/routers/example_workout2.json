@@ -1,0 +1,51 @@
+{
+  "name": "Pull",
+  "description": "example description",
+  "date": 20260207,
+  "start_time": "19:41:29",
+  "duration": "01:15:42",
+  "exercise_entries": [
+    {
+      "exercise_id": 24,
+      "set_entries": [
+        {
+          "weight": 30,
+          "reps": 5
+        },
+        {
+          "weight": 30,
+          "reps": 5
+        },
+        {
+          "weight": 30,
+          "reps": 5
+        }
+      ]
+    },
+    {
+      "exercise_id": 20,
+      "set_entries": [
+        {
+          "reps": 9
+        },
+        {
+          "reps": 7
+        },
+        {
+          "reps": 6
+        }
+      ]
+    },
+     {
+      "exercise_id": 26,
+      "set_entries": [
+        {
+          "time": "00:02:01"
+        },
+        {
+          "time": "00:01:33"
+        }
+      ]
+    }
+  ]
+}

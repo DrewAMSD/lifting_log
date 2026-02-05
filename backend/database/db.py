@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 import sqlite3
 from typing import Union
-from datetime import datetime
+import datetime
 
 
 def get_db_path():
@@ -20,10 +20,33 @@ def get_db():
         conn.close()
 
 
+def create_date(year: int = 0, month: int = 0, day: int = 0):
+    date: int = int( (year * 10000) + (month * 100) + day )
+    return date
+
+
+def get_date_today():
+    today: datetime.date = datetime.date.today()
+    date: int = int(today.strftime("%Y%m%d"))
+    return date
+
+
+def get_year(date: int):
+    return int(date // 10000)
+
+
+def get_month(date: int):
+    return int((date // 100) % 100)
+
+
+def get_day(date: int):
+    return int(date % 100)
+
+
 def get_YYYYMMDD(date: int):
-    year: int = int (date / 10000)
-    month: int = int((date / 100) % 100)
-    day: int = int(date % 100)
+    year: int = get_year(date)
+    month: int = get_month(date)
+    day: int = get_day(date)
     return year, month, day
 
 
@@ -35,7 +58,6 @@ def is_valid_timestamp(timestamp: Union[int, str], is_date: bool = False, is_tim
             return False
         
         year, month, day = get_YYYYMMDD(timestamp)
-        print(f"{year}-{month}-{day}")
         if year <= 1752 or year > 10000:
             return False
         if month <= 0 or month > 12:
@@ -130,7 +152,6 @@ def get_day_of_the_week(date: int):
     if year_code == -1 or month_code == -1 or century_code == -1 or date_number == -1 or leap_year_modifier == -1:
         return -1
     
-    print(f"({year_code}+{month_code}+{century_code}+{date_number}-{leap_year_modifier})%{days_in_a_week}")
     # 0-6, 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     day_of_week: int = (year_code + month_code + century_code + date_number - leap_year_modifier) % days_in_a_week
     return day_of_week
