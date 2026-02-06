@@ -3,7 +3,8 @@ from typing import Annotated
 from sqlite3 import Connection, Cursor, Row
 import datetime
 from backend.models import *
-from backend.database.db import *
+from backend.time import *
+from backend.database.db import get_db
 from backend.auth import get_current_active_user
 from backend.routers.exercises import get_exercise
 
