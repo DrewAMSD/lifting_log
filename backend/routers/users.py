@@ -15,7 +15,7 @@ router = APIRouter()
 @router.post("/users/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
-    ) -> Token:
+) -> Token:
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -31,7 +31,7 @@ async def login_for_access_token(
 
 
 @router.post("/users/", response_model=UsernameResponse)
-def create_user(user: CreateUser, conn: Connection = Depends(get_db)):
+def create_user(user: CreateUser, conn: Connection = Depends(get_db)) -> UsernameResponse:
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ?", (user.username,))
     if cursor.fetchone():
@@ -49,5 +49,5 @@ def create_user(user: CreateUser, conn: Connection = Depends(get_db)):
 @router.get("/users/me", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
-    ):
+) -> User:
     return current_user

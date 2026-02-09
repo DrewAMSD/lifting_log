@@ -27,10 +27,10 @@ app.add_middleware(
 
 
 @app.get("/")
-def root_message():
+def root_message() -> dict:
     return {"message": "Hello World!"}
 
 
 @app.get("/favicon.ico")
-def root_icon():
+def root_icon() -> FileResponse:
     return FileResponse("backend/favicon.ico")

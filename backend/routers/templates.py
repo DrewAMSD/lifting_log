@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
 from sqlite3 import Connection, Cursor, Row
-from backend.database.db import get_db, is_valid_timestamp
+from backend.database.db import get_db
+from backend.time import is_valid_timestamp
 from backend.auth import get_current_active_user
 from backend.models import *
 from backend.routers.exercises import get_exercise
@@ -10,7 +11,7 @@ from backend.routers.exercises import get_exercise
 router = APIRouter()
 
 
-def validate_workout_template(template: Workout_Template):
+def validate_workout_template(template: Workout_Template) -> None:
     if len(template.name) == 0:
         raise HTTPException(status_code=400, detail="Unnamed template")
     
@@ -18,7 +19,7 @@ def validate_workout_template(template: Workout_Template):
         raise HTTPException(status_code=400, detail="Template missing exercises")
 
 
-def validate_set_template(set_template: Set_Template, exercise_row: Row):
+def validate_set_template(set_template: Set_Template, exercise_row: Row) -> None:
     if set_template.reps or (set_template.rep_range_start and set_template.rep_range_end):
         if not exercise_row["reps"]:
             raise HTTPException(status_code=400, detail="Set template has reps/rep range when exercise does not support reps")
@@ -31,7 +32,7 @@ def validate_set_template(set_template: Set_Template, exercise_row: Row):
             raise HTTPException(status_code=400, detail="Set template has incorrectly formatted time range")
 
 
-def insert_template_workout(cursor: Cursor, template: Workout_Template, username: str):
+def insert_template_workout(cursor: Cursor, template: Workout_Template, username: str) -> int:
     cursor.execute("""
         INSERT INTO template_workouts
         (name, username)
@@ -40,7 +41,7 @@ def insert_template_workout(cursor: Cursor, template: Workout_Template, username
     return cursor.lastrowid
 
 
-def get_exercise_row(cursor: Cursor, exercise_id: int):
+def get_exercise_row(cursor: Cursor, exercise_id: int) -> Row:
     cursor.execute("SELECT * FROM exercises WHERE id = ?",(exercise_id,))
     exercise_row: Row = cursor.fetchone()
     if not exercise_row:
@@ -48,7 +49,7 @@ def get_exercise_row(cursor: Cursor, exercise_id: int):
     return exercise_row
 
 
-def insert_template_exercise(cursor: Cursor, pos: int, exercise_template: Exercise_Template, template_id: int):
+def insert_template_exercise(cursor: Cursor, pos: int, exercise_template: Exercise_Template, template_id: int) -> int:
     cursor.execute("""
                 INSERT INTO template_exercises
                 (workout_template_id, exercise_id, routine_note, position)
@@ -57,7 +58,7 @@ def insert_template_exercise(cursor: Cursor, pos: int, exercise_template: Exerci
     return cursor.lastrowid
 
 
-def insert_template_set(cursor: Cursor, set_pos: int, set_template: Set_Template, exercise_template_id: int):
+def insert_template_set(cursor: Cursor, set_pos: int, set_template: Set_Template, exercise_template_id: int) -> None:
     cursor.execute("""
         INSERT INTO template_sets
         (exercise_template_id, reps, rep_range_start, rep_range_end, time_range_start, time_range_end, position)
@@ -65,7 +66,7 @@ def insert_template_set(cursor: Cursor, set_pos: int, set_template: Set_Template
     """, (exercise_template_id, set_template.reps, set_template.rep_range_start, set_template.rep_range_end, set_template.time_range_start, set_template.time_range_end, set_pos))
 
 
-def insert_template_exercises_and_sets(cursor: Cursor, template: Workout_Template):
+def insert_template_exercises_and_sets(cursor: Cursor, template: Workout_Template) -> None:
     for pos,exercise_template in enumerate(template.exercise_templates):
         exercise_row: Row = get_exercise_row(cursor, exercise_template.exercise_id)
         
@@ -86,7 +87,7 @@ def create_user_template(
     template: Workout_Template,
     current_user: Annotated[User, Depends(get_current_active_user)],
     conn: Annotated[Connection, Depends(get_db)]
-):
+) -> Workout_Template:
     cursor: Cursor = conn.cursor()
     cursor.execute("SELECT * FROM template_workouts WHERE name = ? AND username = ?",(template.name, current_user.username))
     if cursor.fetchone():
@@ -112,7 +113,7 @@ def create_user_template(
     return template
 
 
-def convert_template_sets_row_to_template(template_sets_row: Row):
+def convert_template_sets_row_to_template(template_sets_row: Row) -> Set_Template:
     return Set_Template(
         reps=template_sets_row["reps"],
         rep_range_start=template_sets_row["rep_range_start"],
@@ -122,7 +123,7 @@ def convert_template_sets_row_to_template(template_sets_row: Row):
     )
 
 
-def get_set_templates(cursor: Cursor, template_exerciss_row: Row):
+def get_set_templates(cursor: Cursor, template_exerciss_row: Row) -> list[Set_Template]:
     cursor.execute("SELECT * from template_sets WHERE exercise_template_id = ? ORDER BY position ASC", (template_exerciss_row["id"],))
     template_sets_rows: list[Row] = cursor.fetchall()
     if not template_sets_rows:
@@ -135,7 +136,7 @@ def get_set_templates(cursor: Cursor, template_exerciss_row: Row):
     return set_templates
 
 
-def convert_template_exercises_row_to_template(cursor: Cursor, template_exercises_row: Row):
+def convert_template_exercises_row_to_template(cursor: Cursor, template_exercises_row: Row) -> Exercise_Template:
     exercise_row: Row = get_exercise_row(cursor, template_exercises_row["exercise_id"])
     set_templates: list[Set_Template] = get_set_templates(cursor, template_exercises_row)
 
@@ -147,7 +148,7 @@ def convert_template_exercises_row_to_template(cursor: Cursor, template_exercise
     )
 
 
-def get_exercise_templates(cursor: Cursor, template_workouts_row: Row):
+def get_exercise_templates(cursor: Cursor, template_workouts_row: Row) -> list[Exercise_Template]:
     cursor.execute("SELECT * FROM template_exercises WHERE workout_template_id = ? ORDER BY position ASC", (template_workouts_row["id"],))
     template_exercises_rows: list[Row] = cursor.fetchall()
     if not template_exercises_rows:
@@ -158,10 +159,9 @@ def get_exercise_templates(cursor: Cursor, template_workouts_row: Row):
         exercise_templates.append(convert_template_exercises_row_to_template(cursor, template_exercises_row))
 
     return exercise_templates
-    
 
 
-def convert_template_workouts_row_to_template(cursor: Cursor, template_workouts_row: Row):
+def convert_template_workouts_row_to_template(cursor: Cursor, template_workouts_row: Row) -> Workout_Template:
     exercise_templates: list[Exercise_Template] = get_exercise_templates(cursor, template_workouts_row)
 
     return Workout_Template(
@@ -176,7 +176,7 @@ def convert_template_workouts_row_to_template(cursor: Cursor, template_workouts_
 def get_user_templates(
     current_user: Annotated[User, Depends(get_current_active_user)],
     conn: Annotated[Connection, Depends(get_db)]
-):
+) -> list[Workout_Template]:
     cursor: Cursor = conn.cursor()
     cursor.execute("SELECT * FROM template_workouts WHERE username = ?", (current_user.username,))
     template_workouts_rows: list[Row] = cursor.fetchall()
@@ -195,7 +195,7 @@ def get_user_template(
     template_id: int,
     current_user: Annotated[User, Depends(get_current_active_user)],
     conn: Annotated[Connection, Depends(get_db)]
-):
+) -> Workout_Template:
     cursor: Cursor = conn.cursor()
     cursor.execute("SELECT * FROM template_workouts WHERE id = ? and username = ?", (template_id, current_user.username))
     template_workouts_row: Row = cursor.fetchone()
@@ -211,7 +211,7 @@ def update_user_template(
     template: Workout_Template,
     current_user: Annotated[User, Depends(get_current_active_user)],
     conn: Annotated[Connection, Depends(get_db)]
-):
+) -> Workout_Template:
     cursor: Cursor = conn.cursor()
     cursor.execute("SELECT * FROM template_workouts WHERE id = ? AND username = ?", (template_id, current_user.username))
     if not cursor.fetchone():
@@ -250,7 +250,7 @@ def delete_user_template(
     template_id: int,
     current_user: Annotated[User, Depends(get_current_active_user)],
     conn: Annotated[Connection, Depends(get_db)]
-):
+) -> None:
     cursor: Cursor = conn.cursor()
     cursor.execute("SELECT * FROM template_workouts WHERE id = ? AND username = ?", (template_id, current_user.username))
     if not cursor.fetchone():

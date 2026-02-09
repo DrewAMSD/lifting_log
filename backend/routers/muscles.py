@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from typing import List
 import sqlite3
 from sqlite3 import Connection, Cursor
 from backend.database.db import *
@@ -8,8 +7,8 @@ from backend.database.db import *
 router = APIRouter()
 
 
-@router.get("/muscles/defaults", response_model=List[str])
-def get_muscles(conn: Connection = Depends(get_db)):
+@router.get("/muscles/defaults", response_model=list[str])
+def get_muscles(conn: Connection = Depends(get_db)) -> list[str]:
     cursor: Cursor = conn.cursor()
     cursor.execute("SELECT * FROM muscles")
     muscles_rows = cursor.fetchall()

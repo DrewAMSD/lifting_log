@@ -2,37 +2,37 @@ import datetime
 from typing import Union
 
 
-def create_date(year: int = 0, month: int = 0, day: int = 0):
+def create_date(year: int = 0, month: int = 0, day: int = 0) -> int:
     date: int = int( (year * 10000) + (month * 100) + day )
     return date
 
 
-def get_date_today():
+def get_date_today() -> int:
     today: datetime.date = datetime.date.today()
     date: int = int(today.strftime("%Y%m%d"))
     return date
 # above here should probably be refactored, plus parts of workout router
 
-def get_year(date: int):
+def get_year(date: int) -> int:
     return int(date // 10000)
 
 
-def get_month(date: int):
+def get_month(date: int) -> int:
     return int((date // 100) % 100)
 
 
-def get_day(date: int):
+def get_day(date: int) -> int:
     return int(date % 100)
 
 
-def get_YYYYMMDD(date: int):
+def get_YYYYMMDD(date: int) -> tuple[int]:
     year: int = get_year(date)
     month: int = get_month(date)
     day: int = get_day(date)
     return year, month, day
 
 
-def is_valid_timestamp(timestamp: Union[int, str], is_date: bool = False, is_time: bool = False):
+def is_valid_timestamp(timestamp: Union[int, str], is_date: bool = False, is_time: bool = False) -> bool:
     if is_date:
         if not isinstance(timestamp, int):
             return False
@@ -62,13 +62,13 @@ def is_valid_timestamp(timestamp: Union[int, str], is_date: bool = False, is_tim
     return True
 
 
-def get_year_code(year: int):
+def get_year_code(year: int) -> int:
     yy: int = year % 100
     year_code: int = (yy + (yy // 4)) % 7
     return year_code
 
 
-def get_month_code(month: int):
+def get_month_code(month: int) -> int:
     match month:
         case 1: return 0
         case 2: return 3
@@ -88,7 +88,7 @@ def get_month_code(month: int):
     return -1
 
 
-def get_century_code(year: int):
+def get_century_code(year: int) -> int:
     centuries_since_1700: int = (year - 1700) // 100
     mod: int = centuries_since_1700 % 4
     if mod == 0:
@@ -103,7 +103,7 @@ def get_century_code(year: int):
     return -1
 
 
-def get_leap_year_modifier(year: int, month: int):
+def get_leap_year_modifier(year: int, month: int) -> int:
     if month > 2:
         return 0
     if year % 4 == 0:
@@ -115,7 +115,7 @@ def get_leap_year_modifier(year: int, month: int):
     return 0
 
 
-def get_day_of_the_week(date: int):
+def get_day_of_the_week(date: int) -> int:
     if not is_valid_timestamp(date, is_date=True):
         return -1
     
