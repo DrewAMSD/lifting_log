@@ -11,7 +11,7 @@ def get_date_today():
     today: datetime.date = datetime.date.today()
     date: int = int(today.strftime("%Y%m%d"))
     return date
-
+# above here should probably be refactored, plus parts of workout router
 
 def get_year(date: int):
     return int(date // 10000)
