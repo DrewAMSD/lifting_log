@@ -55,10 +55,27 @@ def get_distributions(cursor: Cursor, workouts: list[Workout], username: str = N
 
 
 def get_stats(cursor: Cursor, workouts: list[Workout], username: str = None) -> Workout_Stats:
-    exercise_count: int = sum(len(workout.exercise_entries) for workout in workouts)
-    sets: int = sum(len(exercise_entry.set_entries) for workout in workouts for exercise_entry in workout.exercise_entries)
-    reps: int = sum((set_entry.reps if set_entry.reps is not None else 0) for workout in workouts for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
-    volume: float = sum((set_entry.weight * set_entry.reps if set_entry.weight and set_entry.reps else 0) for workout in workouts for exercise_entry in workout.exercise_entries for set_entry in exercise_entry.set_entries)
+    exercise_count: int = sum(
+        len(workout.exercise_entries) 
+        for workout in workouts
+    )
+    sets: int = sum(
+        len(exercise_entry.set_entries) 
+        for workout in workouts 
+        for exercise_entry in workout.exercise_entries
+    )
+    reps: int = sum(
+        (set_entry.reps if set_entry.reps is not None else 0) 
+        for workout in workouts 
+        for exercise_entry in workout.exercise_entries 
+        for set_entry in exercise_entry.set_entries
+    )
+    volume: float = sum(
+        (set_entry.weight * set_entry.reps if set_entry.weight and set_entry.reps else 0) 
+        for workout in workouts 
+        for exercise_entry in workout.exercise_entries 
+        for set_entry in exercise_entry.set_entries
+    )
     distributions: dict = get_distributions(cursor, workouts, username)
 
     return Workout_Stats(
