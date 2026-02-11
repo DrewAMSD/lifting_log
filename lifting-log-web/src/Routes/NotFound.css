@@ -1,0 +1,14 @@
+.not-found {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 30%;
+}
+
+p {
+    font-size: 4vh;
+    margin: 4px;
+}
