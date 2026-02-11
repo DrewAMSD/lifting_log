@@ -8,16 +8,16 @@ import NotFound from './Routes/NotFound';
 function App() {
   return (
     <>
-      <div className="router">
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home/>}/>
+          <div className="routes-container">
+            <Routes>
+              <Route path="/" element={<Home/>}/>
 
-            <Route path="*" element={<NotFound />}/>
+              <Route path="*" element={<NotFound />}/>
             </Routes>
+          </div>
+            <Navbar />
         </BrowserRouter>
-      </div>
-      <Navbar />
     </>
   );
 }

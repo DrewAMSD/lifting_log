@@ -1,9 +1,10 @@
-.router {
-    display: flex;
+.routes-container {
     height: 93vh;
     width: 100vw;
-    flex-direction: column;
-    align-items: center;
     color: white;
     background-color: rgb(21, 21, 44);
+    /* Below this can be deleted at any time if I want to not have mandatory flexed routes */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
