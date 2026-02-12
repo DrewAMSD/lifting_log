@@ -1,0 +1,17 @@
+form {
+    margin-top: 30%;
+    gap: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.message {
+    margin-top: 10px;
+    font-size: 15px;
+}
