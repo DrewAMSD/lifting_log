@@ -1,7 +1,8 @@
 import "./LoginPage.css"
 import { useState, SubmitEvent } from "react";
 import { useNavigate } from "react-router";
-import { serverUrlProps, HTTPException, User } from "../types";
+import { serverUrlProps, HTTPException, TokenResponse, TokenPayload, User } from "../types";
+import { jwtDecode } from "jwt-decode";
 
 type CreateUser = {
     username: string,
@@ -49,12 +50,16 @@ function LoginPage({ url }: serverUrlProps) {
             const data: unknown = await response.json();
 
             if (response.ok) {
-                const token: Token = data as Token;
+                const tokenResponse: TokenResponse = data as TokenResponse;
+                const token: string = tokenResponse.access_token;
+                const tokenPayload: TokenPayload = jwtDecode<TokenPayload>(token);
 
                 const user: User = {
-                    username: username,
-                    access_token: token.access_token,
-                    token_type: token.token_type
+                    username: tokenPayload.sub, // sub is default indicator for user(name)
+                    access_token: {
+                        token: token,
+                        exp: tokenPayload.exp // expiration in seconds
+                    }
                 }
 
                 localStorage.setItem("user", JSON.stringify(user));

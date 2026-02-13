@@ -9,7 +9,7 @@ import Settings from "./Routes/Settings";
 import NotFound from './Routes/NotFound';
 
 function App() {
-  const serverUrl = "http://localhost:8000";
+  const serverUrl = "http://192.168.0.81:8000";
 
   return (
     <>
