@@ -1,6 +1,13 @@
 import { User } from "./types";
 // import { jwtDecode, JwtPayload } from "jwt-decode";
 
+const isExpired = (exp: number): boolean => {
+    const now: number = Date.now() / 1000;
+    const timeRemaining: number = exp - now;
+    
+    return timeRemaining <= 0;
+};
+    
 const getUser = (): User | null => {
     const userString: string | null = localStorage.getItem("user");
     if (userString === null) {
@@ -14,14 +21,7 @@ const getUser = (): User | null => {
     }
 
     return user;
-}
-
-const isExpired = (exp: number): boolean => {
-    const now: number = Date.now() / 1000;
-    const timeRemaining: number = exp - now;
-    
-    return timeRemaining <= 0;
-}
+};
 
 
 export { getUser };

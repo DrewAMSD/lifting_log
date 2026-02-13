@@ -2,9 +2,6 @@ import "./Navbar.css";
 import { NavLink } from "react-router";
 
 function Navbar() {
-
-
-
     return (
         <div className="navbar">
             <NavLink className="link" to="/home">

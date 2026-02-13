@@ -9,16 +9,11 @@ type CreateUser = {
     password: string,
     email: string,
     full_name: string
-}
+};
 
 type CreateUserResponse = {
     username: string
-}
-
-type Token = {
-    access_token: string,
-    token_type: string
-}
+};
 
 function LoginPage({ url }: serverUrlProps) {
     const serverUrl: string = url;
