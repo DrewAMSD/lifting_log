@@ -6,13 +6,22 @@ const getUser = (): User | null => {
     if (userString === null) {
         return null;
     }
+
     const user: User = JSON.parse(userString) as User;
+    if (isExpired(user.access_token.exp)) {
+	    localStorage.removeItem("user");
+	    return null;
+    }
+
     return user;
 }
 
-// const isTokenExpired = (token: Token): boolean => {
-//     return true;
-// }
+const isExpired = (exp: number): boolean => {
+    const now: number = Date.now() / 1000;
+    const timeRemaining: number = exp - now;
+    
+    return timeRemaining <= 0;
+}
 
 
 export { getUser };
