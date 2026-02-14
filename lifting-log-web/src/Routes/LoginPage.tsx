@@ -46,14 +46,22 @@ function LoginPage({ url }: serverUrlProps) {
 
             if (response.ok) {
                 const tokenResponse: TokenResponse = data as TokenResponse;
-                const token: string = tokenResponse.access_token;
-                const tokenPayload: TokenPayload = jwtDecode<TokenPayload>(token);
+
+                const accessToken: string = tokenResponse.access_token;
+                const accessTokenPayload: TokenPayload = jwtDecode<TokenPayload>(accessToken);
+
+                const refreshToken: string = tokenResponse.refresh_token
+                const refreshTokenPayload: TokenPayload = jwtDecode<TokenPayload>(refreshToken)
 
                 const user: User = {
-                    username: tokenPayload.sub, // sub is default indicator for user(name)
+                    username: accessTokenPayload.sub, // sub is default indicator for user(name)
                     access_token: {
-                        token: token,
-                        exp: tokenPayload.exp // expiration in seconds
+                        token: accessToken,
+                        exp: accessTokenPayload.exp // expiration in seconds
+                    },
+                    refresh_token: {
+                        token: refreshToken,
+                        exp: refreshTokenPayload.exp
                     }
                 }
 

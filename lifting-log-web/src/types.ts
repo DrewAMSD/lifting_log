@@ -8,20 +8,32 @@ export type HTTPException = {
 
 export type TokenResponse = {
   access_token: string,
+  refresh_token: string,
   token_type: string
 };
 
+export type AccessTokenResponse = {
+  access_token: string,
+  token_type: string
+}
+
 export type TokenPayload = {
   sub: string,
-  exp: number
+  exp: number // in seconds
 };
 
-export type AccessToken = {
+export type Token = {
   token: string,
-  exp: number // currently in seconds
+  exp: number // in seconds
 };
+
+export type RefreshToken = {
+  refresh_token: string,
+  token_type: string
+}
 
 export type User = {
   username: string,
-  access_token: AccessToken
+  access_token: Token,
+  refresh_token: Token
 };

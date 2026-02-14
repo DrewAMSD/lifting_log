@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post("/users/token")
-async def login_for_access_token(
+async def login_for_tokens(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> Token:
     user = authenticate_user(form_data.username, form_data.password)
@@ -23,11 +23,25 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+    access_token: str = create_access_token(
+        data={"sub": user.username}
     )
-    return Token(access_token=access_token, token_type="bearer")
+    refresh_token: str = create_refresh_token(
+        data={"sub": user.username}
+    )
+    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+
+
+@router.post("/users/refresh")
+async def refresh_access_token(
+    refresh_token: RefreshToken
+) -> AccessToken:
+    username: str = verify_refresh_token(refresh_token.refresh_token)
+
+    access_token: str = create_access_token(
+        data={"sub": username}
+    )
+    return AccessToken(access_token=access_token, token_type="bearer")
 
 
 @router.post("/users/", response_model=UsernameResponse)
