@@ -1,20 +1,42 @@
-import "./WorkoutPage.css"
-import { Navigate } from "react-router"
-import { getUser } from "../auth"
+import "./WorkoutPage.css";
+import { useState, useEffect } from "react";
+import { useNavigate, NavigateFunction } from "react-router";
+import { getUser } from "../auth";
 import { serverUrlProps, User } from "../types";
 
 function WorkoutPage({ url }: serverUrlProps) {
     const serverUrl: string = url;
-    const user: User | null = getUser(serverUrl);
+    const navigate: NavigateFunction = useNavigate();
+    const [user, setUser] = useState<User | null>(null);
 
-    if (user === null) {
-        return <Navigate to="/login" />
-    }
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const req: User | null = await getUser(serverUrl);
+
+                if (req === null) {
+                    navigate("/login")
+                }
+                setUser(req);
+            }
+            catch (error) {
+                console.error("Error fetching user: ", error);
+                navigate("/login")
+            }
+        }
+        fetchUser();
+    }, []);
 
     return (
-        <div className="workout-page">
-            WorkoutPage
-        </div>
+    <>
+        {user ? (
+            <div className="workout-page">
+                Workout Page
+            </div>
+        ) : (
+            <div>Loading...</div>
+        )}
+    </>
     );
 }
 

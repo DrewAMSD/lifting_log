@@ -196,6 +196,21 @@ def create_workout_template_tables():
     conn.close()
 
 
+def create_refresh_store_table():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS refresh_store (
+        refresh_token TEXT PRIMARY KEY,
+        exp INTEGER NOT NULL,
+        username TEXT NOT NULL
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 def create_tables():
     create_users_table()
     create_muscles_table()
@@ -203,6 +218,7 @@ def create_tables():
     create_exercise_muscles_table()
     create_workout_tables()
     create_workout_template_tables()
+    create_refresh_store_table()
     pass
 
 

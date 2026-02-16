@@ -65,16 +65,12 @@ def authenticate_user(username: str, password: str):
 
 def create_access_token(data: dict) -> str:
     to_encode: dict = data.copy() # just carries username
-    access_token_exp: datetime = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode["exp"] = access_token_exp
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 def create_refresh_token(data: dict) -> str:
     to_encode: dict = data.copy() # just carries username
-    refresh_token_exp: datetime = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode["exp"] = refresh_token_exp
     encoded_jwt: str = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 

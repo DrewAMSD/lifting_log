@@ -1,15 +1,16 @@
 import { jwtDecode } from "jwt-decode";
 import { HTTPException, RefreshToken, User, AccessTokenResponse, TokenPayload } from "./types";
-// import { jwtDecode, JwtPayload } from "jwt-decode";
 
 const isExpired = (exp: number): boolean => {
     const now: number = Date.now() / 1000;
     const timeRemaining: number = exp - now;
+
+    console.log(timeRemaining);
     
     return timeRemaining <= 0;
 };
 
-const refreshAccessToken = async (serverUrl: string, user: User, refreshToken: string) => {
+const refreshAccessToken = async (serverUrl: string, user: User, refreshToken: string): Promise<boolean> => {
     const toSend: RefreshToken = {
         refresh_token: refreshToken,
         token_type: "bearer"
@@ -36,15 +37,19 @@ const refreshAccessToken = async (serverUrl: string, user: User, refreshToken: s
             }
         } else {
             const httpException: HTTPException = data as HTTPException;
+            if (response.status === 404) {
+                return false;
+            }
             console.error("Error: ", httpException.detail);
         }
     }
     catch (error) {
         console.error("Error: ", error);
     }
+    return true;
 }
     
-const getUser = (serverUrl: string): User | null => {
+const getUser = async (serverUrl: string): Promise<User | null> => {
     const userString: string | null = localStorage.getItem("user");
     if (userString === null) {
         return null;
@@ -57,11 +62,39 @@ const getUser = (serverUrl: string): User | null => {
 	        return null;
         }
         // refresh token still valid
-        refreshAccessToken(serverUrl, user, user.refresh_token.token);
+        const refreshed: boolean = await refreshAccessToken(serverUrl, user, user.refresh_token.token);
+        if (!refreshed) {
+            localStorage.removeItem("user");
+            return null;
+        }
     }
 
     return user;
 };
 
+const logoutUser = async (serverUrl: string) => {
+    const user: User | null = await getUser(serverUrl);
+    if (user) {
+        const toSend: RefreshToken = {
+            refresh_token: user.refresh_token.token,
+            token_type: "bearer"
+        }
 
-export { getUser };
+        const response = await fetch(serverUrl+"/users/refresh", {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(toSend)
+        });
+
+        if (!response.ok) {
+            const data: unknown = await response.json();
+            const httpException: HTTPException = data as HTTPException
+            console.error("Error: ", httpException.detail)
+        }
+        localStorage.removeItem("user");
+    }
+}
+
+export { getUser, logoutUser };

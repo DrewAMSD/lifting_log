@@ -1,5 +1,7 @@
 Start venv: source backend/venv/bin/activate
 Run backend: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+
 Make tables: python3 -m backend.database.tables
+Create venv: python3 -m venv <venv-path> -> start venv -> pip install -r requirements.txt
 
 create .env with SECRET_KEY for authentication
