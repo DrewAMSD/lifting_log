@@ -4,8 +4,6 @@ import { HTTPException, RefreshToken, User, AccessTokenResponse, TokenPayload } 
 const isExpired = (exp: number): boolean => {
     const now: number = Date.now() / 1000;
     const timeRemaining: number = exp - now;
-
-    console.log(timeRemaining);
     
     return timeRemaining <= 0;
 };
