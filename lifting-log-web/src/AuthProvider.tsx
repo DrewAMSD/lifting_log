@@ -80,13 +80,14 @@ type AuthContextType = {
     serverUrl: string,
     user: User | null,
     loginUser: () => Promise<void>,
-    logout: () => Promise<void>
+    logoutUser: () => Promise<void>,
+    deleteUser: () => Promise<void>
 }
 
 const AuthContext: Context<AuthContextType> = createContext<AuthContextType>({} as AuthContextType);
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
-    const serverUrl: string = "http://192.168.0.81:8000";
+    const serverUrl: string = process.env.REACT_APP_SERVER_URL || "http://localhost:8000";
     const navigate: NavigateFunction = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -105,39 +106,64 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             console.error("Error fetching user: ", error);
             navigate("/login")
         }
-    }
+    };
 
     const loginUser = async (): Promise<void> => {
         setLoading(true);
         await fetchUser();
-    }
+    };
 
-    const logout = async (): Promise<void> => {
+    const logoutUser = async (): Promise<void> => {
         const user: User | null = await getUser(serverUrl);
-            if (user) {
-                const toSend: RefreshToken = {
-                    refresh_token: user.refresh_token.token,
-                    token_type: "bearer"
-                }
+        if (user) {
+            const toSend: RefreshToken = {
+                refresh_token: user.refresh_token.token,
+                token_type: "bearer"
+            }
 
-                const response = await fetch(serverUrl+"/users/refresh", {
+            const response = await fetch(serverUrl+"/users/refresh", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(toSend)
+            });
+
+            if (!response.ok) {
+                const data: unknown = await response.json();
+                const httpException: HTTPException = data as HTTPException
+                console.error("Error: ", httpException.detail)
+            }
+            localStorage.removeItem("user");
+        }
+        setUser(null);
+        navigate("/login");
+    };
+
+    const deleteUser = async () => {
+        try {
+            if (user !== null) {
+                const response: Response = await fetch(serverUrl+"/users/me", {
                     method: "DELETE",
                     headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(toSend)
-                });
+                        "Contetent-Type": "/application/json",
+                        "Authorization": "Bearer "+user.access_token.token
+                    }
+                })
 
                 if (!response.ok) {
-                    const data: unknown = await response.json();
-                    const httpException: HTTPException = data as HTTPException
-                    console.error("Error: ", httpException.detail)
+                    const httpException: HTTPException = await response.json() as HTTPException;
+                    console.error("HttpException: ", httpException.detail);
                 }
-                localStorage.removeItem("user");
             }
-            setUser(null);
+        } 
+        catch (error) {
+            console.error("Error: ", error);
+        } 
+        finally {
             navigate("/login");
-    }
+        }
+    };
 
     useEffect(() => {
         fetchUser();
@@ -148,8 +174,8 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         {
             loading ? (
                 <div>Loading...</div>
-            ) : (
-                <AuthContext.Provider value={{serverUrl, user, loginUser, logout }}>
+            ) : ( 
+                <AuthContext.Provider value={{serverUrl, user, loginUser, logoutUser, deleteUser }}>
                     {children}
                 </AuthContext.Provider>
             )

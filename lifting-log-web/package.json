@@ -11,6 +11,7 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
+    "dotenv": "^17.3.1",
     "jwt-decode": "^4.0.0",
     "react": "^19.2.4",
     "react-cookie": "^8.0.1",
@@ -21,7 +22,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "update-env": "echo \"REACT_APP_SERVER_URL='http://$(hostname -I | xargs):8000'\" > ./.env",
+    "start": "npm run update-env && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
