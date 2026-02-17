@@ -79,6 +79,7 @@ type AuthProviderProps = {
 type AuthContextType = {
     serverUrl: string,
     user: User | null,
+    loginUser: () => Promise<void>,
     logout: () => Promise<void>
 }
 
@@ -89,6 +90,27 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     const navigate: NavigateFunction = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+
+    const fetchUser = async () => {
+        try {
+            const req: User | null = await getUser(serverUrl);
+
+            if (req === null) {
+                navigate("/login")
+            }
+            setUser(req);
+            setLoading(false);
+        }
+        catch (error) {
+            console.error("Error fetching user: ", error);
+            navigate("/login")
+        }
+    }
+
+    const loginUser = async (): Promise<void> => {
+        setLoading(true);
+        await fetchUser();
+    }
 
     const logout = async (): Promise<void> => {
         const user: User | null = await getUser(serverUrl);
@@ -113,25 +135,11 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
                 }
                 localStorage.removeItem("user");
             }
+            setUser(null);
             navigate("/login");
     }
 
     useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const req: User | null = await getUser(serverUrl);
-
-                if (req === null) {
-                    navigate("/login")
-                }
-                setUser(req);
-                setLoading(false);
-            }
-            catch (error) {
-                console.error("Error fetching user: ", error);
-                navigate("/login")
-            }
-        }
         fetchUser();
     }, []);
 
@@ -141,7 +149,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
             loading ? (
                 <div>Loading...</div>
             ) : (
-                <AuthContext.Provider value={{serverUrl, user, logout }}>
+                <AuthContext.Provider value={{serverUrl, user, loginUser, logout }}>
                     {children}
                 </AuthContext.Provider>
             )

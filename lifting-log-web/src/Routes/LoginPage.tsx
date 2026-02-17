@@ -17,7 +17,7 @@ type CreateUserResponse = {
 };
 
 const LoginPage = () => {
-    const { serverUrl } = useAuth();
+    const { serverUrl, loginUser } = useAuth();
     const [login, setLogin] = useState<boolean>(true);
     const [message, setMessage] = useState<string>("");
     const navigate = useNavigate();
@@ -67,6 +67,7 @@ const LoginPage = () => {
                 }
 
                 localStorage.setItem("user", JSON.stringify(user));
+                await loginUser();
                 navigate("/home");
             } else {
                 const status: number = response.status;
