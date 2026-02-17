@@ -1,7 +1,3 @@
-export type serverUrlProps = {
-  url: string
-};
-
 export type HTTPException = {
   detail: string
 };

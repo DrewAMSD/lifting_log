@@ -1,8 +1,9 @@
 import "./LoginPage.css"
 import { useState, SubmitEvent } from "react";
 import { useNavigate } from "react-router";
-import { serverUrlProps, HTTPException, TokenResponse, TokenPayload, User } from "../types";
+import { HTTPException, TokenResponse, TokenPayload, User } from "../types";
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../AuthProvider";
 
 type CreateUser = {
     username: string,
@@ -15,8 +16,8 @@ type CreateUserResponse = {
     username: string
 };
 
-function LoginPage({ url }: serverUrlProps) {
-    const serverUrl: string = url;
+const LoginPage = () => {
+    const { serverUrl } = useAuth();
     const [login, setLogin] = useState<boolean>(true);
     const [message, setMessage] = useState<string>("");
     const navigate = useNavigate();

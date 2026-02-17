@@ -7,25 +7,26 @@ import WorkoutPage from './Routes/WorkoutPage';
 import LoginPage from './Routes/LoginPage';
 import Settings from "./Routes/Settings";
 import NotFound from './Routes/NotFound';
+import { AuthProvider } from './AuthProvider';
 
 function App() {
-  const serverUrl = "http://192.168.0.81:8000";
-
   return (
     <>
         <BrowserRouter>
-          <div className="routes-container">
-            <Routes>
-              <Route path="/" element={<Home url={serverUrl}/>}/>
-              <Route path="/home" element={<Home url={serverUrl}/>}/>
-              <Route path="/workout" element={<WorkoutPage url={serverUrl}/>}/>
-              <Route path="/settings" element={<Settings url={serverUrl}/>} />
+          <AuthProvider>
+            <div className="routes-container">
+              <Routes>
+                <Route path="/" element={<Home />}/>
+                <Route path="/home" element={<Home />}/>
+                <Route path="/workout" element={<WorkoutPage />}/>
+                <Route path="/settings" element={<Settings />} />
 
-              <Route path="/login" element={<LoginPage url={serverUrl}/>} />
-              <Route path="*" element={<NotFound />}/>
-            </Routes>
-          </div>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="*" element={<NotFound />}/>
+              </Routes>
+            </div>
             <Navbar />
+          </AuthProvider>
         </BrowserRouter>
     </>
   );
