@@ -22,7 +22,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "update-env": "echo \"REACT_APP_SERVER_URL='http://$(hostname -I | xargs):8000'\" > ./.env",
+    "update-env": "echo \"REACT_APP_SERVER_URL='http://$(hostname -I | cut -f1 -d' ' | xargs):8000'\" > ./.env",
     "start": "npm run update-env && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

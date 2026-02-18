@@ -79,7 +79,7 @@ type AuthProviderProps = {
 type AuthContextType = {
     serverUrl: string,
     user: User | null,
-    loginUser: () => Promise<void>,
+    loginUser: () => void,
     logoutUser: () => Promise<void>,
     deleteUser: () => Promise<void>
 }
@@ -108,9 +108,8 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
         }
     };
 
-    const loginUser = async (): Promise<void> => {
+    const loginUser = (): void=> {
         setLoading(true);
-        await fetchUser();
     };
 
     const logoutUser = async (): Promise<void> => {
@@ -166,8 +165,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     };
 
     useEffect(() => {
-        fetchUser();
-    }, []);
+        if (loading) {
+            fetchUser();
+        }
+    }, [loading]);
 
     return (
     <>
