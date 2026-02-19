@@ -1,5 +1,5 @@
 import "./WorkoutPage.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { Navigate } from "react-router";
 import { useAuth } from "../AuthProvider";
 import { HTTPException } from "../types";
@@ -29,7 +29,8 @@ type WorkoutTemplate = {
 const WorkoutPage = () => {
     const { serverUrl, user } = useAuth();
     const [workoutTemplates, setWorkoutTemplates] = useState<Array<WorkoutTemplate>>([]);
-    
+    const [workingOut, setWorkingOut] = useState<boolean>(false);
+
     useEffect(() => {
         const fetchWorkoutTemplates = async (): Promise<void> => {
             if (user === null) {
@@ -61,19 +62,57 @@ const WorkoutPage = () => {
         fetchWorkoutTemplates();
     }, []);
 
-    useEffect(() => {console.log(workoutTemplates)}, [workoutTemplates]);
-
     if (user === null) {
         return <Navigate to="/login" />
     }
 
+    const DefaultPage = () => {
+        return (
+            <>
+                <header className="workout-header">Workout</header>
+                <button className="workout-page-button">Start Empty Workout</button>
+                <button className="workout-page-button">Create New Workout Template</button>
+                <p className="workout-text">My Workout Templates:</p>
+                <div className="templates">
+                    {!workoutTemplates.length ? (
+                        <div>Uh oh... Looks like you have no templates! Hit create template to make one.</div>
+                    ) : (
+                        <>
+                        {workoutTemplates.map((workoutTemplate) => (
+                            <div
+                            key={workoutTemplate.id}
+                            className="template"
+                            >
+                                <p>{workoutTemplate.name}</p>
+                                <div className="template-exercise">
+                                    {workoutTemplate.exercise_templates.map((exerciseTemplate) => (
+                                        <div 
+                                        className="template-exercise-text"
+                                        key={exerciseTemplate.exercise_id}
+                                        >
+                                            - {exerciseTemplate.exercise_name}
+                                        </div>
+                                    ))}
+                                </div>
+                                <button>Edit Template</button>
+                                <button>Start Workout</button>
+                            </div>
+                        ))}
+                        </>
+                    )}
+                </div>
+            </>
+        );
+    };
+
     return (
         <div className="workout-page">
-            Workout Page
-            {!workoutTemplates.length ? (
-                <div>Uh Oh... Looks like you have no templates! Hit create template to make one.</div>
+            {workingOut ? (
+            <>
+                {/* replace here with working out page, need to also have a third editing template page */}
+            </>
             ) : (
-                <div>Workout Templates found</div>
+                <DefaultPage />
             )}
         </div>
     );

@@ -3,4 +3,62 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 5px;
+}
+
+.workout-header {
+    font-size: 35px;
+    padding-top: 5px;
+    padding-bottom: 10px;
+}
+
+.workout-page-button {
+    width: 80%;
+}
+
+.workout-text {
+    font-size: 16px;
+    margin-top: 16px;
+    margin-left: 8vw;
+    align-self: flex-start;
+}
+
+.templates {
+    margin: 2px;
+    padding: 8px;
+    border: solid;
+    border-color: rgb(54, 54, 54);
+    border-width: 2px;
+    border-radius: 10px;
+    min-width: 80%;
+    max-width: 90vw;
+    gap: 8px;
+    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.template {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    background-color: rgb(37, 37, 37);
+    padding: 8px;
+    border: 2px solid rgb(37, 37, 37);
+    border-radius: 10px;
+    gap: 5px;
+    width: 80%;
+}
+
+.template-exercise {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    margin: 3px;
+    gap: 3px;
+}
+
+.template-exercise-text {
+    font-size: 13px;
 }
