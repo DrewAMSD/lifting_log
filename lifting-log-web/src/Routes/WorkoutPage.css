@@ -1,3 +1,10 @@
+.loading {
+   margin-top: 35vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
 .workout-page {
     width: 100vw;
     display: flex;
@@ -13,22 +20,20 @@
 }
 
 .workout-page-button {
+    height: 8vh;
     width: 80%;
+    font-size: 3vh;
 }
 
 .workout-text {
     font-size: 16px;
-    margin-top: 16px;
-    margin-left: 8vw;
-    align-self: flex-start;
+    margin-top: 20px;
 }
 
 .templates {
     margin: 2px;
     padding: 8px;
-    border: solid;
-    border-color: rgb(54, 54, 54);
-    border-width: 2px;
+    /* border: 2px solid rgb(37, 37, 37); */
     border-radius: 10px;
     min-width: 80%;
     max-width: 90vw;
@@ -44,11 +49,11 @@
     flex-direction: column;
     align-items: left;
     background-color: rgb(37, 37, 37);
-    padding: 8px;
     border: 2px solid rgb(37, 37, 37);
+    padding: 6px;
     border-radius: 10px;
     gap: 5px;
-    width: 80%;
+    width: 100%;
 }
 
 .template-exercise {
@@ -57,6 +62,12 @@
     align-items: left;
     margin: 3px;
     gap: 3px;
+}
+
+.template-button {
+    min-height: 30px;
+    height: 5vh;
+    font-size: 15px;
 }
 
 .template-exercise-text {

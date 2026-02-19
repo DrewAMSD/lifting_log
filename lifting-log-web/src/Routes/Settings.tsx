@@ -11,20 +11,18 @@ type UserMetaData = {
 }
 
 const Settings = () => {
-    const { serverUrl, user, logoutUser, deleteUser } = useAuth();
+    const { serverUrl, user, logoutUser, deleteUser, getToken } = useAuth();
     const [userMetaData, setUserMetaData] = useState<UserMetaData>({} as UserMetaData);
     
     useEffect(() => {
         const fetchUserMetaData = async (): Promise<void> => {
-            if (user === null) {
-                return;
-            }
+            const token: string = await getToken();
             try {
                 const response: Response = await fetch(serverUrl+"/users/me", {
                     method: "GET",
                     headers: {
                         "Content-Type": "/application/json",
-                        "Authorization": "Bearer "+user.access_token.token
+                        "Authorization": "Bearer "+token
                     }
                 })
 

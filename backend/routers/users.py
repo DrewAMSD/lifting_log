@@ -31,7 +31,7 @@ def login_for_tokens(
             "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         }
     )
-    refresh_token_exp: int = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    refresh_token_exp: int = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     refresh_token: str = create_refresh_token(
         data={
             "sub": user.username,

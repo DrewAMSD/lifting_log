@@ -29,7 +29,5 @@ export type RefreshToken = {
 }
 
 export type User = {
-  username: string,
-  access_token: Token,
-  refresh_token: Token
+  username: string
 };

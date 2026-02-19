@@ -1,7 +1,7 @@
 import "./LoginPage.css"
 import { useState, SubmitEvent } from "react";
 import { useNavigate } from "react-router";
-import { HTTPException, TokenResponse, TokenPayload, User } from "../types";
+import { HTTPException, TokenResponse, TokenPayload, User, Token } from "../types";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../AuthProvider";
 
@@ -56,17 +56,19 @@ const LoginPage = () => {
 
                 const user: User = {
                     username: accessTokenPayload.sub, // sub is default indicator for user(name)
-                    access_token: {
-                        token: accessToken,
-                        exp: accessTokenPayload.exp // expiration in seconds
-                    },
-                    refresh_token: {
-                        token: refreshToken,
-                        exp: refreshTokenPayload.exp
-                    }
+                }
+                const access_token: Token = {
+                    token: accessToken,
+                    exp: accessTokenPayload.exp // expiration in seconds
+                };
+                const refresh_token: Token = {
+                    token: refreshToken,
+                    exp: refreshTokenPayload.exp
                 }
 
                 localStorage.setItem("user", JSON.stringify(user));
+                localStorage.setItem("accessToken", JSON.stringify(access_token));
+                localStorage.setItem("refreshToken", JSON.stringify(refresh_token));
                 await loginUser();
                 navigate("/home");
             } else {
