@@ -1,5 +1,5 @@
 .loading {
-   margin-top: 35vh;
+    margin-top: 35vh;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -50,10 +50,14 @@
     align-items: left;
     background-color: rgb(37, 37, 37);
     border: 2px solid rgb(37, 37, 37);
-    padding: 6px;
     border-radius: 10px;
+    padding: 6px;
     gap: 5px;
     width: 100%;
+}
+
+.template:active {
+    opacity: 70%;
 }
 
 .template-exercise {
@@ -72,4 +76,21 @@
 
 .template-exercise-text {
     font-size: 13px;
+    color: rgb(161, 161, 161);
+}
+
+.input-default {
+  border: none;
+  background-color: transparent; /* Makes the background blend with its container */
+  outline: none; /* Removes the blue/yellow glow on focus */
+  font-family: inherit; /* Matches the page's font */
+  padding: 0; /* Adjust padding as needed */
+  /* Add any other styling to match plain text */
+  color: rgb(255, 255, 255);
+}
+
+.line {
+    height: 1px;
+    width: 100%;
+    background-color: white;
 }

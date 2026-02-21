@@ -7,6 +7,7 @@ import WorkoutPage from './Routes/WorkoutPage';
 import LoginPage from './Routes/LoginPage';
 import Settings from "./Routes/Settings";
 import NotFound from './Routes/NotFound';
+import EditTemplatePage from './Routes/EditTemplatePage';
 import { AuthProvider, ProtectedRoute } from './AuthProvider';
 
 function App() {
@@ -26,11 +27,23 @@ function App() {
                     <Home />
                   </ProtectedRoute>
                 }/>
-                <Route path="/workout" element={
-                  <ProtectedRoute>
-                    <WorkoutPage />
-                  </ProtectedRoute>
-                }/>
+                <Route path="/workout">
+                  <Route index element={
+                    <ProtectedRoute>
+                      <WorkoutPage />
+                    </ProtectedRoute>
+                  }/>
+                  <Route path="edit-template" element={
+                    <ProtectedRoute>
+                      <EditTemplatePage />
+                    </ProtectedRoute>
+                  }/>
+                  <Route path="working-out" element={
+                    <ProtectedRoute>
+                      <WorkoutPage />
+                    </ProtectedRoute>
+                  }/>
+                </Route>
                 <Route path="/settings" element={
                   <ProtectedRoute>
                     <Settings />

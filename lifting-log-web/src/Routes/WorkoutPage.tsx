@@ -1,36 +1,16 @@
 import "./WorkoutPage.css";
-import { useState, useEffect } from "react";
-import { Navigate } from "react-router";
+import React, { useState, useEffect } from "react";
+import { Navigate, NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
-import { HTTPException } from "../types";
+import { HTTPException, WorkoutTemplate } from "../types";
 
-type SetTemplate = {
-    reps?: number
-    rep_range_start?: number
-    rep_range_end?: number
-    time_range_start?: number
-    time_range_end?: number
-}
-
-type ExerciseTemplate = {
-    exercise_id: number
-    exercise_name: string
-    routine_note: string
-    set_templates: Array<SetTemplate>
-}
-
-type WorkoutTemplate = {
-    id: number,
-    name: string,
-    username: string,
-    exercise_templates: Array<ExerciseTemplate>
-}
 
 const WorkoutPage = () => {
     const { serverUrl, user, getToken } = useAuth();
     const [loading, setLoading] = useState<boolean>(true);
+    // fields for working out
     const [workingOut, setWorkingOut] = useState<boolean>(false);
-    const [editingTemplate, setEditingTemplate] = useState<boolean>(false);
+    // fields fields for workout templates
     const [workoutTemplates, setWorkoutTemplates] = useState<Array<WorkoutTemplate>>([]);
 
     useEffect(() => {
@@ -65,12 +45,29 @@ const WorkoutPage = () => {
     }, []);
 
     const DefaultPage = () => {
+        const navigate: NavigateFunction = useNavigate();
+
         return (
         <>
             <header className="workout-header">Workout</header>
-            <button className="workout-page-button">Start Empty Workout</button>
+            <button 
+            className="workout-page-button"
+            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                console.log("Start Empty Workout");
+            }}
+            >
+                Start Empty Workout
+            </button>
             <p className="workout-text">Workout Templates</p>
-            <button className="workout-page-button">Create New Workout Template</button>
+            <button 
+            className="workout-page-button"
+            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                localStorage.removeItem("templateToEdit");
+                navigate("/workout/edit-template");
+            }}
+            >
+                Create New Workout Template
+            </button>
             <div className="templates">
                 {!workoutTemplates.length ? (
                     <p>Looks like you have no templates...</p>
@@ -80,9 +77,15 @@ const WorkoutPage = () => {
                         <div
                         key={workoutTemplate.id}
                         className="template"
+                        onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+                            localStorage.setItem("templateToEdit", JSON.stringify(workoutTemplate))
+                            navigate("/workout/edit-template");
+                        }}
                         >
                             <p>{workoutTemplate.name}</p>
-                            <div className="template-exercise">
+                            <div 
+                            className="template-exercise"
+                            >
                                 {workoutTemplate.exercise_templates.map((exerciseTemplate) => (
                                     <div 
                                     className="template-exercise-text"
@@ -93,7 +96,15 @@ const WorkoutPage = () => {
                                 ))}
                             </div>
                             {/* <button className="template-button">Edit Template</button> */}
-                            <button className="template-button">Start Workout</button>
+                            <button 
+                            className="template-button"
+                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                                event.stopPropagation();
+                                console.log("Start Workout with Template");
+                            }}
+                            >
+                                Start Workout
+                            </button>
                         </div>
                     ))}
                     </>
@@ -111,11 +122,7 @@ const WorkoutPage = () => {
                 workingOut ? (
                     <></>
                 ) : (
-                    editingTemplate ? (
-                        <></>
-                    ) : (
-                        <DefaultPage />
-                    )
+                    <DefaultPage />
                 )
             )}
         </div>

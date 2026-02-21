@@ -198,20 +198,20 @@ const AuthProvider = ({ children }: ReactNodeProps) => {
 
     const getToken = async (): Promise<string> => {
         const accessToken: Token | null = getAccessToken();
-        const refreshToken: Token | null = getRefreshToken();
-        if (!accessToken || !refreshToken) {
+        if (!accessToken) {
             clearData();
             return "";
         }
         if (isExpired(accessToken.exp)) {
-            if (isExpired(refreshToken.exp)) {
+            const refreshToken: Token | null = getRefreshToken();
+            if (!refreshToken || isExpired(refreshToken.exp)) {
                 clearData();
                 return "";
             }
             // refresh token still valid
             const newAccessToken: Token | null = await refreshAccessToken(serverUrl);
             if (!newAccessToken) {
-                clearData();
+                clearData();const refreshToken: Token | null = getRefreshToken();
                 return "";
             }
             localStorage.setItem("accessToken", JSON.stringify(newAccessToken));

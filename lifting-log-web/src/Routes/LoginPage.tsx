@@ -125,7 +125,10 @@ const LoginPage = () => {
     return (
         <>
         {login ? (
-            <form onSubmit={handleLoginSubmit}>
+            <form 
+            className="login-page-form"
+            onSubmit={handleLoginSubmit}
+            >
                 <label>
                     Username: 
                     <input 
@@ -148,7 +151,10 @@ const LoginPage = () => {
                 <button onClick={() => {setLogin(false)}}>Register Here</button>
             </form>
         ) : (
-            <form onSubmit={handleRegisterSubmit}>
+            <form
+            className="login-page-form" 
+            onSubmit={handleRegisterSubmit}
+            >
                 <label>
                     Username: 
                     <input 

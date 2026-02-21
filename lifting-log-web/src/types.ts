@@ -31,3 +31,25 @@ export type RefreshToken = {
 export type User = {
   username: string
 };
+
+export type SetTemplate = {
+    reps?: number
+    rep_range_start?: number
+    rep_range_end?: number
+    time_range_start?: number
+    time_range_end?: number
+}
+
+export type ExerciseTemplate = {
+    exercise_id: number
+    exercise_name: string
+    routine_note: string
+    set_templates: Array<SetTemplate>
+}
+
+export type WorkoutTemplate = {
+    id?: number,
+    name: string,
+    username?: string,
+    exercise_templates: Array<ExerciseTemplate>
+}
