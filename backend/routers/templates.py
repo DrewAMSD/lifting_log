@@ -24,12 +24,18 @@ def validate_set_template(set_template: Set_Template, exercise_row: Row) -> None
         if not exercise_row["reps"]:
             raise HTTPException(status_code=400, detail="Set template has reps/rep range when exercise does not support reps")
         
-    if (set_template.time_range_start and set_template.time_range_end):
+    if set_template.rep_range_start != set_template.rep_range_end:
+        raise HTTPException(status_code=400, detail="Both start and end of rep range must be defined")
+
+    if set_template.reps and set_template.rep_range_start:
+        raise HTTPException(status_code=400, detail="Cannot have both reps and rep range")
+
+    if (set_template.time):
         if not exercise_row["time"]:
-            raise HTTPException(status_code=400, detail="Set template has time range when exercise does not support time")
+            raise HTTPException(status_code=400, detail="Set template has time when exercise does not support time")
         
-        if not (is_valid_timestamp(set_template.time_range_start, is_time=True) and is_valid_timestamp(set_template.time_range_end, is_time=True)):
-            raise HTTPException(status_code=400, detail="Set template has incorrectly formatted time range")
+        if not (is_valid_timestamp(set_template.time, is_time=True)):
+            raise HTTPException(status_code=400, detail="Set template has incorrectly formatted time field")
 
 
 def insert_template_workout(cursor: Cursor, template: Workout_Template, username: str) -> int:
@@ -61,9 +67,9 @@ def insert_template_exercise(cursor: Cursor, pos: int, exercise_template: Exerci
 def insert_template_set(cursor: Cursor, set_pos: int, set_template: Set_Template, exercise_template_id: int) -> None:
     cursor.execute("""
         INSERT INTO template_sets
-        (exercise_template_id, reps, rep_range_start, rep_range_end, time_range_start, time_range_end, position)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (exercise_template_id, set_template.reps, set_template.rep_range_start, set_template.rep_range_end, set_template.time_range_start, set_template.time_range_end, set_pos))
+        (exercise_template_id, reps, rep_range_start, rep_range_end, t, position)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (exercise_template_id, set_template.reps, set_template.rep_range_start, set_template.rep_range_end, set_template.time, set_pos))
 
 
 def insert_template_exercises_and_sets(cursor: Cursor, template: Workout_Template) -> None:
@@ -118,8 +124,7 @@ def convert_template_sets_row_to_template(template_sets_row: Row) -> Set_Templat
         reps=template_sets_row["reps"],
         rep_range_start=template_sets_row["rep_range_start"],
         rep_range_end=template_sets_row["rep_range_end"],
-        time_range_start=template_sets_row["time_range_start"],
-        time_range_end=template_sets_row["time_range_end"]
+        time=template_sets_row["t"],
     )
 
 

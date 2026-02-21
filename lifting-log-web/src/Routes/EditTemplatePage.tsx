@@ -14,10 +14,10 @@ type SetTemplateProps = {
     setTemplate: SetTemplate,
     isReps: boolean,
     isRepRange: boolean,
-    isTimeRange: boolean
+    isTime: boolean
 }
 
-const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTimeRange }: SetTemplateProps) => {
+const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime }: SetTemplateProps) => {
     return (
         <div 
         className="edit-template-set-row">
@@ -31,16 +31,17 @@ const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTimeRan
             />}
             {isRepRange && 
             <p className="edit-template-set-row-item">{setTemplate.rep_range_start}-{setTemplate.rep_range_end}</p>}
-            {isTimeRange && <p className="edit-template-set-row-item">{setTemplate.time_range_start}-{setTemplate.time_range_end}</p>}
+            {isTime && 
+            <p className="edit-template-set-row-item">{setTemplate.time}</p>}
             <button className="delete-button">D</button>
         </div>
     );
 }
 
 const ExerciseTemplateElement = ({ exIdx, exerciseTemplate }: ExerciseTemplateProps) => {
-    const [isReps, setIsReps] = useState<boolean>(exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].reps ? true : false) : false);
-    const [isRepRange, setIsRepRange] = useState<boolean>(exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].rep_range_start ? true : false) : false);
-    const [isTimeRange, setIsTimeRange] = useState<boolean>(exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].time_range_start ? true : false) : false);
+    const isReps: boolean = (exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].reps ? true : false) : false);
+    const isRepRange: boolean = (exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].rep_range_start ? true : false) : false);
+    const isTime: boolean = (exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].time ? true : false) : false);
 
     return (
         <div
@@ -62,14 +63,11 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate }: ExerciseTemplatePr
                     <p className="edit-template-set-row-item">Set</p>
                     {isReps && <p className="edit-template-set-row-item">Reps</p>}
                     {isRepRange && <p className="edit-template-set-row-item">Rep Range</p>}
-                    {isTimeRange && <p className="edit-template-set-row-item">Time Range</p>}
-                    {!isReps && <button className="set-add-option" onClick={() => {setIsReps(true)}}>+Reps</button>}
-                    {!isRepRange && <button className="set-add-option" onClick={() => {setIsRepRange(true)}}>+Rep Range</button>}
-                    {!isTimeRange && <button className="set-add-option" onClick={() => {setIsTimeRange(true)}}>+Time Range</button>}
+                    {isTime && <p className="edit-template-set-row-item">Time Range</p>}
                 </div>
                 <hr className="line line-light"/>
                 {exerciseTemplate.set_templates.map((setTemplate, setIdx) => (
-                    <SetTemplateElement key={setIdx} setIdx={setIdx} setTemplate={setTemplate} isReps={isReps} isRepRange={isRepRange} isTimeRange={isTimeRange}/>
+                    <SetTemplateElement key={setIdx} setIdx={setIdx} setTemplate={setTemplate} isReps={isReps} isRepRange={isRepRange} isTime={isTime}/>
                 ))}
                 <button 
                 className="add-set-button"

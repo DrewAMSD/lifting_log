@@ -185,8 +185,7 @@ def create_workout_template_tables():
         reps INTEGER,
         rep_range_start INTEGER,
         rep_range_end INTEGER,
-        time_range_start TIME,
-        time_range_end TIME,
+        t TIME,
         position INTEGER NOT NULL,
         FOREIGN KEY (exercise_template_id) REFERENCES template_exercises (id) ON DELETE CASCADE
     )

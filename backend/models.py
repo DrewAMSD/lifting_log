@@ -92,8 +92,7 @@ class Set_Template(BaseModel):
     reps: Optional[int] = None
     rep_range_start: Optional[int] = None
     rep_range_end: Optional[int] = None
-    time_range_start: Optional[str] = None # 'HH:MM:SS'
-    time_range_end: Optional[str] = None # 'HH:MM:SS'
+    time: Optional[str] = None # 'HH:MM:SS'
 
 class Exercise_Template(BaseModel):
     exercise_id: int

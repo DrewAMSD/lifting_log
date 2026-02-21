@@ -36,8 +36,7 @@ export type SetTemplate = {
     reps?: number
     rep_range_start?: number
     rep_range_end?: number
-    time_range_start?: number
-    time_range_end?: number
+    time?: string
 }
 
 export type ExerciseTemplate = {
