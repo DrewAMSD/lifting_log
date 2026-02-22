@@ -1,0 +1,5 @@
+To have new empty instance of db when running docker file, run docker file with:
+docker run -p 8000:8000 <image-name>
+
+To run docker instance connected to db on local machine run:
+docker run -p 8000:8000 -v $(pwd)/backend/database/lifting_log.db:/app/backend/database/lifting_log.db <image-name>

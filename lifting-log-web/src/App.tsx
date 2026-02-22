@@ -22,11 +22,13 @@ function App() {
                     <Home />
                   </ProtectedRoute>
                 }/>
+
                 <Route path="/home" element={
                   <ProtectedRoute>
                     <Home />
                   </ProtectedRoute>
                 }/>
+
                 <Route path="/workout">
                   <Route index element={
                     <ProtectedRoute>
@@ -38,12 +40,18 @@ function App() {
                       <EditTemplatePage />
                     </ProtectedRoute>
                   }/>
+                  {/* 
+                  * this route below will prob not be here, 
+                  * just in case I want workouting-out to be on seperate page.
+                  * Will most likely have a conditional on workout page so those 2 pages are more connected (resume option, switch between the 2 easily, etc.)
+                  */}
                   <Route path="working-out" element={
                     <ProtectedRoute>
-                      <WorkoutPage />
+                      <WorkoutPage /> 
                     </ProtectedRoute>
                   }/>
                 </Route>
+
                 <Route path="/settings" element={
                   <ProtectedRoute>
                     <Settings />
@@ -51,6 +59,7 @@ function App() {
                 } />
 
                 <Route path="/login" element={<LoginPage />} />
+
                 <Route path="*" element={<NotFound />}/>
               </Routes>
             </div>

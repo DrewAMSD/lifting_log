@@ -140,9 +140,7 @@ const EditTemplatePage = () => {
     const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [workoutTemplate, setWorkoutTemplate] = useState<WorkoutTemplate>({name: "", exercise_templates: []} as WorkoutTemplate);
-
     // TODO: add a fetch to grab all exercises available to the user (might want to make it global, or pass it down through props)
-    // Need to make 
 
     const deleteExerciseTemplate = (exIdx: number): void => {
         if (exIdx < 0 || exIdx >= workoutTemplate.exercise_templates.length) {
@@ -176,6 +174,7 @@ const EditTemplatePage = () => {
             const initTemplate: WorkoutTemplate = JSON.parse(templateToEditString) as WorkoutTemplate;
             setWorkoutTemplate(initTemplate);
         }
+        // part of todo at top of this element, in here is where fetch for exercises will be
         setIsLoading(false);
     }, []);
 

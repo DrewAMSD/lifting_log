@@ -24,7 +24,7 @@ def validate_set_template(set_template: Set_Template, exercise_row: Row) -> None
         if not exercise_row["reps"]:
             raise HTTPException(status_code=400, detail="Set template has reps/rep range when exercise does not support reps")
         
-    if set_template.rep_range_start != set_template.rep_range_end:
+    if (not set_template.rep_range_start and set_template.rep_range_end) or (set_template.rep_range_start and not set_template.rep_range_end):
         raise HTTPException(status_code=400, detail="Both start and end of rep range must be defined")
 
     if set_template.reps and set_template.rep_range_start:

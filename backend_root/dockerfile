@@ -1,0 +1,18 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY --exclude=*.db . .
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONBUFFERED=1
+
+RUN chmod +x configure_backend.sh start_backend.sh
+
+EXPOSE 8000
+
+ENTRYPOINT ["./configure_backend.sh"]
+CMD ["./start_backend.sh"]
