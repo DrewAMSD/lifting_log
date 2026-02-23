@@ -17,28 +17,107 @@ type SetTemplateProps = {
     isReps: boolean,
     isRepRange: boolean,
     isTime: boolean,
-    deleteSet: (setIdx: number) => void
+    deleteSetTemplate: (setIdx: number) => void,
+    updateSetTemplate: (setIdx: number, newSetTemplate: SetTemplate) => void
 }
 
-const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, deleteSet }: SetTemplateProps) => {
+const select0To59: Array<number> = Array.from({ length: 60}, (_, i) => i);
+const select0To23: Array<number> = Array.from({ length: 24}, (_, i) => i);
+
+const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, deleteSetTemplate, updateSetTemplate }: SetTemplateProps) => {
+    const [message, setMessage] = useState<string>("message");
+    const handleRepsChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        const newReps: number = parseInt(event.target.value)
+        if (newReps < 0) {
+            return;
+        }
+        const newSetTemplate: SetTemplate = {
+            ...setTemplate,
+            reps: newReps
+        };
+        updateSetTemplate(setIdx, newSetTemplate);
+    };
+
+    const handleRepRangeStartChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        const newRepRange: number = parseInt(event.target.value)
+        if (newRepRange < 0) {
+            return;
+        }
+        const newSetTemplate: SetTemplate = {
+            ...setTemplate,
+            rep_range_start: newRepRange
+        };
+        updateSetTemplate(setIdx, newSetTemplate);
+    };
+    
+    const handleRepRangeEndChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        const newRepRange: number = parseInt(event.target.value)
+        if (newRepRange < 0) {
+            return;
+        }
+        const newSetTemplate: SetTemplate = {
+            ...setTemplate,
+            rep_range_end: newRepRange
+        };
+        updateSetTemplate(setIdx, newSetTemplate);
+    };
+
     return (
         <div 
         className="edit-template-set-row">
             <p className="edit-template-set-row-item">{setIdx+1}</p>
             {isReps && 
             <input 
-            type="number"
-            className="edit-template-set-row-item input-default" 
-            value={""+setTemplate.reps}
-            placeholder="0"
+                type="number"
+                className="edit-template-set-row-item input-default" 
+                value={setTemplate.reps?.toString() || "0"}
+                placeholder="0"
+                onChange={handleRepsChange}
             />}
+            
             {isRepRange && 
-            <p className="edit-template-set-row-item">{setTemplate.rep_range_start}-{setTemplate.rep_range_end}</p>}
+            <p className="edit-template-set-row-item-rep-range">
+                <input 
+                    type="number"
+                    className="rep-range input-default" 
+                    value={setTemplate.rep_range_start?.toString() || "0"}
+                    placeholder="0"
+                    onChange={handleRepRangeStartChange}
+                />
+                -
+                <input 
+                    type="number"
+                    className="rep-range input-default" 
+                    value={setTemplate.rep_range_end?.toString() || "0"}
+                    placeholder="0"
+                    onChange={handleRepRangeEndChange}
+                />
+            </p>}
             {isTime && 
-            <p className="edit-template-set-row-item">{setTemplate.time}</p>}
+            <div 
+                className="edit-template-set-row-item time-container"
+            >
+                <select defaultValue={parseInt(setTemplate.time?.slice(0, 2) || "0")}>
+                    {select0To23.map((i) => (
+                        <option value={i} key={i}>{i < 10 ? (0+i.toString()) : i}</option>
+                    ))}
+                </select>
+                :
+                <select defaultValue={parseInt(setTemplate.time?.slice(3, 5) || "0")}>
+                    {select0To59.map((i) => (
+                        <option value={i} key={i}>{i < 10 ? (0+i.toString()) : i}</option>
+                    ))}
+                </select>
+                :
+                <select defaultValue={parseInt(setTemplate.time?.slice(6, 8) || "0")}>
+                    {select0To59.map((i) => (
+                        <option value={i} key={i}>{i < 10 ? (0+i.toString()) : i}</option>
+                    ))}
+                </select>
+            </div>}
             <button 
-            className="delete-button"
-            onClick={() => deleteSet(setIdx)}
+                className="delete-button"
+                onClick={() => deleteSetTemplate(setIdx)}
             >
                 D
             </button>
@@ -52,7 +131,7 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
     const isRepRange: boolean = (exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].rep_range_start ? true : false) : false);
     const isTime: boolean = (exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].time ? true : false) : false);
 
-    const handleRoutineNoteChange = (event: React.ChangeEvent<HTMLTextAreaElement, HTMLTextAreaElement>): void => {
+    const handleRoutineNoteChange = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
         event.target.style.height = "inherit";
         event.target.style.height = event.target.scrollHeight+"px";
         const newExerciseTemplate = {
@@ -60,7 +139,7 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
             routine_note: event.target.value
         }
         updateExerciseTemplate(exIdx, newExerciseTemplate);
-    }
+    };
 
     const handleAddSet = (): void => {
         const newSetTemplates: Array<SetTemplate> = [...exerciseTemplate.set_templates];
@@ -70,9 +149,9 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
             set_templates: newSetTemplates
         }
         updateExerciseTemplate(exIdx, newExerciseTemplate);
-    }
+    };
 
-    const deleteSet = (setIdx: number): void => {
+    const deleteSetTemplate = (setIdx: number): void => {
         const newSetTemplates: Array<SetTemplate> = [...exerciseTemplate.set_templates];
         newSetTemplates.splice(setIdx, 1);
         const newExerciseTemplate = {
@@ -80,9 +159,17 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
             set_templates: newSetTemplates
         }
         updateExerciseTemplate(exIdx, newExerciseTemplate);
-    }
+    };
 
-    // TODO: add updateSet option for when changing set values (need to first update SetTempalte functionality to allow changes)
+    const updateSetTemplate = (setIdx: number, newSetTemplate: SetTemplate): void => {
+        const newSetTemplates: Array<SetTemplate> = [...exerciseTemplate.set_templates];
+        newSetTemplates[setIdx] = newSetTemplate;
+        const newExerciseTemplate = {
+            ...exerciseTemplate,
+            set_templates: newSetTemplates
+        }
+        updateExerciseTemplate(exIdx, newExerciseTemplate);
+    };
 
     return (
         <div
@@ -92,24 +179,24 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
                 <p className="edit-template-exercise-name">{exIdx+1}. </p>
                 <p className="edit-template-exercise-name">{exerciseTemplate.exercise_name}</p>
                 <button 
-                className="delete-button"
-                onClick={() => deleteExerciseTemplate(exIdx)}
+                    className="delete-button"
+                    onClick={() => deleteExerciseTemplate(exIdx)}
                 >
                     D
                 </button>
             </div>
             <textarea
-            className="input-default routine-note"
-            placeholder="Routine Note"
-            value={exerciseTemplate.routine_note}
-            onChange={handleRoutineNoteChange}
+                className="input-default routine-note"
+                placeholder="Routine Note"
+                value={exerciseTemplate.routine_note}
+                onChange={handleRoutineNoteChange}
             />
             <hr className="line"/>
             <div className="edit-template-set">
                 <div className="edit-template-set-row">
                     <p className="edit-template-set-row-item">Set</p>
                     {isReps && <p className="edit-template-set-row-item">Reps</p>}
-                    {isRepRange && <p className="edit-template-set-row-item">Rep Range</p>}
+                    {isRepRange && <p className="edit-template-set-row-item-rep-range">Rep Range</p>}
                     {isTime && <p className="edit-template-set-row-item">Time</p>}
                 </div>
                 <hr className="line line-light"/>
@@ -121,12 +208,13 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
                         isReps={isReps} 
                         isRepRange={isRepRange} 
                         isTime={isTime}
-                        deleteSet={deleteSet}
+                        deleteSetTemplate={deleteSetTemplate}
+                        updateSetTemplate={updateSetTemplate}
                     />
                 ))}
                 <button 
-                className="add-set-button"
-                onClick={handleAddSet}
+                    className="add-set-button"
+                    onClick={handleAddSet}
                 >
                     Add Set
                 </button>
@@ -186,17 +274,17 @@ const EditTemplatePage = () => {
         <>
             <div className="edit-template-options">
             <button 
-            className="edit-template-options-button"
-            onClick={() => {
-                localStorage.removeItem("templateToEdit");
-                navigate("/workout");
-            }}
+                className="edit-template-options-button"
+                onClick={() => {
+                    localStorage.removeItem("templateToEdit");
+                    navigate("/workout");
+                }}
             >
                 Cancel
             </button>
             <p className="edit-template-options-text">Edit Workout Template</p>
             <button 
-            className="edit-template-options-button"
+                className="edit-template-options-button"
             >
                 Save
             </button>
@@ -228,7 +316,7 @@ const EditTemplatePage = () => {
                     ))
                 }
                 <button 
-                className="edit-template-add-exercise-button"
+                    className="edit-template-add-exercise-button"
                 >
                     Add Exercise
                 </button>

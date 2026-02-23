@@ -51,20 +51,20 @@ const WorkoutPage = () => {
         <>
             <header className="workout-header">Workout</header>
             <button 
-            className="workout-page-button"
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                console.log("Start Empty Workout");
-            }}
+                className="workout-page-button"
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                    console.log("Start Empty Workout");
+                }}
             >
                 Start Empty Workout
             </button>
             <p className="workout-text">Workout Templates</p>
             <button 
-            className="workout-page-button"
-            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                localStorage.removeItem("templateToEdit");
-                navigate("/workout/edit-template");
-            }}
+                className="workout-page-button"
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                    localStorage.removeItem("templateToEdit");
+                    navigate("/workout/edit-template");
+                }}
             >
                 Create New Workout Template
             </button>
@@ -75,21 +75,21 @@ const WorkoutPage = () => {
                     <>
                     {workoutTemplates.map((workoutTemplate) => (
                         <div
-                        key={workoutTemplate.id}
-                        className="template"
-                        onClick={(event: React.MouseEvent<HTMLDivElement>) => {
-                            localStorage.setItem("templateToEdit", JSON.stringify(workoutTemplate))
-                            navigate("/workout/edit-template");
-                        }}
+                            key={workoutTemplate.id}
+                            className="template"
+                            onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+                                localStorage.setItem("templateToEdit", JSON.stringify(workoutTemplate))
+                                navigate("/workout/edit-template");
+                            }}
                         >
                             <p>{workoutTemplate.name}</p>
                             <div 
-                            className="template-exercise"
+                                className="template-exercise"
                             >
                                 {workoutTemplate.exercise_templates.map((exerciseTemplate) => (
                                     <div 
-                                    className="template-exercise-text"
-                                    key={exerciseTemplate.exercise_id}
+                                        className="template-exercise-text"
+                                        key={exerciseTemplate.exercise_id}
                                     >
                                         - {exerciseTemplate.exercise_name}
                                     </div>
@@ -97,11 +97,11 @@ const WorkoutPage = () => {
                             </div>
                             {/* <button className="template-button">Edit Template</button> */}
                             <button 
-                            className="template-button"
-                            onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                                event.stopPropagation();
-                                console.log("Start Workout with Template");
-                            }}
+                                className="template-button"
+                                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                                    event.stopPropagation();
+                                    console.log("Start Workout with Template");
+                                }}
                             >
                                 Start Workout
                             </button>

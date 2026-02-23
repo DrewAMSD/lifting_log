@@ -1,3 +1,6 @@
+To build container:
+docker build -t <image-name> .
+
 To have new empty instance of db when running docker file, run docker file with:
 docker run -p 8000:8000 <image-name>
 
