@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { WorkoutTemplate, ExerciseTemplate, SetTemplate, Exercise, Token, HTTPException } from "../types";
 import { NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
+import { fetchExercises } from "../Components/ExerciseSelect";
 
 type ExerciseTemplateProps = {
     exIdx: number,
@@ -304,7 +305,7 @@ const EditTemplatePage = () => {
         // throw new Error("Exercise for id: "+id+" does not exist");
         return {
             id: -1,
-            name: "Bad exercise",
+            name: "Exercise not found",
             primary_muscles: [],
             weight: false,
             reps: false,
@@ -400,28 +401,12 @@ const EditTemplatePage = () => {
             setWorkoutName(initTemplate.name);
         }
         
-        const fetchExercises = async () => {
+        const callFetchExercises = async () => {
             try {
                 const token: string = await getToken();
 
-                const response: Response = await fetch(serverUrl+"/exercises/me/", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer "+token
-                    }
-                })
-
-                const data: unknown = await response.json();
-
-                if (response.ok) {
-                    const exercisesToSet: Array<Exercise> = data as Array<Exercise>;
-                    setExercises(exercisesToSet);
-                }
-                else {
-                    const httpException: HTTPException = data as HTTPException;
-                    throw new Error(httpException.detail);
-                }
+                const exercisesToAdd: Array<Exercise> = await fetchExercises(serverUrl, token);
+                setExercises(exercisesToAdd);
             }
             catch (error) {
                 console.error("Error: ", error);
@@ -430,7 +415,7 @@ const EditTemplatePage = () => {
                 setIsLoading(false);
             }
         }
-        fetchExercises();
+        callFetchExercises();
     }, []);
 
     return (
@@ -440,22 +425,22 @@ const EditTemplatePage = () => {
         ) : (
         <>
             <div className="edit-template-options">
-            <button 
-                className="edit-template-options-button"
-                onClick={() => {
-                    localStorage.removeItem("templateToEdit");
-                    navigate("/workout");
-                }}
-            >
-                Cancel
-            </button>
-            <p className="edit-template-options-text">Edit Workout Template</p>
-            <button 
-                className="edit-template-options-button"
-                onClick={() => saveWorkoutTemplate()}
-            >
-                Save
-            </button>
+                <button 
+                    className="edit-template-options-button"
+                    onClick={() => {
+                        localStorage.removeItem("templateToEdit");
+                        navigate("/workout");
+                    }}
+                >
+                    Cancel
+                </button>
+                <p className="edit-template-options-text">Edit Workout Template</p>
+                <button 
+                    className="edit-template-options-button"
+                    onClick={() => saveWorkoutTemplate()}
+                >
+                    Save
+                </button>
             </div>
             <div className="edit-template-form">
                 {message.length > 0 && <p className="message">{message}</p>}
