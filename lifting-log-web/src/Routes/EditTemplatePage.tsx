@@ -1,6 +1,6 @@
 import "./EditTemplatePage.css";
 import React, { useEffect, useState } from "react";
-import { WorkoutTemplate, ExerciseTemplate, SetTemplate } from "../types";
+import { WorkoutTemplate, ExerciseTemplate, SetTemplate, Exercise, Token, HTTPException } from "../types";
 import { NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
 
@@ -8,7 +8,8 @@ type ExerciseTemplateProps = {
     exIdx: number,
     exerciseTemplate: ExerciseTemplate
     deleteExerciseTemplate: (exIdx: number) => void,
-    updateExerciseTemplate: (exIdx: number, newExerciseTemplate: ExerciseTemplate) => void
+    updateExerciseTemplate: (exIdx: number, newExerciseTemplate: ExerciseTemplate) => void,
+    exercise: Exercise
 }
 
 type SetTemplateProps = {
@@ -21,46 +22,44 @@ type SetTemplateProps = {
     updateSetTemplate: (setIdx: number, newSetTemplate: SetTemplate) => void
 }
 
-const select0To59: Array<number> = Array.from({ length: 60}, (_, i) => i);
-const select0To23: Array<number> = Array.from({ length: 24}, (_, i) => i);
+const select0To59: Array<string> = Array.from({ length: 60}, (_, i) => (i < 10 ? "0"+i.toString(): i.toString()));
+const select0To23: Array<string> = Array.from({ length: 24}, (_, i) => (i < 10 ? "0"+i.toString(): i.toString()));
 
 const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, deleteSetTemplate, updateSetTemplate }: SetTemplateProps) => {
-    const [message, setMessage] = useState<string>("message");
-    const handleRepsChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        const newReps: number = parseInt(event.target.value)
-        if (newReps < 0) {
-            return;
-        }
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [reps, setReps] = useState<string>(setTemplate.reps ? setTemplate.reps.toString() : "");
+    const [repRangeStart, setRepRangeStart] = useState<string>(setTemplate.rep_range_start ? setTemplate.rep_range_start.toString() : "");
+    const [repRangeEnd, setRepRangeEnd] = useState<string>(setTemplate.rep_range_end ? setTemplate.rep_range_end.toString() : "");
+    // fields for time
+    const time: string | undefined = setTemplate.time;
+    const [hour, setHour] = useState<string>(time ? time.substring(0, 2) : "00");
+    const [minute, setMinute] = useState<string>(time ? time.substring(3, 5) : "00");
+    const [second, setSecond] = useState<string>(time ? time.substring(6, 8) : "00");
+
+    const handleSetTemplateChange = (): void => {
+        const newReps: number | undefined = isReps ? (!Number.isNaN(reps) ? parseInt(reps) : 0) : undefined;
+        const newRepRangeStart: number | undefined = isRepRange ? (!Number.isNaN(repRangeStart) ? parseInt(repRangeStart) : 0) : undefined;
+        const newRepRangeEnd: number | undefined = isRepRange ? (!Number.isNaN(repRangeEnd) ? parseInt(repRangeEnd) : 0) : undefined;
+        const newTime: string | undefined = isTime ? (hour+":"+minute+":"+second) : undefined;
+
         const newSetTemplate: SetTemplate = {
-            ...setTemplate,
-            reps: newReps
-        };
+            reps: newReps,
+            rep_range_start: newRepRangeStart,
+            rep_range_end: newRepRangeEnd,
+            time: newTime
+        }
         updateSetTemplate(setIdx, newSetTemplate);
     };
 
-    const handleRepRangeStartChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        const newRepRange: number = parseInt(event.target.value)
-        if (newRepRange < 0) {
-            return;
+    useEffect(() => {
+        if (!isLoading) {
+            handleSetTemplateChange();
         }
-        const newSetTemplate: SetTemplate = {
-            ...setTemplate,
-            rep_range_start: newRepRange
-        };
-        updateSetTemplate(setIdx, newSetTemplate);
-    };
-    
-    const handleRepRangeEndChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        const newRepRange: number = parseInt(event.target.value)
-        if (newRepRange < 0) {
-            return;
-        }
-        const newSetTemplate: SetTemplate = {
-            ...setTemplate,
-            rep_range_end: newRepRange
-        };
-        updateSetTemplate(setIdx, newSetTemplate);
-    };
+    }, [reps, repRangeStart, repRangeEnd, hour, minute, second]);
+
+    useEffect(() => {
+        setIsLoading(false);
+    }, []);
 
     return (
         <div 
@@ -68,50 +67,53 @@ const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, d
             <p className="edit-template-set-row-item">{setIdx+1}</p>
             {isReps && 
             <input 
-                type="number"
+                type="text"
+                inputMode="numeric"
                 className="edit-template-set-row-item input-default" 
-                value={setTemplate.reps?.toString() || "0"}
+                value={reps}
                 placeholder="0"
-                onChange={handleRepsChange}
+                onChange={(e) => setReps(e.target.value)}
             />}
             
             {isRepRange && 
             <p className="edit-template-set-row-item-rep-range">
                 <input 
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     className="rep-range input-default" 
-                    value={setTemplate.rep_range_start?.toString() || "0"}
+                    value={repRangeStart}
                     placeholder="0"
-                    onChange={handleRepRangeStartChange}
+                    onChange={(e) => setRepRangeStart(e.target.value)}
                 />
                 -
                 <input 
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     className="rep-range input-default" 
-                    value={setTemplate.rep_range_end?.toString() || "0"}
+                    value={repRangeEnd}
                     placeholder="0"
-                    onChange={handleRepRangeEndChange}
+                    onChange={(e) => setRepRangeEnd(e.target.value)}
                 />
             </p>}
             {isTime && 
             <div 
                 className="edit-template-set-row-item time-container"
             >
-                <select defaultValue={parseInt(setTemplate.time?.slice(0, 2) || "0")}>
+                <select defaultValue={hour} onChange={(e) => setHour(e.target.value)}>
                     {select0To23.map((i) => (
-                        <option value={i} key={i}>{i < 10 ? (0+i.toString()) : i}</option>
+                        <option value={i} key={i}>{i}</option>
                     ))}
                 </select>
                 :
-                <select defaultValue={parseInt(setTemplate.time?.slice(3, 5) || "0")}>
+                <select defaultValue={minute} onChange={(e) => setMinute(e.target.value)}>
                     {select0To59.map((i) => (
-                        <option value={i} key={i}>{i < 10 ? (0+i.toString()) : i}</option>
+                        <option value={i} key={i}>{i}</option>
                     ))}
                 </select>
                 :
-                <select defaultValue={parseInt(setTemplate.time?.slice(6, 8) || "0")}>
+                <select defaultValue={second} onChange={(e) => setSecond(e.target.value)}>
                     {select0To59.map((i) => (
-                        <option value={i} key={i}>{i < 10 ? (0+i.toString()) : i}</option>
+                        <option value={i} key={i}>{i}</option>
                     ))}
                 </select>
             </div>}
@@ -125,20 +127,25 @@ const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, d
     );
 }
 
-const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTemplate, updateExerciseTemplate }: ExerciseTemplateProps) => {
-    // TODO: change these 3 fields to check against the actual exercise type (weight+reps = repRange, reps = isReps, time = isTime)
-    const isReps: boolean = (exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].reps ? true : false) : false);
-    const isRepRange: boolean = (exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].rep_range_start ? true : false) : false);
-    const isTime: boolean = (exerciseTemplate.set_templates[0] ? (exerciseTemplate.set_templates[0].time ? true : false) : false);
+const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTemplate, updateExerciseTemplate, exercise }: ExerciseTemplateProps) => {
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [routineNote, setRoutineNote] = useState<string>(exerciseTemplate.routine_note ? exerciseTemplate.routine_note : "");
+    const isReps: boolean = exercise.reps && !exercise.weight;
+    const isRepRange: boolean = exercise.reps && exercise.weight;
+    const isTime: boolean = exercise.time;
+
+    const updateRoutineNote = (): void => {
+        const newExerciseTemplate = {
+            ...exerciseTemplate,
+            routine_note: routineNote
+        }
+        updateExerciseTemplate(exIdx, newExerciseTemplate);
+    }
 
     const handleRoutineNoteChange = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
         event.target.style.height = "inherit";
         event.target.style.height = event.target.scrollHeight+"px";
-        const newExerciseTemplate = {
-            ...exerciseTemplate,
-            routine_note: event.target.value
-        }
-        updateExerciseTemplate(exIdx, newExerciseTemplate);
+        setRoutineNote(event.target.value);
     };
 
     const handleAddSet = (): void => {
@@ -152,6 +159,10 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
     };
 
     const deleteSetTemplate = (setIdx: number): void => {
+        if (exerciseTemplate.set_templates.length <= 1) {
+            return;
+        }
+
         const newSetTemplates: Array<SetTemplate> = [...exerciseTemplate.set_templates];
         newSetTemplates.splice(setIdx, 1);
         const newExerciseTemplate = {
@@ -171,12 +182,22 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
         updateExerciseTemplate(exIdx, newExerciseTemplate);
     };
 
+    useEffect(() => {
+        if (!isLoading) {
+            updateRoutineNote();
+        }
+    }, [routineNote]);
+
+    useEffect(() => {
+        setIsLoading(false);
+    }, []);
+
     return (
         <div
         className="edit-template-exercise"
         >
             <div className="edit-template-exercise-header">
-                <p className="edit-template-exercise-name">{exIdx+1}. </p>
+                <p className="edit-template-exercise-index">{exIdx+1}. </p>
                 <p className="edit-template-exercise-name">{exerciseTemplate.exercise_name}</p>
                 <button 
                     className="delete-button"
@@ -188,7 +209,7 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
             <textarea
                 className="input-default routine-note"
                 placeholder="Routine Note"
-                value={exerciseTemplate.routine_note}
+                value={routineNote}
                 onChange={handleRoutineNoteChange}
             />
             <hr className="line"/>
@@ -227,8 +248,15 @@ const EditTemplatePage = () => {
     const { serverUrl, user, getToken } = useAuth();
     const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [message, setMessage] = useState<string>("");
+    // complete template state
     const [workoutTemplate, setWorkoutTemplate] = useState<WorkoutTemplate>({name: "", exercise_templates: []} as WorkoutTemplate);
-    // TODO: add a fetch to grab all exercises available to the user (might want to make it global, or pass it down through props)
+    // editable fields 
+    const [workoutName, setWorkoutName] = useState<string>("");
+    // exercise list
+    const [exercises, setExercises] = useState<Array<Exercise>>([]);
+    // conditional for deleting template
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
     const deleteExerciseTemplate = (exIdx: number): void => {
         if (exIdx < 0 || exIdx >= workoutTemplate.exercise_templates.length) {
@@ -256,14 +284,153 @@ const EditTemplatePage = () => {
 
     // TODO: make a "addExerciseTemplate", will require drop down with all available exercises to choose from **does not need to be passed down to exercise template, button is in this element
 
+    const getExerciseById = (id: number): Exercise => {
+        let l: number = 0;
+        let r: number = exercises.length-1;
+        let m: number;
+        while (l <= r) {
+            m = Math.floor((l + r) / 2);
+            if (exercises[m].id === id) {
+                return exercises[m];
+            }
+            else if (id < exercises[m].id) {
+                r = m-1;
+            }
+            else {
+                l = m+1;
+            }
+        }
+
+        // throw new Error("Exercise for id: "+id+" does not exist");
+        return {
+            id: -1,
+            name: "Bad exercise",
+            primary_muscles: [],
+            weight: false,
+            reps: false,
+            time: false
+        } as Exercise;
+    };
+
+    const saveWorkoutTemplate = async (): Promise<void> => {
+        if (workoutTemplate.name.length <= 0) {
+            setMessage("Workout template needs to be named");
+            return;
+        }
+        if (workoutTemplate.exercise_templates.length <= 0) {
+            setMessage("Workout template needs to have at least 1 exercise")
+            return;
+        }
+
+        try {
+            const token: string = await getToken();
+
+            const fetchUrl: string = serverUrl+"/templates/me/"+(workoutTemplate.id !== undefined ? workoutTemplate.id : "");
+            const fetchRequest = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer "+token
+                },
+                body: JSON.stringify(workoutTemplate)
+            };
+            if (workoutTemplate.id !== undefined) {
+                fetchRequest.method = "PUT";
+            }
+
+            const response: Response = await fetch(fetchUrl, fetchRequest);
+
+            if (response.ok) {
+                localStorage.removeItem("templateToEdit");
+                navigate("/workout")
+            }
+            else {
+                const httpException: HTTPException = await response.json() as HTTPException;
+                setMessage(httpException.detail);
+            }
+        }
+        catch (error) {
+            console.error("Error: ", error);
+        }
+    }
+
+    const deleteWorkoutTemplate = async (): Promise<void> => {
+        if (!workoutTemplate.id) {
+            return;
+        }
+        try {
+            const token: string = await getToken();
+
+            const response: Response = await fetch(serverUrl+"/templates/me/"+workoutTemplate.id, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer "+token
+                }
+            })
+
+            if (response.ok) {
+                localStorage.removeItem("templateToEdit");
+                navigate("/workout")
+            }
+            else {
+                const httpException: HTTPException = await response.json() as HTTPException;
+                throw new Error(httpException.detail);
+            }
+        }
+        catch (error) {
+            console.error("Error: ", error);
+        }
+    }
+
+    useEffect(() => {
+        if (!isLoading) {
+            setWorkoutTemplate((prevWorkoutTemplate) => ({
+                ...prevWorkoutTemplate,
+                name: workoutName
+            }));
+        }
+    }, [workoutName]);
+
     useEffect(() => {
         const templateToEditString: string | null = localStorage.getItem("templateToEdit");
         if (templateToEditString) {
             const initTemplate: WorkoutTemplate = JSON.parse(templateToEditString) as WorkoutTemplate;
             setWorkoutTemplate(initTemplate);
+            setWorkoutName(initTemplate.name);
         }
-        // part of todo at top of this element, in here is where fetch for exercises will be
-        setIsLoading(false);
+        
+        const fetchExercises = async () => {
+            try {
+                const token: string = await getToken();
+
+                const response: Response = await fetch(serverUrl+"/exercises/me/", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer "+token
+                    }
+                })
+
+                const data: unknown = await response.json();
+
+                if (response.ok) {
+                    const exercisesToSet: Array<Exercise> = data as Array<Exercise>;
+                    setExercises(exercisesToSet);
+                }
+                else {
+                    const httpException: HTTPException = data as HTTPException;
+                    throw new Error(httpException.detail);
+                }
+            }
+            catch (error) {
+                console.error("Error: ", error);
+            }
+            finally {
+                setIsLoading(false);
+            }
+        }
+        fetchExercises();
     }, []);
 
     return (
@@ -285,23 +452,19 @@ const EditTemplatePage = () => {
             <p className="edit-template-options-text">Edit Workout Template</p>
             <button 
                 className="edit-template-options-button"
+                onClick={() => saveWorkoutTemplate()}
             >
                 Save
             </button>
             </div>
             <div className="edit-template-form">
+                {message.length > 0 && <p className="message">{message}</p>}
                 <input 
                     type="text"
                     className="edit-template-title input-default"
-                    onChange={
-                        (event) => {setWorkoutTemplate((prevWorkoutTemplate) => ({
-                            ...prevWorkoutTemplate, 
-                            name: event.target.value
-                        }))}
-                    }
+                    onChange={(e) => setWorkoutName(e.target.value)}
                     placeholder="Template Name"
-                    value={workoutTemplate.name}
-                    required
+                    value={workoutName}
                 />
                 <hr className="line"/>
                 {
@@ -312,6 +475,7 @@ const EditTemplatePage = () => {
                             exerciseTemplate={exerciseTemplate}
                             deleteExerciseTemplate={deleteExerciseTemplate}
                             updateExerciseTemplate={updateExerciseTemplate}
+                            exercise={getExerciseById(exerciseTemplate.exercise_id)}
                         />
                     ))
                 }
@@ -320,6 +484,38 @@ const EditTemplatePage = () => {
                 >
                     Add Exercise
                 </button>
+                {
+                    workoutTemplate.id && 
+                    <>
+                        <p className="other-template-options">Other Template Options:</p>
+                        <button 
+                            className="delete-template-button"
+                            onClick={() => setIsDeleting(true)}
+                        >
+                            Delete Template
+                        </button>
+                        {
+                            isDeleting && 
+                            <div className="are-you-sure-container">
+                                <p>Are you sure you want to delete this template?</p>
+                                <div className="are-you-sure-button-container">
+                                    <button 
+                                        className="are-you-sure-button are-you-sure-cancel-button"
+                                        onClick={() => setIsDeleting(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="are-you-sure-button are-you-sure-delete-button"
+                                        onClick={() => deleteWorkoutTemplate()}
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </>
+                }
             </div>
         </>
         )}

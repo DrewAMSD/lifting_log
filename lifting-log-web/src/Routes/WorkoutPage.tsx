@@ -1,9 +1,17 @@
 import "./WorkoutPage.css";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import { Navigate, NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
 import { HTTPException, WorkoutTemplate } from "../types";
 
+type MenuProps = {
+    items: Array<ReactNode>
+}
+
+const Menu = ({ items }: MenuProps) => {
+
+
+}
 
 const WorkoutPage = () => {
     const { serverUrl, user, getToken } = useAuth();
@@ -58,7 +66,7 @@ const WorkoutPage = () => {
             >
                 Start Empty Workout
             </button>
-            <p className="workout-text">Workout Templates</p>
+            <p className="workout-templates">Workout Templates</p>
             <button 
                 className="workout-page-button"
                 onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
@@ -82,7 +90,10 @@ const WorkoutPage = () => {
                                 navigate("/workout/edit-template");
                             }}
                         >
-                            <p>{workoutTemplate.name}</p>
+                            <div className="template-header">
+                                <p className="template-name">{workoutTemplate.name}</p>
+                                {/* TODO: add drop down menu here */}
+                            </div>
                             <div 
                                 className="template-exercise"
                             >
@@ -95,7 +106,6 @@ const WorkoutPage = () => {
                                     </div>
                                 ))}
                             </div>
-                            {/* <button className="template-button">Edit Template</button> */}
                             <button 
                                 className="template-button"
                                 onClick={(event: React.MouseEvent<HTMLButtonElement>) => {

@@ -2,6 +2,7 @@ import "./Navbar.css";
 import { NavLink } from "react-router";
 
 function Navbar() {
+    // TODO: add icons right above text on each of these links
     return (
         <div className="navbar">
             <NavLink className="link" to="/home">

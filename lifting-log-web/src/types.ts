@@ -52,3 +52,27 @@ export type WorkoutTemplate = {
     username?: string,
     exercise_templates: Array<ExerciseTemplate>
 }
+
+export type Exercise = {
+  id: number,
+  name: string,
+  username?: string,
+  primary_muscles: Array<string>,
+  secondary_muscles?: Array<string>,
+  description?: string,
+  weight: boolean,
+  reps: boolean,
+  time: boolean
+}
+
+export type ExerciseToAdd = {
+  id?: number,
+  name: string,
+  username?: string,
+  primary_muscles: Array<string>,
+  secondary_muscles?: Array<string>,
+  description?: string,
+  weight: boolean,
+  reps: boolean,
+  time: boolean
+}

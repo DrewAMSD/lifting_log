@@ -126,8 +126,8 @@ const LoginPage = () => {
         <>
         {login ? (
             <form 
-            className="login-page-form"
-            onSubmit={handleLoginSubmit}
+                className="login-page-form"
+                onSubmit={handleLoginSubmit}
             >
                 <label>
                     Username: 
@@ -152,8 +152,8 @@ const LoginPage = () => {
             </form>
         ) : (
             <form
-            className="login-page-form" 
-            onSubmit={handleRegisterSubmit}
+                className="login-page-form" 
+                onSubmit={handleRegisterSubmit}
             >
                 <label>
                     Username: 

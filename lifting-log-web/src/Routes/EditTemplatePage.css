@@ -45,8 +45,13 @@
     flex-direction: row;
 }
 
+.edit-template-exercise-index {
+    font-size: 20px;
+}
+
 .edit-template-exercise-name {
     font-size: 20px;
+    color: rgb(35, 94, 255);
 }
 
 .edit-template-set {
@@ -113,6 +118,51 @@
     border-color: rgb(170, 0, 0);
 }
 
+.other-template-options {
+    margin-top: 40px;
+}
+
+.delete-template-button {
+    height: 36px;
+    background-color: rgb(170, 0, 0);
+    border-color: rgb(170, 0, 0);
+}
+
+.are-you-sure-container {
+    background-color: rgb(129, 129, 129);
+    border: solid 2px black;
+    position: absolute;
+    padding: 4vw;
+    top: 20vh;
+    width: 60vw;
+    left: 18vw;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
+.are-you-sure-button-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.are-you-sure-button {
+    width: 40%;
+}
+
+.are-you-sure-cancel-button {
+    background-color: rgb(102, 102, 102);
+    border-color: rgb(102, 102, 102);
+}
+
+.are-you-sure-delete-button {
+    background-color: rgb(170, 0, 0);
+    border-color: rgb(170, 0, 0);
+}
+
 .edit-template-add-exercise-button {
     height: 50px;
     font-size: 24px;
@@ -125,9 +175,7 @@
     font-size: 16px;
 }
 
-select {
-    appearance: none;
-    background-color: rgb(37, 37, 37);
-    border: 2px solid rgb(37, 37, 37);
-    color: white;
+.message {
+    color: red;
+    font-size: 20px;
 }

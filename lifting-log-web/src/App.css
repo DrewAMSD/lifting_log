@@ -18,3 +18,10 @@ button {
     color: white;
     padding: 3px;
 }
+
+select {
+    appearance: none;
+    background-color: rgb(37, 37, 37);
+    border: 2px solid rgb(37, 37, 37);
+    color: white;
+}

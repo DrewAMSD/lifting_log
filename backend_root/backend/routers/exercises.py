@@ -118,10 +118,13 @@ def get_exercise(cursor: Cursor, exercise_id: int, username: str = None, for_wor
     elif for_workout:
         cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_id,))
     else:   
-        cursor.execute("""SELECT * FROM exercises
-                   WHERE id = ? AND username IS NULL
-                   OR id = ? AND username = ?
-                   """, (exercise_id, exercise_id, username))
+        cursor.execute("""
+            SELECT * FROM exercises
+            WHERE id = ? AND username IS NULL
+            OR id = ? AND username = ?
+            ORDER BY id ASC
+            """, (exercise_id, exercise_id, username)
+        )
     exercises_row: sqlite3.Row = cursor.fetchone()
     if not exercises_row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Exercise with id {exercise_id} not found")

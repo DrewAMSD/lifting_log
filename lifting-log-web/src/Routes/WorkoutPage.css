@@ -25,9 +25,9 @@
     font-size: 3vh;
 }
 
-.workout-text {
+.workout-templates {
     font-size: 16px;
-    margin-top: 20px;
+    margin-top: 40px;
 }
 
 .templates {
@@ -58,6 +58,15 @@
 
 .template:active {
     opacity: 70%;
+}
+
+.template-header {
+    display: flex;
+    flex-direction: row;
+}
+
+.template-name {
+    font-size: 22px;
 }
 
 .template-exercise {
