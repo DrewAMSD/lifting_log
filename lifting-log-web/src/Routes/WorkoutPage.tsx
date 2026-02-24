@@ -4,15 +4,6 @@ import { Navigate, NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
 import { HTTPException, WorkoutTemplate } from "../types";
 
-type MenuProps = {
-    items: Array<ReactNode>
-}
-
-const Menu = ({ items }: MenuProps) => {
-
-
-}
-
 const WorkoutPage = () => {
     const { serverUrl, user, getToken } = useAuth();
     const [loading, setLoading] = useState<boolean>(true);
@@ -92,7 +83,6 @@ const WorkoutPage = () => {
                         >
                             <div className="template-header">
                                 <p className="template-name">{workoutTemplate.name}</p>
-                                {/* TODO: add drop down menu here */}
                             </div>
                             <div 
                                 className="template-exercise"
