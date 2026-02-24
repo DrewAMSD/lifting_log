@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { WorkoutTemplate, ExerciseTemplate, SetTemplate, Exercise, Token, HTTPException } from "../types";
 import { NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
-import { fetchExercises } from "../Components/ExerciseSelect";
+import { ExerciseSelect, fetchExercises } from "../Components/ExerciseSelect";
 
 type ExerciseTemplateProps = {
     exIdx: number,
@@ -258,6 +258,9 @@ const EditTemplatePage = () => {
     const [exercises, setExercises] = useState<Array<Exercise>>([]);
     // conditional for deleting template
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    // variables for adding in exercise
+    const [isSelectingExercise, setIsSelectingExercise] = useState<boolean>(false);
+    const [selectedExercise, setSelectedExercise] = useState<Exercise>({} as Exercise);
 
     const deleteExerciseTemplate = (exIdx: number): void => {
         if (exIdx < 0 || exIdx >= workoutTemplate.exercise_templates.length) {
@@ -384,6 +387,10 @@ const EditTemplatePage = () => {
         }
     }
 
+    const cancelSelect = (): void => {
+        setIsSelectingExercise(false);
+    }
+
     useEffect(() => {
         if (!isLoading) {
             setWorkoutTemplate((prevWorkoutTemplate) => ({
@@ -422,6 +429,12 @@ const EditTemplatePage = () => {
     <>
         {isLoading ? (
             <div>Loading...</div>
+        ) : (
+        isSelectingExercise ? (
+            <ExerciseSelect 
+                exercises={exercises}
+                cancelSelect={cancelSelect}
+            />
         ) : (
         <>
             <div className="edit-template-options">
@@ -466,6 +479,7 @@ const EditTemplatePage = () => {
                 }
                 <button 
                     className="edit-template-add-exercise-button"
+                    onClick={() => setIsSelectingExercise(true)}
                 >
                     Add Exercise
                 </button>
@@ -503,6 +517,7 @@ const EditTemplatePage = () => {
                 }
             </div>
         </>
+        )
         )}
     </>
     );
