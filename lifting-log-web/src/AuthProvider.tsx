@@ -1,7 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { HTTPException, RefreshToken, User, AccessTokenResponse, TokenPayload, Token } from "./types";
 import { Navigate, useNavigate, NavigateFunction } from "react-router";
-import { useState, useEffect, createContext, ReactNode, Context, useContext } from "react";
+import { JSX, useState, useEffect, createContext, ReactNode, Context, useContext } from "react";
 
 const isExpired = (exp: number): boolean => {
     const now: number = Date.now() / 1000;
@@ -103,7 +103,7 @@ type AuthContextType = {
 
 const AuthContext: Context<AuthContextType> = createContext<AuthContextType>({} as AuthContextType);
 
-const AuthProvider = ({ children }: ReactNodeProps) => {
+const AuthProvider = ({ children }: ReactNodeProps): JSX.Element => {
     const serverUrl: string = process.env.REACT_APP_SERVER_URL || "http://localhost:8000";
     const navigate: NavigateFunction = useNavigate();
     const [user, setUser] = useState<User | null>(null);
@@ -241,7 +241,7 @@ const useAuth = (): AuthContextType => {
     return useContext(AuthContext);
 }
 
-const ProtectedRoute = ({ children }: ReactNodeProps) => {
+const ProtectedRoute = ({ children }: ReactNodeProps): JSX.Element => {
     const { user, loading } = useAuth();
 
     if (loading) {

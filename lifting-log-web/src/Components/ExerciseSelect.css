@@ -1,3 +1,16 @@
+/* #es-container {
+    height: 93vh;
+    max-height: 93vh;
+    width: 100vw;
+    color: white;
+    background-color: rgb(0, 0, 0);
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+} */
+
 .es-options {
     display: flex;
     flex-direction: row;
@@ -19,4 +32,37 @@
 
 .es-options-text {
     font-size: 16px;
+}
+
+.es-exercises-container {
+    display: flex;
+    flex-direction: column;
+    width: 98%;
+}
+
+.es-search-bar {
+    margin-bottom: 10px;
+    width: 80%;
+    font-size: 26px;
+    font-family: inherit;
+    color: white;
+    background-color: rgb(37, 37, 37);
+    border: 2px solid rgb(37, 37, 37);
+    border-radius: 10px;
+    outline: none;
+}
+
+.es-exercise-container {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(24, 24, 24);
+    border: 2px solid rgb(24, 24, 24);
+    border-radius: 10px;
+    margin-top: 3px;
+    padding: 5px;
+}
+
+.es-muscle-text {
+    font-size: 18px;
+    color: rgb(150, 150, 150);
 }

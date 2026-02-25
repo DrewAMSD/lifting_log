@@ -1,5 +1,5 @@
 import "./Settings.css";
-import { useState, useEffect } from "react";
+import { JSX, useState, useEffect } from "react";
 import { Navigate } from "react-router";
 import { useAuth } from "../AuthProvider";
 import { HTTPException } from "../types";
@@ -10,7 +10,7 @@ type UserMetaData = {
     full_name: string
 }
 
-const Settings = () => {
+const Settings = (): JSX.Element => {
     const { serverUrl, user, logoutUser, deleteUser, getToken } = useAuth();
     const [userMetaData, setUserMetaData] = useState<UserMetaData>({} as UserMetaData);
     
@@ -47,7 +47,7 @@ const Settings = () => {
     }
 
     return (
-        <div className="settings">
+        <div className="route-container" id="settings">
             <div>{userMetaData.username}</div>
             <div>{userMetaData.email}</div>
             <div>{userMetaData.full_name}</div>

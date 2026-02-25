@@ -1,5 +1,5 @@
 import "./LoginPage.css"
-import { useState, SubmitEvent } from "react";
+import { JSX, useState, SubmitEvent } from "react";
 import { useNavigate } from "react-router";
 import { HTTPException, TokenResponse, TokenPayload, User, Token } from "../types";
 import { jwtDecode } from "jwt-decode";
@@ -16,7 +16,7 @@ type CreateUserResponse = {
     username: string
 };
 
-const LoginPage = () => {
+const LoginPage = (): JSX.Element => {
     const { serverUrl, loginUser } = useAuth();
     const [login, setLogin] = useState<boolean>(true);
     const [message, setMessage] = useState<string>("");
@@ -123,7 +123,7 @@ const LoginPage = () => {
     };
 
     return (
-        <>
+    <div className="route-container">
         {login ? (
             <form 
                 className="login-page-form"
@@ -196,7 +196,7 @@ const LoginPage = () => {
             </form>
         )}
         <div className="message">{message}</div>
-        </>
+    </div>
     );
 }
 

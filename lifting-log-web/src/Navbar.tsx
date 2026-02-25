@@ -1,7 +1,8 @@
 import "./Navbar.css";
+import { JSX } from "react";
 import { NavLink } from "react-router";
 
-function Navbar() {
+function Navbar(): JSX.Element {
     // TODO: add icons right above text on each of these links
     return (
         <div className="navbar">

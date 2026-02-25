@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { JSX } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import './App.css';
 import Navbar from "./Navbar";
@@ -10,12 +10,11 @@ import NotFound from './Routes/NotFound';
 import EditTemplatePage from './Routes/EditTemplatePage';
 import { AuthProvider, ProtectedRoute } from './AuthProvider';
 
-function App() {
+function App(): JSX.Element {
   return (
     <>
         <BrowserRouter>
           <AuthProvider>
-            <div className="routes-container">
               <Routes>
                 <Route path="/" element={
                   <ProtectedRoute>
@@ -62,7 +61,6 @@ function App() {
 
                 <Route path="*" element={<NotFound />}/>
               </Routes>
-            </div>
             <Navbar />
           </AuthProvider>
         </BrowserRouter>

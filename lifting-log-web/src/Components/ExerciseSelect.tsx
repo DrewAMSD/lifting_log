@@ -1,10 +1,16 @@
 import "./ExerciseSelect.css";
 import { Exercise, HTTPException } from "../types";
+import { JSX, useEffect, useState } from "react";
 
+type ExerciseElementProps = {
+    exercise: Exercise,
+    selectExercise: (ex: Exercise) => void
+}
 
 type ExerciseSelectProps = {
     exercises: Array<Exercise>,
-    cancelSelect: () => void
+    cancelSelect: () => void,
+    selectExercise: (ex: Exercise) => void
 }
 
 const fetchExercises = async (serverUrl: string, token: string): Promise<Array<Exercise>> => {    
@@ -28,10 +34,39 @@ const fetchExercises = async (serverUrl: string, token: string): Promise<Array<E
     }
 };
 
-const ExerciseSelect = ({ exercises, cancelSelect }: ExerciseSelectProps) => {
+const ExerciseElement = ({ exercise, selectExercise }: ExerciseElementProps): JSX.Element => {
+    return (
+        <div
+            className="es-exercise-container"
+            onClick={() => selectExercise(exercise)}
+        >
+            <p>{exercise.name}</p>
+            {exercise.primary_muscles && <p className="es-muscle-text">{exercise.primary_muscles}</p>}
+        </div>
+    );
+}
+
+const ExerciseSelect = ({ exercises, cancelSelect, selectExercise }: ExerciseSelectProps): JSX.Element => {
+    const [search, setSearch] = useState<string>("");
+    const [searchToLower, setSearchToLower] = useState<string>("");
+
+    useEffect(() => {
+        // scroll 
+        const esContainer: HTMLElement | null = document.getElementById("es-container");
+        if (esContainer !== null) {
+            esContainer.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+    }, []);
+
+    useEffect(() => {
+        setSearchToLower(search.toLowerCase());
+    }, [search]);
 
     return (
-    <>
+    <div className="route-container" id="es-container">
         <div className="es-options">
             <button
                 className="es-options-button"
@@ -47,7 +82,29 @@ const ExerciseSelect = ({ exercises, cancelSelect }: ExerciseSelectProps) => {
                 Create
             </button>
         </div>
-    </>
+        <input 
+            type="text"
+            className="es-search-bar"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="es-exercises-container">
+            {
+                exercises
+                .filter((exercise) => 
+                    exercise.name.toLowerCase().includes(searchToLower)
+                )
+                .map((exercise) => (
+                    <ExerciseElement 
+                        key={exercise.id}
+                        exercise={exercise}
+                        selectExercise={selectExercise}
+                    />
+                ))
+            }
+        </div>
+    </div>
     );
 };
 

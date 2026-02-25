@@ -1,11 +1,12 @@
-.not-found {
-    height: 100%;
-    width: 100%;
+#not-found {
+    height: 93vh;
+    width: 100vw;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding-bottom: 30%;
+    background-color: black;
 }
 
 p {

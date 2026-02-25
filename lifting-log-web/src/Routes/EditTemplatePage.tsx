@@ -1,5 +1,5 @@
 import "./EditTemplatePage.css";
-import React, { useEffect, useState } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { WorkoutTemplate, ExerciseTemplate, SetTemplate, Exercise, Token, HTTPException } from "../types";
 import { NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
@@ -26,7 +26,7 @@ type SetTemplateProps = {
 const select0To59: Array<string> = Array.from({ length: 60}, (_, i) => (i < 10 ? "0"+i.toString(): i.toString()));
 const select0To23: Array<string> = Array.from({ length: 24}, (_, i) => (i < 10 ? "0"+i.toString(): i.toString()));
 
-const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, deleteSetTemplate, updateSetTemplate }: SetTemplateProps) => {
+const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, deleteSetTemplate, updateSetTemplate }: SetTemplateProps): JSX.Element => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [reps, setReps] = useState<string>(setTemplate.reps ? setTemplate.reps.toString() : "");
     const [repRangeStart, setRepRangeStart] = useState<string>(setTemplate.rep_range_start ? setTemplate.rep_range_start.toString() : "");
@@ -128,7 +128,7 @@ const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, d
     );
 }
 
-const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTemplate, updateExerciseTemplate, exercise }: ExerciseTemplateProps) => {
+const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTemplate, updateExerciseTemplate, exercise }: ExerciseTemplateProps): JSX.Element => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [routineNote, setRoutineNote] = useState<string>(exerciseTemplate.routine_note ? exerciseTemplate.routine_note : "");
     const isReps: boolean = exercise.reps && !exercise.weight;
@@ -245,7 +245,7 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
     );
 }
 
-const EditTemplatePage = () => {
+const EditTemplatePage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
     const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -260,7 +260,6 @@ const EditTemplatePage = () => {
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
     // variables for adding in exercise
     const [isSelectingExercise, setIsSelectingExercise] = useState<boolean>(false);
-    const [selectedExercise, setSelectedExercise] = useState<Exercise>({} as Exercise);
 
     const deleteExerciseTemplate = (exIdx: number): void => {
         if (exIdx < 0 || exIdx >= workoutTemplate.exercise_templates.length) {
@@ -288,16 +287,16 @@ const EditTemplatePage = () => {
 
     // TODO: make a "addExerciseTemplate", will require drop down with all available exercises to choose from **does not need to be passed down to exercise template, button is in this element
 
-    const getExerciseById = (id: number): Exercise => {
+    const getExerciseByName = (exerciseName: string): Exercise => {
         let l: number = 0;
         let r: number = exercises.length-1;
         let m: number;
         while (l <= r) {
             m = Math.floor((l + r) / 2);
-            if (exercises[m].id === id) {
+            if (exercises[m].name === exerciseName) {
                 return exercises[m];
             }
-            else if (id < exercises[m].id) {
+            else if (exercises[m].name.localeCompare(exerciseName) > 0) {
                 r = m-1;
             }
             else {
@@ -391,6 +390,24 @@ const EditTemplatePage = () => {
         setIsSelectingExercise(false);
     }
 
+    const selectExercise = (ex: Exercise): void => {
+        const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
+        const newExerciseTemplate: ExerciseTemplate = {
+            exercise_id: ex.id,
+            exercise_name: ex.name,
+            routine_note: "",
+            set_templates: [{} as SetTemplate]
+        } as ExerciseTemplate;
+
+        newExerciseTemplates.push(newExerciseTemplate);
+
+        setWorkoutTemplate((prevWorkoutTemplate) => ({
+            ...prevWorkoutTemplate,
+            exercise_templates: newExerciseTemplates
+        }));
+        setIsSelectingExercise(false);
+    }
+
     useEffect(() => {
         if (!isLoading) {
             setWorkoutTemplate((prevWorkoutTemplate) => ({
@@ -413,6 +430,8 @@ const EditTemplatePage = () => {
                 const token: string = await getToken();
 
                 const exercisesToAdd: Array<Exercise> = await fetchExercises(serverUrl, token);
+                // sort exercises alphabetically
+                exercisesToAdd.sort((a,b) => a.name.localeCompare(b.name));
                 setExercises(exercisesToAdd);
             }
             catch (error) {
@@ -434,9 +453,10 @@ const EditTemplatePage = () => {
             <ExerciseSelect 
                 exercises={exercises}
                 cancelSelect={cancelSelect}
+                selectExercise={selectExercise}
             />
         ) : (
-        <>
+        <div className="route-container">
             <div className="edit-template-options">
                 <button 
                     className="edit-template-options-button"
@@ -473,13 +493,15 @@ const EditTemplatePage = () => {
                             exerciseTemplate={exerciseTemplate}
                             deleteExerciseTemplate={deleteExerciseTemplate}
                             updateExerciseTemplate={updateExerciseTemplate}
-                            exercise={getExerciseById(exerciseTemplate.exercise_id)}
+                            exercise={getExerciseByName(exerciseTemplate.exercise_name)}
                         />
                     ))
                 }
                 <button 
                     className="edit-template-add-exercise-button"
-                    onClick={() => setIsSelectingExercise(true)}
+                    onClick={() => {
+                        setIsSelectingExercise(true)
+                    }}
                 >
                     Add Exercise
                 </button>
@@ -516,7 +538,7 @@ const EditTemplatePage = () => {
                     </>
                 }
             </div>
-        </>
+        </div>
         )
         )}
     </>

@@ -1,10 +1,10 @@
 import "./WorkoutPage.css";
-import React, { useState, useEffect, ReactNode } from "react";
-import { Navigate, NavigateFunction, useNavigate } from "react-router";
+import React, { JSX, useState, useEffect } from "react";
+import { NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
 import { HTTPException, WorkoutTemplate } from "../types";
 
-const WorkoutPage = () => {
+const WorkoutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
     const [loading, setLoading] = useState<boolean>(true);
     // fields for working out
@@ -115,7 +115,7 @@ const WorkoutPage = () => {
     };
 
     return (
-        <div className="workout-page">
+        <div className="route-container">
             {loading ? (
                 <div className="loading">Loading...</div>
             ) : (

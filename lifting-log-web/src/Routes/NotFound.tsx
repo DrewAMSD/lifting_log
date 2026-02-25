@@ -1,8 +1,9 @@
-import "./NotFound.css"
+import "./NotFound.css";
+import { JSX } from "react";
 
-function NotFound() {
+const NotFound = (): JSX.Element => {
     return (
-        <div className="not-found">
+        <div className="route-container" id="not-found">
             <p>Error 404</p>
             <p>Page Not Found</p>
         </div>
