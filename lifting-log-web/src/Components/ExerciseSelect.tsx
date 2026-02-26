@@ -58,15 +58,6 @@ const ExerciseSelect = ({ exercises, cancelSelect, selectExercise }: ExerciseSel
     const [musclesFilter, setMusclesFilter] = useState<Array<string>>([]);
 
     useEffect(() => {
-        // scroll to top of this div element after coming to this page
-        const esContainer: HTMLElement | null = document.getElementById("es-container");
-        if (esContainer !== null) {
-            esContainer.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        }
-
         const fetchMuscles = async (): Promise<void> => {
             try {
                 const token: string = await getToken();

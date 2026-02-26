@@ -1,7 +1,7 @@
 import "./WorkoutPage.css";
-import React, { JSX, useState, useEffect } from "react";
+import React, { JSX, useState, useEffect, useId } from "react";
 import { NavigateFunction, useNavigate } from "react-router";
-import { useAuth } from "../AuthProvider";
+import { getUID, useAuth } from "../AuthProvider";
 import { HTTPException, WorkoutTemplate } from "../types";
 
 const WorkoutPage = (): JSX.Element => {
@@ -76,7 +76,7 @@ const WorkoutPage = (): JSX.Element => {
                         <div
                             key={workoutTemplate.id}
                             className="template"
-                            onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+                            onClick={() => {
                                 localStorage.setItem("templateToEdit", JSON.stringify(workoutTemplate))
                                 navigate("/workout/edit-template");
                             }}

@@ -101,6 +101,10 @@ type AuthContextType = {
     getToken: () => Promise<string>
 }
 
+const getUID = (): string => {
+    return Date.now()+"-"+Math.random();
+}
+
 const AuthContext: Context<AuthContextType> = createContext<AuthContextType>({} as AuthContextType);
 
 const AuthProvider = ({ children }: ReactNodeProps): JSX.Element => {
@@ -255,4 +259,4 @@ const ProtectedRoute = ({ children }: ReactNodeProps): JSX.Element => {
     return (<>{children}</>);
 }
 
-export { AuthProvider, useAuth, ProtectedRoute }
+export { AuthProvider, useAuth, ProtectedRoute, getUID }

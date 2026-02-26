@@ -4,6 +4,7 @@ import { WorkoutTemplate, ExerciseTemplate, SetTemplate, Exercise, Token, HTTPEx
 import { NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
 import { ExerciseSelect, fetchExercises } from "../Components/ExerciseSelect";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 type ExerciseTemplateProps = {
     exIdx: number,
@@ -194,11 +195,19 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
     }, []);
 
     return (
+    <Draggable
+        draggableId={exIdx.toString()}
+        index={exIdx}
+    >
+    {(provided) => (
         <div
-        className="edit-template-exercise"
+            className="edit-template-exercise"
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            ref={provided.innerRef}
         >
             <div className="edit-template-exercise-header">
-                <p className="edit-template-exercise-index">{exIdx+1}. </p>
+                {/* <p className="edit-template-exercise-index">{exIdx+1}. </p> */}
                 <p className="edit-template-exercise-name">{exerciseTemplate.exercise_name}</p>
                 <button 
                     className="delete-button"
@@ -242,6 +251,8 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
                 </button>
             </div>
         </div>
+    )}
+    </Draggable>
     );
 }
 
@@ -284,8 +295,6 @@ const EditTemplatePage = (): JSX.Element => {
             exercise_templates: newExerciseTemplates
         }));
     }
-
-    // TODO: make a "addExerciseTemplate", will require drop down with all available exercises to choose from **does not need to be passed down to exercise template, button is in this element
 
     const getExerciseByName = (exerciseName: string): Exercise => {
         let l: number = 0;
@@ -485,18 +494,60 @@ const EditTemplatePage = (): JSX.Element => {
                     value={workoutName}
                 />
                 <hr className="line"/>
-                {
-                    workoutTemplate.exercise_templates.map((exerciseTemplate, exIdx) => (
-                        <ExerciseTemplateElement 
-                            key={exIdx} 
-                            exIdx={exIdx} 
-                            exerciseTemplate={exerciseTemplate}
-                            deleteExerciseTemplate={deleteExerciseTemplate}
-                            updateExerciseTemplate={updateExerciseTemplate}
-                            exercise={getExerciseByName(exerciseTemplate.exercise_name)}
-                        />
-                    ))
-                }
+                <DragDropContext
+                    onDragEnd={result => {
+                        const { destination, source, draggableId } = result;
+
+                        // User dropped item outside of droppable
+                        if (!destination) {
+                            return;
+                        }
+
+                        // User droppped item back into same droppable at same position
+                        if (
+                            destination.droppableId === source.droppableId &&
+                            destination.index === source.index
+                        ) {
+                            return;
+                        }
+
+                        setWorkoutTemplate((prevWorkoutTemplate) => {
+                            const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
+                            const exerciseTemplateToMove: ExerciseTemplate = newExerciseTemplates[source.index];
+                            newExerciseTemplates.splice(source.index, 1);
+                            newExerciseTemplates.splice(destination.index, 0, exerciseTemplateToMove);
+
+                            return {
+                                ...prevWorkoutTemplate,
+                                exercise_templates: newExerciseTemplates
+                            };
+                        });
+                    }}
+                >
+                    <Droppable droppableId="exercise-template-droppable">
+                        {provided => (
+                            <div 
+                                className="exercise-templates-container"
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                            >
+                            {
+                                workoutTemplate.exercise_templates.map((exerciseTemplate, exIdx) => (
+                                    <ExerciseTemplateElement 
+                                        key={exIdx} 
+                                        exIdx={exIdx} 
+                                        exerciseTemplate={exerciseTemplate}
+                                        deleteExerciseTemplate={deleteExerciseTemplate}
+                                        updateExerciseTemplate={updateExerciseTemplate}
+                                        exercise={getExerciseByName(exerciseTemplate.exercise_name)}
+                                    />
+                                ))
+                            }
+                            {provided.placeholder}
+                            </div>
+                        )}
+                    </Droppable>
+                </DragDropContext>
                 <button 
                     className="edit-template-add-exercise-button"
                     onClick={() => {
