@@ -87,10 +87,10 @@ const WorkoutPage = (): JSX.Element => {
                             <div 
                                 className="template-exercise"
                             >
-                                {workoutTemplate.exercise_templates.map((exerciseTemplate) => (
+                                {workoutTemplate.exercise_templates.map((exerciseTemplate, exIdx) => (
                                     <div 
                                         className="template-exercise-text"
-                                        key={exerciseTemplate.exercise_id}
+                                        key={exIdx}
                                     >
                                         - {exerciseTemplate.exercise_name}
                                     </div>
