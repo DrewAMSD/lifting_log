@@ -6,58 +6,31 @@ import { useAuth } from "../AuthProvider";
 import { ExerciseSelect, fetchExercises } from "../Components/ExerciseSelect";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-type ExerciseTemplateProps = {
-    exIdx: number,
-    exerciseTemplate: ExerciseTemplate
-    deleteExerciseTemplate: (exIdx: number) => void,
-    updateExerciseTemplate: (exIdx: number, newExerciseTemplate: ExerciseTemplate) => void,
-    exercise: Exercise
+type SetTemplateProps = {
+    setIdx: number
+    setTemplate: SetTemplate
+    isReps: boolean
+    isRepRange: boolean
+    isTime: boolean
 }
 
-type SetTemplateProps = {
-    setIdx: number,
-    setTemplate: SetTemplate,
-    isReps: boolean,
-    isRepRange: boolean,
-    isTime: boolean,
-    deleteSetTemplate: (setIdx: number) => void,
-    updateSetTemplate: (setIdx: number, newSetTemplate: SetTemplate) => void
+type ExerciseTemplateProps = {
+    exIdx: number
+    exerciseTemplate: ExerciseTemplate
+    exercise: Exercise
+    handleRoutineNoteChange: (exIdx: number, newRoutineNote: string) => void
+    handleExerciseTemplateDelete: (exIdx: number) => void
 }
 
 const select0To59: Array<string> = Array.from({ length: 60}, (_, i) => (i < 10 ? "0"+i.toString(): i.toString()));
 const select0To23: Array<string> = Array.from({ length: 24}, (_, i) => (i < 10 ? "0"+i.toString(): i.toString()));
 
-const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, deleteSetTemplate, updateSetTemplate }: SetTemplateProps): JSX.Element => {
+const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime }: SetTemplateProps): JSX.Element => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [reps, setReps] = useState<string>(setTemplate.reps ? setTemplate.reps.toString() : "");
-    const [repRangeStart, setRepRangeStart] = useState<string>(setTemplate.rep_range_start ? setTemplate.rep_range_start.toString() : "");
-    const [repRangeEnd, setRepRangeEnd] = useState<string>(setTemplate.rep_range_end ? setTemplate.rep_range_end.toString() : "");
-    // fields for time
-    const time: string | undefined = setTemplate.time;
-    const [hour, setHour] = useState<string>(time ? time.substring(0, 2) : "00");
-    const [minute, setMinute] = useState<string>(time ? time.substring(3, 5) : "00");
-    const [second, setSecond] = useState<string>(time ? time.substring(6, 8) : "00");
+    const hour: string = (setTemplate.time ? setTemplate.time.substring(0, 2) : "00");
+    const minute: string = (setTemplate.time ? setTemplate.time.substring(3, 5) : "00");
+    const second: string = (setTemplate.time ? setTemplate.time.substring(6, 8) : "00");
 
-    const handleSetTemplateChange = (): void => {
-        const newReps: number | undefined = isReps ? (!Number.isNaN(reps) ? parseInt(reps) : 0) : undefined;
-        const newRepRangeStart: number | undefined = isRepRange ? (!Number.isNaN(repRangeStart) ? parseInt(repRangeStart) : 0) : undefined;
-        const newRepRangeEnd: number | undefined = isRepRange ? (!Number.isNaN(repRangeEnd) ? parseInt(repRangeEnd) : 0) : undefined;
-        const newTime: string | undefined = isTime ? (hour+":"+minute+":"+second) : undefined;
-
-        const newSetTemplate: SetTemplate = {
-            reps: newReps,
-            rep_range_start: newRepRangeStart,
-            rep_range_end: newRepRangeEnd,
-            time: newTime
-        }
-        updateSetTemplate(setIdx, newSetTemplate);
-    };
-
-    useEffect(() => {
-        if (!isLoading) {
-            handleSetTemplateChange();
-        }
-    }, [reps, repRangeStart, repRangeEnd, hour, minute, second]);
 
     useEffect(() => {
         setIsLoading(false);
@@ -72,9 +45,9 @@ const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, d
                 type="text"
                 inputMode="numeric"
                 className="edit-template-set-row-item input-default" 
-                value={reps}
+                value={setTemplate.reps}
                 placeholder="0"
-                onChange={(e) => setReps(e.target.value)}
+                onChange={(e) => console.log("update reps")}
             />}
             
             {isRepRange && 
@@ -83,37 +56,37 @@ const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, d
                     type="text"
                     inputMode="numeric"
                     className="rep-range input-default" 
-                    value={repRangeStart}
+                    value={setTemplate.rep_range_start}
                     placeholder="0"
-                    onChange={(e) => setRepRangeStart(e.target.value)}
+                    onChange={(e) => console.log("update rep range start")}
                 />
                 -
                 <input 
                     type="text"
                     inputMode="numeric"
                     className="rep-range input-default" 
-                    value={repRangeEnd}
+                    value={setTemplate.rep_range_end}
                     placeholder="0"
-                    onChange={(e) => setRepRangeEnd(e.target.value)}
+                    onChange={(e) => console.log("update rep range end")}
                 />
             </p>}
             {isTime && 
             <div 
                 className="edit-template-set-row-item time-container"
             >
-                <select defaultValue={hour} onChange={(e) => setHour(e.target.value)}>
+                <select defaultValue={hour} onChange={(e) => console.log("update hour")}>
                     {select0To23.map((i) => (
                         <option value={i} key={i}>{i}</option>
                     ))}
                 </select>
                 :
-                <select defaultValue={minute} onChange={(e) => setMinute(e.target.value)}>
+                <select defaultValue={minute} onChange={(e) => console.log("update minute")}>
                     {select0To59.map((i) => (
                         <option value={i} key={i}>{i}</option>
                     ))}
                 </select>
                 :
-                <select defaultValue={second} onChange={(e) => setSecond(e.target.value)}>
+                <select defaultValue={second} onChange={(e) => console.log("update second")}>
                     {select0To59.map((i) => (
                         <option value={i} key={i}>{i}</option>
                     ))}
@@ -121,7 +94,7 @@ const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, d
             </div>}
             <button 
                 className="delete-button"
-                onClick={() => deleteSetTemplate(setIdx)}
+                onClick={() => console.log("delete set")}
             >
                 D
             </button>
@@ -129,66 +102,11 @@ const SetTemplateElement = ({ setIdx, setTemplate, isReps, isRepRange, isTime, d
     );
 }
 
-const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTemplate, updateExerciseTemplate, exercise }: ExerciseTemplateProps): JSX.Element => {
+const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, exercise, handleRoutineNoteChange, handleExerciseTemplateDelete }: ExerciseTemplateProps): JSX.Element => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [routineNote, setRoutineNote] = useState<string>(exerciseTemplate.routine_note ? exerciseTemplate.routine_note : "");
     const isReps: boolean = exercise.reps && !exercise.weight;
     const isRepRange: boolean = exercise.reps && exercise.weight;
     const isTime: boolean = exercise.time;
-
-    const updateRoutineNote = (): void => {
-        const newExerciseTemplate = {
-            ...exerciseTemplate,
-            routine_note: routineNote
-        }
-        updateExerciseTemplate(exIdx, newExerciseTemplate);
-    }
-
-    const handleRoutineNoteChange = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
-        event.target.style.height = "inherit";
-        event.target.style.height = event.target.scrollHeight+"px";
-        setRoutineNote(event.target.value);
-    };
-
-    const handleAddSet = (): void => {
-        const newSetTemplates: Array<SetTemplate> = [...exerciseTemplate.set_templates];
-        newSetTemplates.push({} as SetTemplate);
-        const newExerciseTemplate = {
-            ...exerciseTemplate,
-            set_templates: newSetTemplates
-        }
-        updateExerciseTemplate(exIdx, newExerciseTemplate);
-    };
-
-    const deleteSetTemplate = (setIdx: number): void => {
-        if (exerciseTemplate.set_templates.length <= 1) {
-            return;
-        }
-
-        const newSetTemplates: Array<SetTemplate> = [...exerciseTemplate.set_templates];
-        newSetTemplates.splice(setIdx, 1);
-        const newExerciseTemplate = {
-            ...exerciseTemplate,
-            set_templates: newSetTemplates
-        }
-        updateExerciseTemplate(exIdx, newExerciseTemplate);
-    };
-
-    const updateSetTemplate = (setIdx: number, newSetTemplate: SetTemplate): void => {
-        const newSetTemplates: Array<SetTemplate> = [...exerciseTemplate.set_templates];
-        newSetTemplates[setIdx] = newSetTemplate;
-        const newExerciseTemplate = {
-            ...exerciseTemplate,
-            set_templates: newSetTemplates
-        }
-        updateExerciseTemplate(exIdx, newExerciseTemplate);
-    };
-
-    useEffect(() => {
-        if (!isLoading) {
-            updateRoutineNote();
-        }
-    }, [routineNote]);
 
     useEffect(() => {
         setIsLoading(false);
@@ -211,7 +129,7 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
                 <p className="edit-template-exercise-name">{exerciseTemplate.exercise_name}</p>
                 <button 
                     className="delete-button"
-                    onClick={() => deleteExerciseTemplate(exIdx)}
+                    onClick={() => handleExerciseTemplateDelete(exIdx)}
                 >
                     D
                 </button>
@@ -219,8 +137,8 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
             <textarea
                 className="input-default routine-note"
                 placeholder="Routine Note"
-                value={routineNote}
-                onChange={handleRoutineNoteChange}
+                value={exerciseTemplate.routine_note}
+                onChange={(e) => handleRoutineNoteChange(exIdx, e.target.value)}
             />
             <hr className="line"/>
             <div className="edit-template-set">
@@ -239,13 +157,11 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, deleteExerciseTempla
                         isReps={isReps} 
                         isRepRange={isRepRange} 
                         isTime={isTime}
-                        deleteSetTemplate={deleteSetTemplate}
-                        updateSetTemplate={updateSetTemplate}
                     />
                 ))}
                 <button 
                     className="add-set-button"
-                    onClick={handleAddSet}
+                    onClick={() => console.log("add set")}
                 >
                     Add Set
                 </button>
@@ -263,8 +179,6 @@ const EditTemplatePage = (): JSX.Element => {
     const [message, setMessage] = useState<string>("");
     // complete template state
     const [workoutTemplate, setWorkoutTemplate] = useState<WorkoutTemplate>({name: "", exercise_templates: []} as WorkoutTemplate);
-    // editable fields 
-    const [workoutName, setWorkoutName] = useState<string>("");
     // exercise list
     const [exercises, setExercises] = useState<Array<Exercise>>([]);
     // conditional for deleting template
@@ -272,56 +186,34 @@ const EditTemplatePage = (): JSX.Element => {
     // variables for adding in exercise
     const [isSelectingExercise, setIsSelectingExercise] = useState<boolean>(false);
 
-    const deleteExerciseTemplate = (exIdx: number): void => {
-        if (exIdx < 0 || exIdx >= workoutTemplate.exercise_templates.length) {
-            return;
-        }
+    const handleWorkoutTemplateNameChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        setWorkoutTemplate(prevWorkoutTemplate => ({
+            ...prevWorkoutTemplate,
+            name: event.target.value
+        }));
+    };
+
+    const handleRoutineNoteChange = (exIdx: number, newRoutineNote: string): void => {
+        setWorkoutTemplate(prevWorkoutTemplate => ({
+            ...prevWorkoutTemplate,
+            exercise_templates: prevWorkoutTemplate.exercise_templates.map((exerciseTemplate, i) => (
+                i === exIdx ?
+                {
+                    ...exerciseTemplate,
+                    routine_note: newRoutineNote
+                } :
+                exerciseTemplate
+            ))
+        }));
+    };
+
+    const handleExerciseTemplateDelete = (exIdx: number): void => {
         const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
         newExerciseTemplates.splice(exIdx, 1);
         setWorkoutTemplate(prevWorkoutTemplate => ({
             ...prevWorkoutTemplate,
             exercise_templates: newExerciseTemplates
         }));
-    }
-
-    const updateExerciseTemplate = (exIdx: number, newExerciseTemplate: ExerciseTemplate): void => {
-        if (exIdx < 0 || exIdx >= workoutTemplate.exercise_templates.length) {
-            return;
-        }
-        const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
-        newExerciseTemplates[exIdx] = newExerciseTemplate;
-        setWorkoutTemplate(prevWorkoutTemplate => ({
-            ...prevWorkoutTemplate,
-            exercise_templates: newExerciseTemplates
-        }));
-    }
-
-    const getExerciseByName = (exerciseName: string): Exercise => {
-        let l: number = 0;
-        let r: number = exercises.length-1;
-        let m: number;
-        while (l <= r) {
-            m = Math.floor((l + r) / 2);
-            if (exercises[m].name === exerciseName) {
-                return exercises[m];
-            }
-            else if (exercises[m].name.localeCompare(exerciseName) > 0) {
-                r = m-1;
-            }
-            else {
-                l = m+1;
-            }
-        }
-
-        // throw new Error("Exercise for id: "+id+" does not exist");
-        return {
-            id: -1,
-            name: "Exercise not found",
-            primary_muscles: [],
-            weight: false,
-            reps: false,
-            time: false
-        } as Exercise;
     };
 
     const saveWorkoutTemplate = async (): Promise<void> => {
@@ -395,6 +287,34 @@ const EditTemplatePage = (): JSX.Element => {
         }
     }
 
+    const getExerciseByName = (exerciseName: string): Exercise => {
+        let l: number = 0;
+        let r: number = exercises.length-1;
+        let m: number;
+        while (l <= r) {
+            m = Math.floor((l + r) / 2);
+            if (exercises[m].name === exerciseName) {
+                return exercises[m];
+            }
+            else if (exercises[m].name.localeCompare(exerciseName) > 0) {
+                r = m-1;
+            }
+            else {
+                l = m+1;
+            }
+        }
+
+        // throw new Error("Exercise for id: "+id+" does not exist");
+        return {
+            id: -1,
+            name: "Exercise not found",
+            primary_muscles: [],
+            weight: false,
+            reps: false,
+            time: false
+        } as Exercise;
+    };
+    
     const cancelSelect = (): void => {
         setIsSelectingExercise(false);
     }
@@ -418,20 +338,10 @@ const EditTemplatePage = (): JSX.Element => {
     }
 
     useEffect(() => {
-        if (!isLoading) {
-            setWorkoutTemplate((prevWorkoutTemplate) => ({
-                ...prevWorkoutTemplate,
-                name: workoutName
-            }));
-        }
-    }, [workoutName]);
-
-    useEffect(() => {
         const templateToEditString: string | null = localStorage.getItem("templateToEdit");
         if (templateToEditString) {
             const initTemplate: WorkoutTemplate = JSON.parse(templateToEditString) as WorkoutTemplate;
             setWorkoutTemplate(initTemplate);
-            setWorkoutName(initTemplate.name);
         }
         
         const callFetchExercises = async () => {
@@ -489,9 +399,9 @@ const EditTemplatePage = (): JSX.Element => {
                 <input 
                     type="text"
                     className="edit-template-title input-default"
-                    onChange={(e) => setWorkoutName(e.target.value)}
+                    onChange={handleWorkoutTemplateNameChange}
                     placeholder="Template Name"
-                    value={workoutName}
+                    value={workoutTemplate.name}
                 />
                 <hr className="line"/>
                 <DragDropContext
@@ -511,17 +421,18 @@ const EditTemplatePage = (): JSX.Element => {
                             return;
                         }
 
-                        setWorkoutTemplate((prevWorkoutTemplate) => {
-                            const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
-                            const exerciseTemplateToMove: ExerciseTemplate = newExerciseTemplates[source.index];
-                            newExerciseTemplates.splice(source.index, 1);
-                            newExerciseTemplates.splice(destination.index, 0, exerciseTemplateToMove);
+                        console.log("update state when exercise dropped in new spot");
+                        // setWorkoutTemplate((prevWorkoutTemplate) => {
+                        //     const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
+                        //     const exerciseTemplateToMove: ExerciseTemplate = newExerciseTemplates[source.index];
+                        //     newExerciseTemplates.splice(source.index, 1);
+                        //     newExerciseTemplates.splice(destination.index, 0, exerciseTemplateToMove);
 
-                            return {
-                                ...prevWorkoutTemplate,
-                                exercise_templates: newExerciseTemplates
-                            };
-                        });
+                        //     return {
+                        //         ...prevWorkoutTemplate,
+                        //         exercise_templates: newExerciseTemplates
+                        //     };
+                        // });
                     }}
                 >
                     <Droppable droppableId="exercise-template-droppable">
@@ -537,9 +448,9 @@ const EditTemplatePage = (): JSX.Element => {
                                         key={exIdx} 
                                         exIdx={exIdx} 
                                         exerciseTemplate={exerciseTemplate}
-                                        deleteExerciseTemplate={deleteExerciseTemplate}
-                                        updateExerciseTemplate={updateExerciseTemplate}
                                         exercise={getExerciseByName(exerciseTemplate.exercise_name)}
+                                        handleRoutineNoteChange={handleRoutineNoteChange}
+                                        handleExerciseTemplateDelete={handleExerciseTemplateDelete}
                                     />
                                 ))
                             }
