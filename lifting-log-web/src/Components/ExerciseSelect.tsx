@@ -14,7 +14,7 @@ type ExerciseSelectProps = {
     selectExercise: (ex: Exercise) => void
 }
 
-const fetchExercises = async (serverUrl: string, token: string): Promise<Array<Exercise>> => {    
+const FetchExercises = async (serverUrl: string, token: string): Promise<Array<Exercise>> => {    
     const response: Response = await fetch(serverUrl+"/exercises/me/", {
         method: "GET",
         headers: {
@@ -206,4 +206,4 @@ const ExerciseSelect = ({ exercises, cancelSelect, selectExercise }: ExerciseSel
     );
 };
 
-export { ExerciseSelect, fetchExercises };
+export { ExerciseSelect, FetchExercises };

@@ -51,8 +51,8 @@ const Settings = (): JSX.Element => {
             <div>{userMetaData.username}</div>
             <div>{userMetaData.email}</div>
             <div>{userMetaData.full_name}</div>
-            <button onClick={logoutUser}>Click to Sign Out</button>
-            <button onClick={deleteUser}>Click to Delete Account</button>
+            <button className="sign-out-b" onClick={logoutUser}>Click to Sign Out</button>
+            <button className="delete-account-b" onClick={deleteUser}>Click to Delete Account</button>
         </div>
     );
 }

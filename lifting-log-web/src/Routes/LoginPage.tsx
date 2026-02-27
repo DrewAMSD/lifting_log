@@ -126,6 +126,7 @@ const LoginPage = (): JSX.Element => {
     <div className="route-container">
         {login ? (
             <form 
+                key="login-form"
                 className="login-page-form"
                 onSubmit={handleLoginSubmit}
             >
@@ -152,6 +153,7 @@ const LoginPage = (): JSX.Element => {
             </form>
         ) : (
             <form
+                key="register-form"
                 className="login-page-form" 
                 onSubmit={handleRegisterSubmit}
             >

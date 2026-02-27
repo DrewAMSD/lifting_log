@@ -3,7 +3,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { WorkoutTemplate, ExerciseTemplate, SetTemplate, Exercise, Token, HTTPException } from "../types";
 import { NavigateFunction, useNavigate } from "react-router";
 import { useAuth } from "../AuthProvider";
-import { ExerciseSelect, fetchExercises } from "../Components/ExerciseSelect";
+import { ExerciseSelect, FetchExercises } from "../Components/ExerciseSelect";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 type SetTemplateProps = {
@@ -227,12 +227,12 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, exercise, updateExer
         <div
             className="edit-template-exercise"
             {...provided.draggableProps}
-            {...provided.dragHandleProps}
             ref={provided.innerRef}
         >
             <div className="edit-template-exercise-header">
                 {/* <p className="edit-template-exercise-index">{exIdx+1}. </p> */}
                 <p className="edit-template-exercise-name">{exerciseTemplate.exercise_name}</p>
+                <div {...provided.dragHandleProps}>Reorganize</div>
                 <button 
                     className="delete-button"
                     onClick={() => deleteExerciseTemplate(exIdx)}
@@ -311,7 +311,9 @@ const EditTemplatePage = (): JSX.Element => {
                     ...prevExerciseTemplate,
                     routine_note: newExerciseTemplate.routine_note,
                     set_templates: newExerciseTemplate.set_templates.map((newSetTemplate) => (
-                        {...newSetTemplate}
+                        {
+                            ...newSetTemplate
+                        }
                     ))
                 } :
                 prevExerciseTemplate
@@ -480,7 +482,7 @@ const EditTemplatePage = (): JSX.Element => {
             try {
                 const token: string = await getToken();
 
-                const exercisesToAdd: Array<Exercise> = await fetchExercises(serverUrl, token);
+                const exercisesToAdd: Array<Exercise> = await FetchExercises(serverUrl, token);
                 // sort exercises alphabetically
                 exercisesToAdd.sort((a,b) => a.name.localeCompare(b.name));
                 setExercises(exercisesToAdd);
@@ -553,7 +555,6 @@ const EditTemplatePage = (): JSX.Element => {
                             return;
                         }
 
-                        console.log("update state when exercise dropped in new spot");
                         setWorkoutTemplate((prevWorkoutTemplate) => {
                             const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
                             const exerciseTemplateToMove: ExerciseTemplate = newExerciseTemplates[source.index];

@@ -1,6 +1,6 @@
 #not-found {
-    height: 93vh;
-    width: 100vw;
+    height: 93dvh;
+    width: 100dvw;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -10,6 +10,6 @@
 }
 
 p {
-    font-size: 4vh;
+    font-size: 4dvh;
     margin: 4px;
 }

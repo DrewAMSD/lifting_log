@@ -87,7 +87,7 @@ const getUser = async (): Promise<User | null> => {
     return user;
 };
 
-type ReactNodeProps = {
+type ChildrenProps = {
     children: ReactNode
 }
 
@@ -107,8 +107,8 @@ const getUID = (): string => {
 
 const AuthContext: Context<AuthContextType> = createContext<AuthContextType>({} as AuthContextType);
 
-const AuthProvider = ({ children }: ReactNodeProps): JSX.Element => {
-    const serverUrl: string = process.env.REACT_APP_SERVER_URL || "http://localhost:8000";
+const AuthProvider = ({ children }: ChildrenProps): JSX.Element => {
+    const serverUrl: string = process.env.VITE_SERVER_URL || "http://localhost:8000";
     const navigate: NavigateFunction = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -245,7 +245,7 @@ const useAuth = (): AuthContextType => {
     return useContext(AuthContext);
 }
 
-const ProtectedRoute = ({ children }: ReactNodeProps): JSX.Element => {
+const ProtectedRoute = ({ children }: ChildrenProps): JSX.Element => {
     const { user, loading } = useAuth();
 
     if (loading) {

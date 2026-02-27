@@ -1,7 +1,7 @@
 .route-container {
-    height: 93vh;
-    max-height: 93vh;
-    width: 100vw;
+    height: 93dvh;
+    max-height: 93dvh;
+    width: 100dvw;
     color: white;
     background-color: rgb(0, 0, 0);
     overflow-y: auto;
@@ -12,8 +12,8 @@
 }
 
 button {
-    background-color: rgb(35, 94, 255);
-    border-color: rgb(35, 94, 255);
+    background-color: rgb(14, 67, 214);
+    border-color: rgb(14, 67, 214);
     border-radius: 5px;
     color: white;
     padding: 3px;

@@ -1,12 +1,12 @@
 .loading {
-    margin-top: 35vh;
+    margin-top: 35dvh;
     width: 100%;
     display: flex;
     justify-content: center;
 }
 
 .workout-page {
-    width: 100vw;
+    width: 100dvw;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -20,9 +20,9 @@
 }
 
 .workout-page-button {
-    height: 8vh;
+    height: 8dvh;
     width: 80%;
-    font-size: 3vh;
+    font-size: 3dvh;
 }
 
 .workout-templates {
@@ -36,7 +36,7 @@
     /* border: 2px solid rgb(37, 37, 37); */
     border-radius: 10px;
     min-width: 80%;
-    max-width: 90vw;
+    max-width: 90dvw;
     gap: 8px;
     font-size: 18px;
     display: flex;
@@ -79,7 +79,7 @@
 
 .template-button {
     min-height: 30px;
-    height: 5vh;
+    height: 5dvh;
     font-size: 15px;
 }
 

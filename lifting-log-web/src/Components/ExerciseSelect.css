@@ -49,9 +49,9 @@
 #es-muscle-filter-list-container {
     position: absolute;
     overflow-y: scroll;
-    top: 16vh;
-    height: 60vh;
-    width: 60vw;
+    top: 16dvh;
+    height: 60dvh;
+    width: 60dvw;
     background-color: rgb(24, 24, 24);
     border: 2px solid rgb(24, 24, 24);
     border-radius: 10px;

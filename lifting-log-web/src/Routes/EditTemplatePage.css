@@ -123,6 +123,7 @@
 
 .other-template-options {
     margin-top: 40px;
+    font-size: 24px;
 }
 
 .delete-template-button {
@@ -135,10 +136,10 @@
     background-color: rgb(129, 129, 129);
     border: solid 2px black;
     position: absolute;
-    padding: 4vw;
-    top: 20vh;
-    width: 60vw;
-    left: 18vw;
+    padding: 4dvw;
+    top: 20dvh;
+    width: 60dvw;
+    left: 18dvw;
     text-align: center;
     align-items: center;
     justify-content: center;

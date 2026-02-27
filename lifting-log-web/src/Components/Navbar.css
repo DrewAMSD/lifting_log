@@ -4,9 +4,9 @@
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    bottom: 0;
-    height: 7vh;
-    width: 100vw;
+    top: 93dvh; /* fixed bug with navbar not being aligned at bottom of page on different browsers when using bottom: 0 */
+    height: 7dvh;
+    width: 100dvw;
     background-color: rgb(43, 43, 43);
 }
 
