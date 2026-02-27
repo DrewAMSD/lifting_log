@@ -101,14 +101,10 @@ type AuthContextType = {
     getToken: () => Promise<string>
 }
 
-const getUID = (): string => {
-    return Date.now()+"-"+Math.random();
-}
-
 const AuthContext: Context<AuthContextType> = createContext<AuthContextType>({} as AuthContextType);
 
 const AuthProvider = ({ children }: ChildrenProps): JSX.Element => {
-    const serverUrl: string = process.env.VITE_SERVER_URL || "http://localhost:8000";
+    const serverUrl: string = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
     const navigate: NavigateFunction = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -259,4 +255,4 @@ const ProtectedRoute = ({ children }: ChildrenProps): JSX.Element => {
     return (<>{children}</>);
 }
 
-export { AuthProvider, useAuth, ProtectedRoute, getUID }
+export { AuthProvider, useAuth, ProtectedRoute }

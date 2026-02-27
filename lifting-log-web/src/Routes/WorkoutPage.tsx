@@ -1,7 +1,7 @@
 import "./WorkoutPage.css";
 import React, { JSX, useState, useEffect, useId } from "react";
 import { NavigateFunction, useNavigate } from "react-router";
-import { getUID, useAuth } from "../AuthProvider";
+import { useAuth } from "../AuthProvider";
 import { HTTPException, WorkoutTemplate } from "../types";
 
 const WorkoutPage = (): JSX.Element => {
