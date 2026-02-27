@@ -1,0 +1,8 @@
+services:
+  api:
+    build: .
+    volumes:
+      - ./backend/database/lifting_log.db:/app/backend/database/lifting_log.db
+    ports:
+      - "8000:8000"
+
