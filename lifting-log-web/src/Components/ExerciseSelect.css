@@ -48,7 +48,6 @@
 
 #es-muscle-filter-list-container {
     position: absolute;
-    overflow-y: scroll;
     top: 16dvh;
     height: 60dvh;
     width: 60dvw;
@@ -60,6 +59,8 @@
 }
 
 .es-muscle-filter-list-button-container {
+    width: 100%;
+    height: 8dvh;
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
@@ -78,4 +79,21 @@
 .es-muscle-text {
     font-size: 18px;
     color: rgb(150, 150, 150);
+}
+
+.es-filter-button {
+    font-size: 20px;
+    width: 45%;
+}
+
+.es-muscle-filter-text-container {
+    width: 100%;
+    height: 50dvh;
+    overflow-y: scroll;
+}
+
+.es-muscle-filter-text {
+    padding: 5px;
+    border: 2px solid rgb(37, 37, 37);
+    border-radius: 12px;
 }

@@ -231,8 +231,12 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, exercise, updateExer
         >
             <div className="edit-template-exercise-header">
                 {/* <p className="edit-template-exercise-index">{exIdx+1}. </p> */}
-                <p className="edit-template-exercise-name">{exerciseTemplate.exercise_name}</p>
-                <div {...provided.dragHandleProps}>Reorganize</div>
+                <p 
+                    className="edit-template-exercise-name"
+                    {...provided.dragHandleProps}
+                >
+                    {exerciseTemplate.exercise_name}
+                </p>
                 <button 
                     className="delete-button"
                     onClick={() => deleteExerciseTemplate(exIdx)}

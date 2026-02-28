@@ -134,6 +134,7 @@ const ExerciseSelect = ({ exercises, cancelSelect, selectExercise }: ExerciseSel
                 <div id="es-muscle-filter-list-container">
                     <div className="es-muscle-filter-list-button-container">
                         <button
+                            className="es-filter-button"
                             onClick={() => {
                                 setMusclesFilter([]);
                                 setIsFilteringMuscles(false);
@@ -142,11 +143,13 @@ const ExerciseSelect = ({ exercises, cancelSelect, selectExercise }: ExerciseSel
                             Clear
                         </button>
                         <button 
+                            className="es-filter-button"
                             onClick={() => setIsFilteringMuscles(false)}
                         >
                             Save
                         </button>
                     </div>
+                    <div className="es-muscle-filter-text-container">
                     {
                         muscles.map((muscle, idx) => (
                             <div
@@ -166,15 +169,19 @@ const ExerciseSelect = ({ exercises, cancelSelect, selectExercise }: ExerciseSel
                                         return newFilter;
                                     })
                                 }
+                            >
+                                <p 
+                                className="es-muscle-filter-text"
                                 style={{
                                     backgroundColor: (musclesFilter.includes(muscle) ? "rgb(35, 94, 255)" : "transparent")
                                 }}
-                            >
-                                <hr></hr>
-                                <p>{muscle}</p>
+                                >
+                                    {muscle}
+                                </p>
                             </div>
                         ))
                     }
+                    </div>
                 </div>
             }
             <div className="es-exercises-container">
