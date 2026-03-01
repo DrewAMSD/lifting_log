@@ -4,6 +4,7 @@ import './App.css';
 import Navbar from "./Components/Navbar";
 import Home from "./Routes/Home";
 import WorkoutPage from './Routes/WorkoutPage';
+import WorkingOutPage from './Routes/WorkingOutPage';
 import LoginPage from './Routes/LoginPage';
 import Settings from "./Routes/Settings";
 import NotFound from './Routes/NotFound';
@@ -17,45 +18,46 @@ function App(): JSX.Element {
           <AuthProvider>
               <Routes>
                 <Route path="/" element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                }/>
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }
+                />
 
                 <Route path="/home" element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                }/>
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }
+                />
 
                 <Route path="/workout">
                   <Route index element={
-                    <ProtectedRoute>
-                      <WorkoutPage />
-                    </ProtectedRoute>
-                  }/>
+                      <ProtectedRoute>
+                        <WorkoutPage />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="edit-template" element={
-                    <ProtectedRoute>
-                      <EditTemplatePage />
-                    </ProtectedRoute>
-                  }/>
-                  {/* 
-                  * this route below will prob not be here, 
-                  * just in case I want workouting-out to be on seperate page.
-                  * Will most likely have a conditional on workout page so those 2 pages are more connected (resume option, switch between the 2 easily, etc.)
-                  */}
+                      <ProtectedRoute>
+                        <EditTemplatePage />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="working-out" element={
-                    <ProtectedRoute>
-                      <WorkoutPage /> 
-                    </ProtectedRoute>
-                  }/>
+                      <ProtectedRoute>
+                        <WorkingOutPage /> 
+                      </ProtectedRoute>
+                    }
+                  />
                 </Route>
 
                 <Route path="/settings" element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } />
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  }
+                />
 
                 <Route path="/login" element={<LoginPage />} />
 

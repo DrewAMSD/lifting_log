@@ -6,10 +6,8 @@ import { HTTPException, WorkoutTemplate } from "../types";
 
 const WorkoutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
-    const [loading, setLoading] = useState<boolean>(true);
-    // fields for working out
-    const [workingOut, setWorkingOut] = useState<boolean>(false);
-    // fields fields for workout templates
+    const navigate: NavigateFunction = useNavigate();
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [workoutTemplates, setWorkoutTemplates] = useState<Array<WorkoutTemplate>>([]);
 
     useEffect(() => {
@@ -37,93 +35,82 @@ const WorkoutPage = (): JSX.Element => {
                 console.error("Error: ", error)
             }
             finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         };
         fetchWorkoutTemplates();
     }, []);
 
-    const DefaultPage = () => {
-        const navigate: NavigateFunction = useNavigate();
-
-        return (
-        <>
-            <header className="workout-header">Workout</header>
-            <button 
-                className="workout-page-button"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                    console.log("Start Empty Workout");
-                }}
-            >
-                Start Empty Workout
-            </button>
-            <p className="workout-templates">Workout Templates</p>
-            <button 
-                className="workout-page-button"
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                    localStorage.removeItem("templateToEdit");
-                    navigate("/workout/edit-template");
-                }}
-            >
-                Create New Workout Template
-            </button>
-            <div className="templates">
-                {!workoutTemplates.length ? (
-                    <p>Looks like you have no templates...</p>
-                ) : (
-                    <>
-                    {workoutTemplates.map((workoutTemplate) => (
-                        <div
-                            key={workoutTemplate.id}
-                            className="template"
-                            onClick={() => {
-                                localStorage.setItem("templateToEdit", JSON.stringify(workoutTemplate))
-                                navigate("/workout/edit-template");
-                            }}
-                        >
-                            <div className="template-header">
-                                <p className="template-name">{workoutTemplate.name}</p>
-                            </div>
-                            <div 
-                                className="template-exercise"
-                            >
-                                {workoutTemplate.exercise_templates.map((exerciseTemplate, exIdx) => (
-                                    <div 
-                                        className="template-exercise-text"
-                                        key={exIdx}
-                                    >
-                                        - {exerciseTemplate.exercise_name}
-                                    </div>
-                                ))}
-                            </div>
-                            <button 
-                                className="template-button"
-                                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
-                                    event.stopPropagation();
-                                    console.log("Start Workout with Template");
-                                }}
-                            >
-                                Start Workout
-                            </button>
-                        </div>
-                    ))}
-                    </>
-                )}
-            </div>
-        </>
-        );
-    };
-
     return (
         <div className="route-container">
-            {loading ? (
+            {isLoading ? (
                 <div className="loading">Loading...</div>
             ) : (
-                workingOut ? (
-                    <></>
-                ) : (
-                    <DefaultPage />
-                )
+                <>
+                    <header className="workout-header">Workout</header>
+                    <button 
+                        className="workout-page-button"
+                        onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                            navigate("/workout/working-out");
+                        }}
+                    >
+                        Start Empty Workout
+                    </button>
+                    <p className="workout-templates">Workout Templates</p>
+                    <button 
+                        className="workout-page-button"
+                        onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                            localStorage.removeItem("templateToEdit");
+                            navigate("/workout/edit-template");
+                        }}
+                    >
+                        Create New Workout Template
+                    </button>
+                    <div className="templates">
+                        {!workoutTemplates.length ? (
+                            <p>Looks like you have no templates...</p>
+                        ) : (
+                            <>
+                            {workoutTemplates.map((workoutTemplate) => (
+                                <div
+                                    key={workoutTemplate.id}
+                                    className="template"
+                                    onClick={() => {
+                                        localStorage.setItem("templateToEdit", JSON.stringify(workoutTemplate))
+                                        navigate("/workout/edit-template");
+                                    }}
+                                >
+                                    <div className="template-header">
+                                        <p className="template-name">{workoutTemplate.name}</p>
+                                    </div>
+                                    <div 
+                                        className="template-exercise"
+                                    >
+                                        {workoutTemplate.exercise_templates.map((exerciseTemplate, exIdx) => (
+                                            <div 
+                                                className="template-exercise-text"
+                                                key={exIdx}
+                                            >
+                                                - {exerciseTemplate.exercise_name}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button 
+                                        className="template-button"
+                                        onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                                            event.stopPropagation();
+                                            localStorage.setItem("templateToUse", JSON.stringify(workoutTemplate));
+                                            navigate("/workout/working-out");
+                                        }}
+                                    >
+                                        Start Workout
+                                    </button>
+                                </div>
+                            ))}
+                            </>
+                        )}
+                    </div>
+                </>
             )}
         </div>
     );
