@@ -1,0 +1,27 @@
+.wo-options {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: rgb(37, 37, 37);
+}
+
+.wo-options-button {
+    height: 40px;
+    font-size: 16px;
+    width: 20%;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.wo-delete-button {
+    background-color: rgb(170, 0, 0);
+    border-color: rgb(170, 0, 0);
+}
+
+.wo-options-text {
+    font-size: 20px;
+}

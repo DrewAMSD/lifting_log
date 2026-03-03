@@ -1,8 +1,8 @@
 import "./Settings.css";
 import { JSX, useState, useEffect } from "react";
 import { Navigate } from "react-router";
-import { useAuth } from "../AuthProvider";
-import { HTTPException } from "../types";
+import { useAuth } from "../../AuthProvider";
+import { HTTPException } from "../../types";
 
 type UserMetaData = {
     username: string,

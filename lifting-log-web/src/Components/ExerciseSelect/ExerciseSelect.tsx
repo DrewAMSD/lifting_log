@@ -1,7 +1,7 @@
 import "./ExerciseSelect.css";
-import { Exercise, HTTPException } from "../types";
+import { Exercise, HTTPException } from "../../types";
 import { JSX, useEffect, useState } from "react";
-import { useAuth } from "../AuthProvider";
+import { useAuth } from "../../AuthProvider";
 
 type ExerciseElementProps = {
     exercise: Exercise,

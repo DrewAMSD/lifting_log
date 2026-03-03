@@ -1,9 +1,9 @@
 import "./EditTemplatePage.css";
 import React, { JSX, useEffect, useState } from "react";
-import { WorkoutTemplate, ExerciseTemplate, SetTemplate, Exercise, Token, HTTPException } from "../types";
+import { WorkoutTemplate, ExerciseTemplate, SetTemplate, Exercise, Token, HTTPException } from "../../types";
 import { NavigateFunction, useNavigate } from "react-router";
-import { useAuth } from "../AuthProvider";
-import { ExerciseSelect, FetchExercises } from "../Components/ExerciseSelect";
+import { useAuth } from "../../AuthProvider";
+import { ExerciseSelect, FetchExercises } from "../../Components/ExerciseSelect/ExerciseSelect";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 type SetTemplateProps = {

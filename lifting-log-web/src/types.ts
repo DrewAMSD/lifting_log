@@ -76,3 +76,41 @@ export type ExerciseToAdd = {
   reps: boolean,
   time: boolean
 }
+
+export type WorkoutStats = {
+    exercise_count: number
+    sets: number
+    reps: number
+    volume: number
+    distributions: {
+        set_distribution: Record<string, Record<string, number>>,
+        muscle_distribution: Record<string, number>
+    }
+}
+
+export type SetEntry = {
+    previous?: string
+    weight?: number
+    reps?: number
+    time?: string
+    placeholder?: string
+}
+
+export type ExerciseEntry = {
+    exercise_id: number
+    exercise_name?: string
+    description?: string
+    routine_note?: string
+    set_entries: Array<SetEntry>
+}
+
+export type Workout = {
+    id?: number
+    name: string
+    description?: string
+    date: number
+    start_time: string
+    duration: string
+    stats?: WorkoutStats
+    exercise_entries: Array<ExerciseEntry>
+}

@@ -1,6 +1,6 @@
 import "./Home.css"
 import { JSX } from "react";
-import { useAuth } from "../AuthProvider";
+import { useAuth } from "../../AuthProvider";
 
 const Home = (): JSX.Element => {
     const { serverUrl, user } = useAuth();

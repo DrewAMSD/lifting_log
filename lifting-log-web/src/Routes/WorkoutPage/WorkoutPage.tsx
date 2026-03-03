@@ -1,16 +1,25 @@
 import "./WorkoutPage.css";
 import React, { JSX, useState, useEffect, useId } from "react";
 import { NavigateFunction, useNavigate } from "react-router";
-import { useAuth } from "../AuthProvider";
-import { HTTPException, WorkoutTemplate } from "../types";
+import { useAuth } from "../../AuthProvider";
+import { HTTPException, WorkoutTemplate, Workout } from "../../types";
 
 const WorkoutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
     const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [workoutTemplates, setWorkoutTemplates] = useState<Array<WorkoutTemplate>>([]);
+    const [isSavedLocalWorkout, setIsSavedLocalWorkout] = useState<boolean>(false);
+    const [savedWorkout, setSavedWorkout] = useState<Workout>({} as Workout);
 
     useEffect(() => {
+        const savedWorkoutStateString: string | null = localStorage.getItem("workoutState");
+        if (savedWorkoutStateString) {
+            const localWorkoutState: Workout = JSON.parse(savedWorkoutStateString) as Workout;
+            setSavedWorkout(localWorkoutState);
+            setIsSavedLocalWorkout(true);
+        }
+
         const fetchWorkoutTemplates = async (): Promise<void> => {
             try {
                 const token: string = await getToken();
@@ -56,6 +65,28 @@ const WorkoutPage = (): JSX.Element => {
                     >
                         Start Empty Workout
                     </button>
+                    {isSavedLocalWorkout &&
+                        <div
+                            className="saved-workout-container"
+                        >
+                            <p>Unfinished Workout</p>
+                            <div
+                                className="saved-workout-info-container"
+                            >
+                                <p className="saved-workout-info-text">Date: {Math.floor(savedWorkout.date / 10000)}-{(Math.floor(savedWorkout.date / 100) % 100).toString().padStart(2, "0")}-{(savedWorkout.date % 100).toString().padStart(2, "0")}</p>
+                                <p>|</p>
+                                <p className="saved-workout-info-text">Start Time: {savedWorkout.start_time}</p>
+                            </div>
+                            <button
+                                className="resume-workout-button"
+                                onClick={() => {
+                                    navigate("/workout/working-out")
+                                }}
+                            >
+                                Resume Workout
+                            </button>
+                        </div>
+                    }
                     <p className="workout-templates">Workout Templates</p>
                     <button 
                         className="workout-page-button"
@@ -99,6 +130,7 @@ const WorkoutPage = (): JSX.Element => {
                                         className="template-button"
                                         onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
                                             event.stopPropagation();
+                                            localStorage.removeItem("workoutState");
                                             localStorage.setItem("templateToUse", JSON.stringify(workoutTemplate));
                                             navigate("/workout/working-out");
                                         }}

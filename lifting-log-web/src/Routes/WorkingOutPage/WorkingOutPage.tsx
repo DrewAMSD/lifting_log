@@ -1,61 +1,41 @@
 import { JSX, useState, useEffect } from "react";
 import "./WorkingOutPage.css";
-import { useAuth } from "../AuthProvider";
-import { WorkoutTemplate } from "../types";
-
-type WorkoutStats = {
-    exercise_count: number
-    sets: number
-    reps: number
-    volume: number
-    distributions: {
-        set_distribution: Record<string, Record<string, number>>,
-        muscle_distribution: Record<string, number>
-    }
-}
-
-type SetEntry = {
-    previous?: string
-    weight?: number
-    reps?: number
-    time?: string
-    placeholder?: string
-}
-
-type ExerciseEntry = {
-    exercise_id: number
-    exercise_name?: string
-    description?: string
-    routine_note?: string
-    set_entries: Array<SetEntry>
-}
-
-type Workout = {
-    id?: number
-    name: string
-    description?: string
-    date: number
-    start_time: string
-    duration: string
-    stats?: WorkoutStats
-    exercise_entries: Array<ExerciseEntry>
-}
+import { useAuth } from "../../AuthProvider";
+import { WorkoutTemplate, Workout, ExerciseEntry, SetEntry } from "../../types";
+import { NavigateFunction, useNavigate } from "react-router";
 
 const WorkingOutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
+    const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [workoutState, setWorkoutState] = useState<Workout>({} as Workout);
+
+    const saveWorkoutLocally = async () => {
+        localStorage.setItem("workoutState", JSON.stringify(workoutState));
+    };
+
+    useEffect(() => {
+        if (!isLoading) {
+            saveWorkoutLocally();
+        }
+    }, [workoutState]);
 
     // TODO: add exercise select with fetch exercises on initial page redirect
     useEffect(() => {
         const workoutStateString: string | null = localStorage.getItem("workoutState");
 
-        if (workoutStateString) {
+        if (workoutStateString) { // locally saved workout to use
             const currentWorkoutState: Workout = JSON.parse(workoutStateString) as Workout;
             setWorkoutState(currentWorkoutState);
         }
-        else {
+        else { // need to create new workout
             const currentDate: Date = new Date();
+            // current date as int
+            const year: number = currentDate.getFullYear();
+            const month: number = currentDate.getMonth() + 1;
+            const day: number = currentDate.getDay() + 1;
+            const dateInteger: number = (year * 10000) + (month * 100) + day;
+            // current time
             const hours: number = currentDate.getHours();
             const minutes: number = currentDate.getMinutes();
             const seconds: number = currentDate.getSeconds();
@@ -67,7 +47,7 @@ const WorkingOutPage = (): JSX.Element => {
                 
                 const workoutStateFromTemplate: Workout = {
                     name: workoutTemplateToUse.name,
-                    date: currentDate.getFullYear(),
+                    date: dateInteger,
                     start_time: currentTime,
                     duration: "",
                     exercise_entries: workoutTemplateToUse.exercise_templates.map((exerciseTemplate) => {             
@@ -124,9 +104,29 @@ const WorkingOutPage = (): JSX.Element => {
                 isLoading ? (
                     <div>Loading...</div>
                 ) : (
+                <>
+                    <div className="wo-options">
+                        <button 
+                            className="wo-options-button wo-delete-button"
+                            onClick={() => {
+                                localStorage.removeItem("workoutState");
+                                navigate("/workout");
+                            }}
+                        >
+                            Discard
+                        </button>
+                        <p className="wo-options-text">Working Out</p>
+                        <button 
+                            className="wo-options-button"
+                            onClick={() => console.log("Submit workout")}
+                        >
+                            Submit
+                        </button>
+                    </div>
                     <p>
-                        Working out
+                        Working out page here
                     </p>
+                </>
                 )
             }
         </div>

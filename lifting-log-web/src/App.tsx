@@ -1,14 +1,14 @@
 import React, { JSX } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import './App.css';
-import Navbar from "./Components/Navbar";
-import Home from "./Routes/Home";
-import WorkoutPage from './Routes/WorkoutPage';
-import WorkingOutPage from './Routes/WorkingOutPage';
-import LoginPage from './Routes/LoginPage';
-import Settings from "./Routes/Settings";
-import NotFound from './Routes/NotFound';
-import EditTemplatePage from './Routes/EditTemplatePage';
+import Navbar from "./Components/Navbar/Navbar";
+import Home from "./Routes/Home/Home";
+import WorkoutPage from './Routes/WorkoutPage/WorkoutPage';
+import WorkingOutPage from './Routes/WorkingOutPage/WorkingOutPage';
+import LoginPage from './Routes/LoginPage/LoginPage';
+import Settings from "./Routes/Settings/Settings";
+import NotFound from './Routes/NotFound/NotFound';
+import EditTemplatePage from './Routes/EditTemplatePage/EditTemplatePage';
 import { AuthProvider, ProtectedRoute } from './AuthProvider';
 
 function App(): JSX.Element {

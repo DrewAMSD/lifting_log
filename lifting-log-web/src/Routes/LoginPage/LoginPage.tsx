@@ -1,9 +1,9 @@
 import "./LoginPage.css"
 import { JSX, useState, SubmitEvent } from "react";
 import { useNavigate } from "react-router";
-import { HTTPException, TokenResponse, TokenPayload, User, Token } from "../types";
+import { HTTPException, TokenResponse, TokenPayload, User, Token } from "../../types";
 import { jwtDecode } from "jwt-decode";
-import { useAuth } from "../AuthProvider";
+import { useAuth } from "../../AuthProvider";
 
 type CreateUser = {
     username: string,
