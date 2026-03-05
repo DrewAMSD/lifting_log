@@ -1,35 +1,91 @@
 import { JSX, useState, useEffect } from "react";
 import "./WorkingOutPage.css";
 import { useAuth } from "../../AuthProvider";
-import { WorkoutTemplate, Workout, ExerciseEntry, SetEntry } from "../../types";
+import { WorkoutTemplate, Workout, ExerciseEntry, SetEntry, Exercise } from "../../types";
 import { NavigateFunction, useNavigate } from "react-router";
+import { ExerciseSelect, FetchExercises } from "../../Components/ExerciseSelect/ExerciseSelect";
 
 const WorkingOutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
     const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    // exercise fields
+    const [isSelectingExercise, setIsSelectingExercise] = useState<boolean>(false);
+    const [exercises, setExercises] = useState<Array<Exercise>>([]);
+    // time fields
+    const [startTime, setStartTime] = useState<number>(0);
+    // workout state
     const [workoutState, setWorkoutState] = useState<Workout>({} as Workout);
 
     const saveWorkoutLocally = async () => {
         localStorage.setItem("workoutState", JSON.stringify(workoutState));
     };
 
+    const cancelSelect = (): void => {
+        setIsSelectingExercise(false);
+    };
+
+    const selectExercise = (ex: Exercise): void => {
+        const newExerciseEntries: Array<ExerciseEntry> = [...workoutState.exercise_entries];
+        const newExerciseEntry: ExerciseEntry = {
+            exercise_id: ex.id,
+            exercise_name: ex.name,
+            description: "",
+            routine_note: "",
+            set_entries: [{} as SetEntry]
+        } as ExerciseEntry;
+
+        newExerciseEntries.push(newExerciseEntry);
+
+        setWorkoutState((prevWorkoutState) => ({
+            ...prevWorkoutState,
+            exercise_entries: newExerciseEntries
+        }));
+        setIsSelectingExercise(false);
+    };
+
+    // TODO, setup interval to update duration every second
+    const getDuration = (): string => {
+        const currentTime: number = Math.floor(Date.now() / 1000); // in seconds
+        const durationInSeconds: number = currentTime - startTime;
+        const hours: number = Math.floor(durationInSeconds / 3600);
+        const minutes: number = Math.floor(durationInSeconds / 60) % 60;
+        const seconds: number = durationInSeconds % 60;
+        const durationString: string =
+            hours.toString().padStart(2, "0")+
+            "-"+
+            minutes.toString().padStart(2, "0")+
+            "-"+
+            seconds.toString().padStart(2, "0")
+        ;
+        return durationString;
+    }
+
     useEffect(() => {
         if (!isLoading) {
             saveWorkoutLocally();
         }
-    }, [workoutState]);
+    }, [isLoading, workoutState]);
 
-    // TODO: add exercise select with fetch exercises on initial page redirect
     useEffect(() => {
         const workoutStateString: string | null = localStorage.getItem("workoutState");
 
         if (workoutStateString) { // locally saved workout to use
             const currentWorkoutState: Workout = JSON.parse(workoutStateString) as Workout;
+            
+            const currentTime: number = Math.floor(Date.now() / 1000); // seconds
+            const newStartTime: number = currentTime - (
+                (parseInt(currentWorkoutState.duration.substring(0, 2)) * 3600) +
+                (parseInt(currentWorkoutState.duration.substring(3, 5)) * 60) +
+                (parseInt(currentWorkoutState.duration.substring(6, 8)))
+            );
+            setStartTime(newStartTime);
+
             setWorkoutState(currentWorkoutState);
         }
         else { // need to create new workout
             const currentDate: Date = new Date();
+            setStartTime(Math.floor(currentDate.getTime() / 1000)); // seconds
             // current date as int
             const year: number = currentDate.getFullYear();
             const month: number = currentDate.getMonth() + 1;
@@ -94,15 +150,37 @@ const WorkingOutPage = (): JSX.Element => {
             }
         }
 
-        setIsLoading(false);
+        const callFetchExercises = async () => {
+            try {
+                const token: string = await getToken();
+
+                const exercisesToAdd: Array<Exercise> = await FetchExercises(serverUrl, token);
+                // sort exercises alphabetically
+                exercisesToAdd.sort((a,b) => a.name.localeCompare(b.name));
+                setExercises(exercisesToAdd);
+            }
+            catch (error) {
+                console.error("Error: ", error);
+            }
+            finally {
+                setIsLoading(false);
+            }
+        }
+        callFetchExercises();
     }, []);
 
-    // TODO: add button for discard workout where it clears templateToUse and workoutState in localStorage
     return (
         <div className="route-container">
             {
                 isLoading ? (
                     <div>Loading...</div>
+                ) : (
+                isSelectingExercise ? (
+                    <ExerciseSelect 
+                        exercises={exercises}
+                        cancelSelect={cancelSelect}
+                        selectExercise={selectExercise}
+                    />
                 ) : (
                 <>
                     <div className="wo-options">
@@ -110,6 +188,7 @@ const WorkingOutPage = (): JSX.Element => {
                             className="wo-options-button wo-delete-button"
                             onClick={() => {
                                 localStorage.removeItem("workoutState");
+                                localStorage.removeItem("templateToUse");
                                 navigate("/workout");
                             }}
                         >
@@ -123,11 +202,22 @@ const WorkingOutPage = (): JSX.Element => {
                             Submit
                         </button>
                     </div>
+                    <div className="wo-stats-container">
+                        <p>{workoutState.duration}</p>
+                    </div>
                     <p>
                         Working out page here
                     </p>
+                    <button 
+                        className="edit-template-add-exercise-button"
+                        onClick={() => {
+                            setIsSelectingExercise(true)
+                        }}
+                    >
+                        Add Exercise
+                    </button>
                 </>
-                )
+                ))
             }
         </div>
     )
