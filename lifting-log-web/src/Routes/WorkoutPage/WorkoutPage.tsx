@@ -33,6 +33,7 @@ const WorkoutPage = (): JSX.Element => {
 
                 if (response.ok) {
                     const templates: Array<WorkoutTemplate> = await response.json() as Array<WorkoutTemplate>;
+                    templates.sort((a, b) => a.name.localeCompare(b.name));
                     setWorkoutTemplates(templates);
                 }
                 else {

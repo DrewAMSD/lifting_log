@@ -5,6 +5,22 @@ import { WorkoutTemplate, Workout, ExerciseEntry, SetEntry, Exercise } from "../
 import { NavigateFunction, useNavigate } from "react-router";
 import { ExerciseSelect, FetchExercises } from "../../Components/ExerciseSelect/ExerciseSelect";
 
+const getDuration = (startTime: number): string => {
+    const currentTime: number = Math.floor(Date.now() / 1000); // in seconds
+    const durationInSeconds: number = currentTime - startTime;
+    const hours: number = Math.floor(durationInSeconds / 3600);
+    const minutes: number = Math.floor(durationInSeconds / 60) % 60;
+    const seconds: number = durationInSeconds % 60;
+    const durationString: string =
+        hours.toString().padStart(2, "0")+
+        "-"+
+        minutes.toString().padStart(2, "0")+
+        "-"+
+        seconds.toString().padStart(2, "0")
+    ;
+    return durationString;
+}
+
 const WorkingOutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
     const navigate: NavigateFunction = useNavigate();
@@ -44,28 +60,24 @@ const WorkingOutPage = (): JSX.Element => {
         setIsSelectingExercise(false);
     };
 
-    // TODO, setup interval to update duration every second
-    const getDuration = (): string => {
-        const currentTime: number = Math.floor(Date.now() / 1000); // in seconds
-        const durationInSeconds: number = currentTime - startTime;
-        const hours: number = Math.floor(durationInSeconds / 3600);
-        const minutes: number = Math.floor(durationInSeconds / 60) % 60;
-        const seconds: number = durationInSeconds % 60;
-        const durationString: string =
-            hours.toString().padStart(2, "0")+
-            "-"+
-            minutes.toString().padStart(2, "0")+
-            "-"+
-            seconds.toString().padStart(2, "0")
-        ;
-        return durationString;
-    }
-
     useEffect(() => {
         if (!isLoading) {
             saveWorkoutLocally();
         }
     }, [isLoading, workoutState]);
+
+    useEffect(() => {
+        if (!isLoading && startTime !== 0) {
+            const intervalId = setInterval(() => {
+                setWorkoutState(prev => ({
+                    ...prev,
+                    duration: getDuration(startTime)
+                }));
+            }, 1000);
+
+            return () => clearInterval(intervalId);
+        }
+    }, [isLoading, startTime]);
 
     useEffect(() => {
         const workoutStateString: string | null = localStorage.getItem("workoutState");
@@ -80,12 +92,12 @@ const WorkingOutPage = (): JSX.Element => {
                 (parseInt(currentWorkoutState.duration.substring(6, 8)))
             );
             setStartTime(newStartTime);
-
             setWorkoutState(currentWorkoutState);
         }
         else { // need to create new workout
             const currentDate: Date = new Date();
-            setStartTime(Math.floor(currentDate.getTime() / 1000)); // seconds
+            const newStartTime: number = Math.floor(currentDate.getTime() / 1000);
+            setStartTime(newStartTime); // seconds
             // current date as int
             const year: number = currentDate.getFullYear();
             const month: number = currentDate.getMonth() + 1;
@@ -105,7 +117,7 @@ const WorkingOutPage = (): JSX.Element => {
                     name: workoutTemplateToUse.name,
                     date: dateInteger,
                     start_time: currentTime,
-                    duration: "",
+                    duration: "00-00-00",
                     exercise_entries: workoutTemplateToUse.exercise_templates.map((exerciseTemplate) => {             
                         const exerciseEntry: ExerciseEntry = {
                             exercise_id: exerciseTemplate.exercise_id,
@@ -141,9 +153,9 @@ const WorkingOutPage = (): JSX.Element => {
             } else {
                 const emptyWorkout: Workout = {
                     name: "",
-                    date: currentDate.getFullYear(),
+                    date: dateInteger,
                     start_time: currentTime,
-                    duration: "",
+                    duration: "00-00-00",
                     exercise_entries: []
                 };
                 setWorkoutState(emptyWorkout);
@@ -197,13 +209,13 @@ const WorkingOutPage = (): JSX.Element => {
                         <p className="wo-options-text">Working Out</p>
                         <button 
                             className="wo-options-button"
-                            onClick={() => console.log("Submit workout")}
+                            onClick={() => console.log("Submit workout, remember to input duration in here")}
                         >
                             Submit
                         </button>
                     </div>
                     <div className="wo-stats-container">
-                        <p>{workoutState.duration}</p>
+                        <p className="wo-stats-text">Duration: {workoutState.duration}</p>
                     </div>
                     <p>
                         Working out page here
