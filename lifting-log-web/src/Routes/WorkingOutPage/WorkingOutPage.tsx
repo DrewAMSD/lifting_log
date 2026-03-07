@@ -25,6 +25,7 @@ const WorkingOutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
     const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [message, setMessage] = useState<string>("");
     // exercise fields
     const [isSelectingExercise, setIsSelectingExercise] = useState<boolean>(false);
     const [exercises, setExercises] = useState<Array<Exercise>>([]);
@@ -33,8 +34,32 @@ const WorkingOutPage = (): JSX.Element => {
     // workout state
     const [workoutState, setWorkoutState] = useState<Workout>({} as Workout);
 
-    const saveWorkoutLocally = async () => {
-        localStorage.setItem("workoutState", JSON.stringify(workoutState));
+    const getExerciseByName = (exerciseName: string): Exercise => {
+        let l: number = 0;
+        let r: number = exercises.length-1;
+        let m: number;
+        while (l <= r) {
+            m = Math.floor((l + r) / 2);
+            if (exercises[m].name === exerciseName) {
+                return exercises[m];
+            }
+            else if (exercises[m].name.localeCompare(exerciseName) > 0) {
+                r = m-1;
+            }
+            else {
+                l = m+1;
+            }
+        }
+
+        // throw new Error("Exercise for id: "+id+" does not exist");
+        return {
+            id: -1,
+            name: "Exercise not found",
+            primary_muscles: [],
+            weight: false,
+            reps: false,
+            time: false
+        } as Exercise;
     };
 
     const cancelSelect = (): void => {
@@ -58,6 +83,10 @@ const WorkingOutPage = (): JSX.Element => {
             exercise_entries: newExerciseEntries
         }));
         setIsSelectingExercise(false);
+    };
+
+    const saveWorkoutLocally = async () => {
+        localStorage.setItem("workoutState", JSON.stringify(workoutState));
     };
 
     useEffect(() => {
@@ -125,24 +154,25 @@ const WorkingOutPage = (): JSX.Element => {
                             description: "",
                             routine_note: exerciseTemplate.routine_note,
                             set_entries: exerciseTemplate.set_templates.map((setTemplate) => {
-                                // const isReps: boolean = exercise.reps && !exercise.weight;
-                                // const isRepRange: boolean = exercise.reps && exercise.weight;
-                                // const isTime: boolean = exercise.time;
+                                const exercise: Exercise = getExerciseByName(exerciseTemplate.exercise_name);
+                                const isReps: boolean = exercise.reps && !exercise.weight;
+                                const isRepRange: boolean = exercise.reps && exercise.weight;
+                                const isTime: boolean = exercise.time;
                                 
                                 const setEntry: SetEntry = {
-                                    // TODO: update fields after implementing exercise fetch + grabbing previous exercises
+                                    // todo later: get previous exercises
                                     previous: "",
                                     placeholder: ""
                                 };
-                                // if (isReps) {
-                                //     setEntry.placeholder = setTemplate.reps ? setTemplate.reps.toString() : "";
-                                // }
-                                // else if (isRepRange) {
-                                //     setEntry.placeholder = (setTemplate.rep_range_start !== undefined && setTemplate.rep_range_end !== undefined) ? (setTemplate.rep_range_start.toString()+"-"+setTemplate.rep_range_end.toString()) : "";
-                                // }
-                                // else if (isTime) {
-                                //     setEntry.placeholder = setTemplate.time ? setTemplate.time : "";
-                                // }
+                                if (isReps) {
+                                    setEntry.placeholder = setTemplate.reps ? setTemplate.reps.toString() : "";
+                                }
+                                else if (isRepRange) {
+                                    setEntry.placeholder = (setTemplate.rep_range_start !== undefined && setTemplate.rep_range_end !== undefined) ? (setTemplate.rep_range_start.toString()+"-"+setTemplate.rep_range_end.toString()) : "";
+                                }
+                                else if (isTime) {
+                                    setEntry.placeholder = setTemplate.time ? setTemplate.time : "";
+                                }
                                 return setEntry;
                             })
                         }
@@ -215,11 +245,25 @@ const WorkingOutPage = (): JSX.Element => {
                         </button>
                     </div>
                     <div className="wo-stats-container">
-                        <p className="wo-stats-text">Duration: {workoutState.duration}</p>
+                        <div className="wo-stats-row">
+                            <p className="wo-stats-text top-row">Duration</p>
+                            <p className="wo-stats-text top-row">Exercises</p>
+                            <p className="wo-stats-text top-row">Sets</p>
+                            <p className="wo-stats-text top-row">Volume</p>
+                        </div>
+                        <div className="wo-stats-row">
+                            <p className="wo-stats-text bottom-row blue-text">{workoutState.duration}</p>
+                            <p className="wo-stats-text bottom-row">{workoutState.exercise_entries.reduce((sum, exerciseEntry) => sum + (exerciseEntry.set_entries[0].submitted ? 1 : 0), 0)}</p>
+                            <p className="wo-stats-text bottom-row">{workoutState.exercise_entries.reduce((sum, exerciseEntry) => sum + exerciseEntry.set_entries.reduce((sets, setEntry) => sets + (setEntry.submitted ? 1 : 0), 0), 0)}</p>
+                            <p className="wo-stats-text bottom-row">{workoutState.exercise_entries.reduce((sum, exerciseEntry) => sum + exerciseEntry.set_entries.reduce((volume, setEntry) => volume + ((setEntry.submitted && setEntry.reps !== undefined && setEntry.weight !== undefined) ? (setEntry.reps * setEntry.weight) : 0), 0), 0)} lbs</p>
+                        </div>
                     </div>
-                    <p>
-                        Working out page here
-                    </p>
+                    {message &&
+                        <p className="error-message">{message}</p>
+                    }
+                    {!workoutState.exercise_entries.length &&
+                        <p>No exercises? Click 'Add Exercise' to begin</p>
+                    }
                     <button 
                         className="edit-template-add-exercise-button"
                         onClick={() => {

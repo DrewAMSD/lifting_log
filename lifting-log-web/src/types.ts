@@ -94,6 +94,7 @@ export type SetEntry = {
     reps?: number
     time?: string
     placeholder?: string
+    submitted?: boolean
 }
 
 export type ExerciseEntry = {
