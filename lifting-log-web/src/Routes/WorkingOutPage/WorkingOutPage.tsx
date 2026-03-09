@@ -21,6 +21,15 @@ const getDuration = (startTime: number): string => {
     return durationString;
 }
 
+const ExerciseEntryElement = (): JSX.Element => {
+
+    return (
+        <div className="wo-exercise-entry-container">
+            Exercise Entry
+        </div>
+    );
+};
+
 const WorkingOutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
     const navigate: NavigateFunction = useNavigate();
@@ -258,12 +267,37 @@ const WorkingOutPage = (): JSX.Element => {
                             <p className="wo-stats-text bottom-row">{workoutState.exercise_entries.reduce((sum, exerciseEntry) => sum + exerciseEntry.set_entries.reduce((volume, setEntry) => volume + ((setEntry.submitted && setEntry.reps !== undefined && setEntry.weight !== undefined) ? (setEntry.reps * setEntry.weight) : 0), 0), 0)} lbs</p>
                         </div>
                     </div>
+                    <input 
+                        type="text"
+                        className="input-default wo-name"
+                        value={workoutState.name}
+                        placeholder={"Name Workout"}
+                        onChange={(e) => {
+                            setWorkoutState(prev => ({
+                                ...prev,
+                                name: e.target.value
+                            }))
+                        }}
+                    />
+                    <hr className="line line-light "/>
                     {message &&
                         <p className="error-message">{message}</p>
                     }
                     {!workoutState.exercise_entries.length &&
-                        <p>No exercises? Click 'Add Exercise' to begin</p>
+                    <>
+                        <p>No Exercises?</p>
+                        <p>Click 'Add Exercise' to Get Started</p>
+                    </>
                     }
+                    <div className="wo-exercise-entries-container">
+                    {
+                        workoutState.exercise_entries.map((exerciseEntry, eIdx) => (
+                            <ExerciseEntryElement 
+                                key={eIdx}
+                            />
+                        ))
+                    }
+                    </div>
                     <button 
                         className="edit-template-add-exercise-button"
                         onClick={() => {

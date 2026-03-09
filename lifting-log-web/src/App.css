@@ -25,3 +25,23 @@ select {
     border: 2px solid rgb(37, 37, 37);
     color: white;
 }
+
+.input-default {
+  border: none;
+  background-color: transparent; /* Makes the background blend with its container */
+  outline: none; /* Removes the blue/yellow glow on focus */
+  font-family: inherit; /* Matches the page's font */
+  padding: 0; /* Adjust padding as needed */
+  /* Add any other styling to match plain text */
+  color: rgb(255, 255, 255);
+}
+
+.line {
+    height: 1px;
+    width: 100%;
+    background-color: white;
+}
+
+.line-light {
+    opacity: 60%;
+}
