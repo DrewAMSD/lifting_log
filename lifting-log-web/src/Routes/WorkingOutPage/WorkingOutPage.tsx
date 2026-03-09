@@ -267,7 +267,8 @@ const WorkingOutPage = (): JSX.Element => {
                             <p className="wo-stats-text bottom-row">{workoutState.exercise_entries.reduce((sum, exerciseEntry) => sum + exerciseEntry.set_entries.reduce((volume, setEntry) => volume + ((setEntry.submitted && setEntry.reps !== undefined && setEntry.weight !== undefined) ? (setEntry.reps * setEntry.weight) : 0), 0), 0)} lbs</p>
                         </div>
                     </div>
-                    <input 
+                    <hr className="header-divider" />
+                    {/* <input 
                         type="text"
                         className="input-default wo-name"
                         value={workoutState.name}
@@ -278,8 +279,8 @@ const WorkingOutPage = (): JSX.Element => {
                                 name: e.target.value
                             }))
                         }}
-                    />
-                    <hr className="line line-light "/>
+                    /> */}
+                    {/* <hr className="line line-light "/> */}
                     {message &&
                         <p className="error-message">{message}</p>
                     }
