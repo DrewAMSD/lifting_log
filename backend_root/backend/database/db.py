@@ -28,6 +28,33 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 def init_database() -> None:
     SQLModel.metadata.create_all(engine)
 
+    # default values
+    with Session(engine) as session:
+        for muscle in MUSCLES:
+            newMuscle: Muscle = Muscle(muscle=muscle)
+            session.add(newMuscle)
+        session.commit()
+
+
+MUSCLES: list[str] = [
+    "Chest", 
+    "Triceps", 
+    "Biceps", 
+    "Forearms",
+    "Abdominals", 
+    "Shoulders",
+    "Lats",
+    "Lower Back",
+    "Upper Back",
+    "Quadriceps",
+    "Glutes",
+    "Hamstrings",
+    "Calves",
+    "Adductors",
+    "Abductors",
+    "Neck"
+    ]
+
 
 if __name__ == "__main__":
     init_database()

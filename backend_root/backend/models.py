@@ -54,6 +54,11 @@ class UsernameResponse(SQLModel):
     username: str
 
 
+class Muscle(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    muscle: str
+
+
 class Exercise(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
