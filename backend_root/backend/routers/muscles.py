@@ -18,5 +18,5 @@ def get_muscles(session: Session = Depends(get_db)) -> list[str]:
 
     muscles_strings: list[str] = []
     for muscle in muscles:
-        muscles_strings.append(muscle.muscle)
+        muscles_strings.append(muscle.name)
     return muscles_strings
