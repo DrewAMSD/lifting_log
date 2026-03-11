@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
 from sqlite3 import Connection, Cursor, Row
-from backend.database.db import get_db
+from backend_root.backend.db import get_db
 from backend.time import is_valid_timestamp
 from backend.auth import get_current_active_user
 from backend.models import *

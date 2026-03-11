@@ -1,24 +1,31 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Annotated
-from sqlite3 import Connection, Cursor, Row
+from sqlmodel import Session, select
 import datetime
+from sqlalchemy.orm import selectinload
+
 from backend.models import *
+from backend.schemas.workout import *
 from backend.time import *
-from backend.database.db import get_db
+from backend.database import get_db
 from backend.auth import get_current_active_user
 from backend.routers.exercises import get_exercise
+
+#delete after
+import sqlite3
+from sqlite3 import Cursor, Connection, Row
 
 
 router = APIRouter()
 
 
-def get_distributions(cursor: Cursor, workouts: list[Workout], username: str = None) -> dict:
+def get_distributions(session: Session, workouts: list[Workout], username: str = None) -> dict:
     set_distribution: dict[str, dict[str, float]] = {}
     total_muscle_sets: float = 0.0
     for workout in workouts:
         for exercise_entry in workout.exercise_entries:
             for_workout: bool = True
-            exercise: Exercise = get_exercise(cursor, exercise_entry.exercise_id, username, for_workout)
+            exercise: Exercise = get_exercise(session, exercise_entry.exercise_id, username, for_workout)
             
             for primary_muscle in exercise.primary_muscles:
                 to_add: float = 1.0 * len(exercise_entry.set_entries)
@@ -54,7 +61,7 @@ def get_distributions(cursor: Cursor, workouts: list[Workout], username: str = N
     }
 
 
-def get_stats(cursor: Cursor, workouts: list[Workout], username: str = None) -> Workout_Stats:
+def get_stats(session: Session, workouts: list[Workout], username: str = None) -> Workout_Stats:
     exercise_count: int = sum(
         len(workout.exercise_entries) 
         for workout in workouts
@@ -76,7 +83,7 @@ def get_stats(cursor: Cursor, workouts: list[Workout], username: str = None) -> 
         for exercise_entry in workout.exercise_entries 
         for set_entry in exercise_entry.set_entries
     )
-    distributions: dict = get_distributions(cursor, workouts, username)
+    distributions: dict = get_distributions(session, workouts, username)
 
     return Workout_Stats(
         exercise_count=exercise_count,
@@ -87,41 +94,20 @@ def get_stats(cursor: Cursor, workouts: list[Workout], username: str = None) -> 
     )
 
 
-def get_workout_stats(cursor: Cursor, workout: Workout, username: str = None) -> Workout_Stats:
-    return get_stats(cursor, [workout], username)
+def get_workout_stats(session: Session, workout: Workout, username: str = None) -> Workout_Stats:
+    return get_stats(session, [workout], username)
 
 
-def invalid_set_entry(exercise_row: Row, set_entry: Set_Entry) -> bool:
-    weight: bool = exercise_row["weight"]
-    reps: bool = exercise_row["reps"]
-    time: bool = exercise_row["time"]
+def invalid_set_entry(exercise: Exercise, set_entry: Set_Entry) -> bool:
     return not (
-        (weight != set_entry.weight) or
-        (reps != set_entry.reps) or
-        (time != set_entry.time)
+        (exercise.weight != set_entry.weight) or
+        (exercise.reps != set_entry.reps) or
+        (exercise.time != set_entry.time)
     )
 
 
-def insert_workout_exercise_entry(cursor: Cursor, pos: int, exercise_entry: Exercise_Entry, workout_id: int) -> int:
-    cursor.execute("""
-        INSERT INTO workout_exercise_entries 
-        (workout_id, exercise_id, description, position) 
-        VALUES (?, ?, ?, ?)
-        """, 
-        (workout_id, exercise_entry.exercise_id, exercise_entry.description, pos)
-    )
-    return cursor.lastrowid
-
-
-def insert_workout_set_entry(cursor: Cursor, set_pos: int, set_entry: Set_Entry, exercise_entry_id: int, exercise_row: Row) -> None:
-    if (invalid_set_entry(exercise_row, set_entry)):
-        raise HTTPException(status_code=400, detail="Invalid set entries")
-    if (set_entry.time and not is_valid_timestamp(set_entry.time, is_time=True)):
-        raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
-    cursor.execute("INSERT INTO workout_set_entries (exercise_entry_id, weight, reps, t, position) VALUES (?, ?, ?, ?, ?)", (exercise_entry_id, set_entry.weight, set_entry.reps, set_entry.time, set_pos))
-
-
-def validate_workout(workout: Workout) -> None:
+def validate_workout(session: Session, workout: Workout) -> None:
+    # workout
     if not is_valid_timestamp(workout.date, is_date=True):
         raise HTTPException(status_code=400, detail="Incorrectly formatted date")
     if not is_valid_timestamp(workout.start_time, is_time=True):
@@ -129,54 +115,96 @@ def validate_workout(workout: Workout) -> None:
     if not is_valid_timestamp(workout.duration, is_time=True):
         raise HTTPException(status_code=400, detail="Incorrectly formatted duration")
 
+    # exercise entries
     if len(workout.exercise_entries) == 0:
         raise HTTPException(status_code=400, detail="Empty exercise entries array")
-
-
-def insert_workout_exercise_and_set_entries(cursor: Cursor, workout: Workout) -> None:
+    
     for pos,exercise_entry in enumerate(workout.exercise_entries):
-        cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_entry.exercise_id,))
-        exercise_row: Row = cursor.fetchone()
-        if not exercise_row:
+        exercise: Exercise = session.exec(
+            select(Exercise)
+            .where(Exercise.id == exercise_entry.exercise_id)
+        ).first()
+        if not exercise:
             raise HTTPException(status_code=400, detail="Invalid exercise(id) submitted")
 
-        exercise_entry_id: int = insert_workout_exercise_entry(cursor, pos, exercise_entry, workout.id)
-        exercise_entry.exercise_name = exercise_row["name"]
-
+        # set entries
         if len(exercise_entry.set_entries) == 0:
             raise HTTPException(status_code=400, detail="Empty set entries array")
         
         for set_pos,set_entry in enumerate(exercise_entry.set_entries):
-            insert_workout_set_entry(cursor, set_pos, set_entry, exercise_entry_id, exercise_row)
+            if (invalid_set_entry(exercise, set_entry)):
+                raise HTTPException(status_code=400, detail="Invalid set entries")
+            if (set_entry.time and not is_valid_timestamp(set_entry.time, is_time=True)):
+                raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
 
 
-@router.post("/workouts/me/", response_model=Workout, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
+@router.post("/workouts/me/", response_model=Workout_Read, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
 def create_workout(
-    workout: Workout, 
+    workout: Workout_Create, 
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
-) -> Workout:
-    cursor: Cursor = conn.cursor()
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Read:
 
-    validate_workout(workout)
+    validate_workout(session, workout)
 
     try:
-        cursor.execute("INSERT INTO workouts (name, username, description, workout_date, start_time, duration) VALUES (?, ?, ?, ?, ?, ?)", (workout.name, current_user.username, workout.description, workout.date, workout.start_time, workout.duration))
-        workout.id = cursor.lastrowid
+        new_workout: Workout = Workout(
+            **workout.model_dump(exclude={"exercise_entries", "username"}),
+            username=current_user.username
+        )
+        session.add(new_workout)
 
-        insert_workout_exercise_and_set_entries(cursor, workout)
+        new_exercises_entries: list[Exercise_Entry] = []
+        for exercise_entry_create in workout.exercise_entries:
+            exercise: Exercise = session.get(Exercise, exercise_entry_create.exercise_id)
+            if not exercise:
+                raise HTTPException(status_code=404, detail="Exercise not found")
 
-        conn.commit()
+            new_exercise_entry: Exercise_Entry = Exercise_Entry(
+                **exercise_entry_create.model_dump(exclude={"set_entries"}),
+                exercise_name=exercise.name,
+                workout=new_workout,
+                exercise=exercise
+            )
+            session.add(new_exercise_entry)
+
+            new_set_entries: list[Set_Entry] = []
+            for set_entry_create in exercise_entry_create.set_entries:
+                new_set_entry: Set_Entry = Set_Entry(
+                    **set_entry_create.model_dump(), 
+                    exercise_entry=new_exercise_entry
+                )
+                session.add(new_set_entry)
+                new_set_entries.append(new_set_entry)
+            new_exercise_entry.set_entries = new_set_entries
+
+            new_exercises_entries.append(new_exercise_entry)
+
+        new_workout.exercise_entries = new_exercises_entries
+
+        session.commit()
     except HTTPException:
-        conn.rollback()
+        session.rollback()
         raise
     except Exception as e:
-        conn.rollback()
+        session.rollback()
         print(e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-    workout.stats = get_workout_stats(cursor, workout, current_user.username)
-    return workout
+    workout_response: Workout = session.exec(
+        select(Workout)
+        .where(Workout.id == new_workout.id)
+        .options(
+            selectinload(Workout.exercise_entries)
+            .selectinload(Exercise_Entry.set_entries)
+        )
+    ).first()
+
+    if not workout_response:
+        raise HTTPException(status_code=404, detail="Failed to retrieve created workout")
+
+    workout_response.stats = get_workout_stats(session, workout, current_user.username)
+    return workout_response
 
 
 def get_exercise_entry_set_entries(cursor: Cursor, exercise_entry_id: int) -> list[Set_Entry]:

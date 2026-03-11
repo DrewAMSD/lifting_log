@@ -5,7 +5,7 @@ from typing import Annotated
 from sqlmodel import Session, select
 
 from backend.models import *
-from backend.database.db import get_db
+from backend.database import get_db
 from backend.auth import *
 
 

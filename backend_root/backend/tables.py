@@ -1,8 +1,12 @@
+# after sqlmodel refactor, delete this file
+
 import sqlite3
 from sqlite3 import Connection, Cursor, Row
 from backend.models import *
-from backend.database.db import get_db_path
 
+
+def get_db_path() -> str:
+    return "sqlite:///tables.db"
 
 def create_users_table():
     conn: sqlite3.Connection = sqlite3.connect(get_db_path())

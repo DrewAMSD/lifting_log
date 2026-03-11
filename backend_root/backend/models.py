@@ -72,13 +72,7 @@ class Exercise(SQLModel, table=True):
     reps: bool = Field(default=False)
     time: bool = Field(default=False)
 
-
-class Workout_Stats(SQLModel):
-    exercise_count: Optional[int] = Field(default=None)
-    sets: Optional[int] = Field(default=None)
-    reps: Optional[int] = Field(default=None)
-    volume: Optional[float] = Field(default=None) # lbs
-    distributions: Optional[dict] = Field(default=None)
+    exercise_entries: list["Exercise_Entry"] = Relationship(back_populates="exercise")
 
 
 class Workout(SQLModel, table=True):
@@ -89,11 +83,12 @@ class Workout(SQLModel, table=True):
     date: int # 'YYYYMMDD'
     start_time: str # 'HH:MM:SS' time of day when workout started
     duration: str # 'HH:MM:SS', duration of workout
-    stats: Optional[Workout_Stats] = Field(default=None, sa_column=Column(JSON))
+    
+    stats: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     
     exercise_entries: List["Exercise_Entry"] = Relationship(
         back_populates="workout",
-        cascade_delete=True
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
 
@@ -105,10 +100,11 @@ class Exercise_Entry(SQLModel, table=True):
     exercise_name: Optional[str] = Field(default=None) # todo: how to put name in here (maybe replace with Exercise element instead)
     description: Optional[str] = Field(default="")
 
-    workout: Workout = Relationship(back_populates="exercise_entries")
+    workout: Optional[Workout] = Relationship(back_populates="exercise_entries")
+    exercise: Optional[Exercise] = Relationship(back_populates="exercise_entries")
     set_entries: List["Set_Entry"] = Relationship(
         back_populates="exercise_entry",
-        cascade_delete=True
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
 

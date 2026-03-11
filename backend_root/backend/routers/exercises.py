@@ -3,7 +3,7 @@ from typing import Annotated, Optional, List
 from sqlmodel import Session, select
 from backend.auth import get_current_active_user
 from backend.models import *
-from backend.database.db import get_db
+from backend.database import get_db
 
 
 router = APIRouter()
