@@ -46,6 +46,8 @@ class Exercise_Entry_Read(SQLModel):
 class Workout_Read(SQLModel):
     id: int
     name: str
+    username: Optional[str]
+    description: Optional[str]
     date: int # 'YYYYMMDD'
     start_time: str # 'HH:MM:SS' time of day when workout started
     duration: str # 'HH:MM:SS', duration of workout

@@ -174,7 +174,9 @@ def delete_exercise(
         if workout_template:
             for exercise_template in workout_template.exercise_templates:
                 if exercise_template.exercise_id == exercise_id:
+                    session.delete(exercise_template)
                     workout_template.exercise_templates.remove(exercise_template)
+
             session.add(workout_template)
     except Exception as e:
         session.rollback()

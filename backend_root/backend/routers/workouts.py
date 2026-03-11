@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Annotated
-from sqlmodel import Session, select
+from sqlmodel import Session, select, delete
 import datetime
 from sqlalchemy.orm import selectinload
 
@@ -12,8 +12,8 @@ from backend.auth import get_current_active_user
 from backend.routers.exercises import get_exercise
 
 #delete after
-import sqlite3
-from sqlite3 import Cursor, Connection, Row
+# import sqlite3
+# from sqlite3 import Cursor, Connection, Row
 
 
 router = APIRouter()
@@ -138,6 +138,35 @@ def validate_workout(session: Session, workout: Workout) -> None:
                 raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
 
 
+def get_new_exercise_entries(session: Session, workout_create: Workout_Create, new_workout: Workout):
+    new_exercise_entries: list[Exercise_Entry] = []
+    for exercise_entry_create in workout_create.exercise_entries:
+        exercise: Exercise = session.get(Exercise, exercise_entry_create.exercise_id)
+        if not exercise:
+            raise HTTPException(status_code=404, detail="Exercise not found")
+
+        new_exercise_entry: Exercise_Entry = Exercise_Entry(
+            **exercise_entry_create.model_dump(exclude={"set_entries"}),
+            exercise_name=exercise.name,
+            workout=new_workout,
+            exercise=exercise
+        )
+        session.add(new_exercise_entry)
+
+        new_set_entries: list[Set_Entry] = []
+        for set_entry_create in exercise_entry_create.set_entries:
+            new_set_entry: Set_Entry = Set_Entry(
+                **set_entry_create.model_dump(), 
+                exercise_entry=new_exercise_entry
+            )
+            session.add(new_set_entry)
+            new_set_entries.append(new_set_entry)
+        new_exercise_entry.set_entries = new_set_entries
+
+        new_exercise_entries.append(new_exercise_entry)
+    return new_exercise_entries
+
+
 @router.post("/workouts/me/", response_model=Workout_Read, status_code=status.HTTP_201_CREATED, response_model_exclude_none=True)
 def create_workout(
     workout: Workout_Create, 
@@ -154,31 +183,7 @@ def create_workout(
         )
         session.add(new_workout)
 
-        new_exercises_entries: list[Exercise_Entry] = []
-        for exercise_entry_create in workout.exercise_entries:
-            exercise: Exercise = session.get(Exercise, exercise_entry_create.exercise_id)
-            if not exercise:
-                raise HTTPException(status_code=404, detail="Exercise not found")
-
-            new_exercise_entry: Exercise_Entry = Exercise_Entry(
-                **exercise_entry_create.model_dump(exclude={"set_entries"}),
-                exercise_name=exercise.name,
-                workout=new_workout,
-                exercise=exercise
-            )
-            session.add(new_exercise_entry)
-
-            new_set_entries: list[Set_Entry] = []
-            for set_entry_create in exercise_entry_create.set_entries:
-                new_set_entry: Set_Entry = Set_Entry(
-                    **set_entry_create.model_dump(), 
-                    exercise_entry=new_exercise_entry
-                )
-                session.add(new_set_entry)
-                new_set_entries.append(new_set_entry)
-            new_exercise_entry.set_entries = new_set_entries
-
-            new_exercises_entries.append(new_exercise_entry)
+        new_exercises_entries: list[Exercise_Entry] = get_new_exercise_entries(session, workout, new_workout)
 
         new_workout.exercise_entries = new_exercises_entries
 
@@ -207,64 +212,7 @@ def create_workout(
     return workout_response
 
 
-def get_exercise_entry_set_entries(cursor: Cursor, exercise_entry_id: int) -> list[Set_Entry]:
-    cursor.execute("SELECT * FROM workout_set_entries WHERE exercise_entry_id = ? ORDER BY position ASC", (exercise_entry_id,))
-    set_entries_rows: list[Row] = cursor.fetchall()
-    if not set_entries_rows:
-        raise HTTPException(status_code=404, detail="Set entries not found")
-    
-    set_entries: list[Set_Entry] = []
-    for set_entries_row in set_entries_rows:
-        set_entries.append(Set_Entry(
-            weight=set_entries_row["weight"],
-            reps=set_entries_row["reps"],
-            time=set_entries_row["t"]
-        ))
-    return set_entries
-
-
-def get_exercise_name(cursor: Cursor, exercise_id: int) -> str:
-    cursor.execute("SELECT * FROM exercises WHERE id = ?", (exercise_id,))
-    exercises_row: Row = cursor.fetchone()
-    if not exercises_row:
-        raise HTTPException(status_code=404, detail="Exercise in workout not found")
-    return exercises_row["name"]
-
-def get_workout_exercise_entries(cursor: Cursor, workout_id: int) -> list[Exercise_Entry]:
-    cursor.execute("SELECT * FROM workout_exercise_entries WHERE workout_id = ? ORDER BY position ASC", (workout_id,))
-    exercise_entries_rows: list[Row] = cursor.fetchall()
-    if not exercise_entries_rows:
-        raise HTTPException(status_code=404, detail="Exercise entries not found")
-
-    exercise_entries: list[Exercise_Entry] = []
-    for exercise_entries_row in exercise_entries_rows:
-        exercise_entries.append(Exercise_Entry(
-            exercise_id=exercise_entries_row["exercise_id"],
-            exercise_name=get_exercise_name(cursor, exercise_entries_row["exercise_id"]),
-            description=exercise_entries_row["description"],
-            set_entries=get_exercise_entry_set_entries(cursor, exercise_entries_row["id"])
-        ))
-    return exercise_entries
-
-
-def convert_workouts_row_to_workout(cursor: Cursor, workouts_row: Row, username: str) -> Workout:
-    exercise_entries: list[Exercise_Entry] = get_workout_exercise_entries(cursor, workouts_row["id"])
-    
-    workout: Workout = Workout(
-        id=workouts_row["id"],
-        name=workouts_row["name"],
-        username=workouts_row["username"],
-        description=workouts_row["description"],
-        date=workouts_row["workout_date"],
-        start_time=workouts_row["start_time"],
-        duration=workouts_row["duration"],
-        exercise_entries=exercise_entries
-    )
-    workout.stats = get_workout_stats(cursor, workout, username)
-    return workout
-
-
-def get_user_workouts_by_date(cursor: Cursor, username: str, start_date: int = None, end_date: int = None) -> list[Workout]:
+def get_user_workouts_by_date(session: Session, username: str, start_date: int = None, end_date: int = None) -> list[Workout]:
     if start_date:
         if not is_valid_timestamp(start_date, is_date=True):
             raise HTTPException(status_code=400, detail="Invalid start date")
@@ -273,90 +221,122 @@ def get_user_workouts_by_date(cursor: Cursor, username: str, start_date: int = N
             raise HTTPException(status_code=400, detail="Invalid end date")
     
     if not start_date and not end_date:
-        cursor.execute("SELECT * FROM workouts WHERE username = ?", (username,))
+        statement = (
+            select(Workout)
+            .where(Workout.username == username)
+            .options(
+                selectinload(Workout.exercise_entries)
+                .selectinload(Exercise_Entry.set_entries)
+            )
+        )
     elif start_date and not end_date:
-        cursor.execute("SELECT * FROM workouts WHERE username = ? AND workout_date >= ?", (username, start_date))
+        statement = (
+            select(Workout)
+            .where(
+                Workout.username == username,
+                Workout.date >= start_date
+            )
+            .options(
+                selectinload(Workout.exercise_entries)
+                .selectinload(Exercise_Entry.set_entries)
+            )
+        )
     elif not start_date and end_date:
-        cursor.execute("SELECT * FROM workouts WHERE username = ? AND workout_date <= ?", (username, end_date))
+        statement = (
+            select(Workout)
+            .where(
+                Workout.username == username,
+                Workout.date <= end_date
+            )
+            .options(
+                selectinload(Workout.exercise_entries)
+                .selectinload(Exercise_Entry.set_entries)
+            )
+        )
     else:
-        cursor.execute("SELECT * FROM workouts WHERE username = ? AND workout_date >= ? AND workout_date <= ?", (username, start_date, end_date))
+        statement = (
+            select(Workout)
+            .where(
+                Workout.username == username,
+                Workout.date >= start_date,
+                Workout.date <= end_date
+            )
+            .options(
+                selectinload(Workout.exercise_entries)
+                .selectinload(Exercise_Entry.set_entries)
+            )
+        )
     
-    workouts_rows: list[Row] = cursor.fetchall()
-    if not workouts_rows:
+    workouts: list[Workout] = session.exec(statement).all()
+    if not workouts:
         return []
-    
-    workouts: list[Workout] = []
-    for workouts_row in workouts_rows:
-        workouts.append(convert_workouts_row_to_workout(cursor, workouts_row, username))
 
     return workouts
 
 
-@router.get("/workouts/me/", response_model=list[Workout], response_model_exclude_none=True)
+@router.get("/workouts/me/", response_model=list[Workout_Read], response_model_exclude_none=True)
 def get_user_workouts(
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
-) -> list[Workout]:
-    cursor: Cursor = conn.cursor()
-    return get_user_workouts_by_date(cursor, current_user.username, start_date=None, end_date=None)
+    session: Annotated[Session, Depends(get_db)]
+) -> list[Workout_Read]:
+    return get_user_workouts_by_date(session, current_user.username, start_date=None, end_date=None)
 
 
-@router.get("/workouts/me/{workout_id}", response_model=Workout, response_model_exclude_none=True)
+@router.get("/workouts/me/{workout_id}", response_model=Workout_Read, response_model_exclude_none=True)
 def get_user_workout(
     workout_id: int,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
-) -> Workout:
-    cursor: Cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM workouts WHERE id = ? AND username = ?", (workout_id, current_user.username))
-    workouts_row: Row = cursor.fetchone()
-    if not workouts_row:
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Read:
+    workout: Workout = session.exec (
+        select(Workout)
+        .where(
+            Workout.id == workout_id,
+            Workout.username == current_user.username
+        )
+        .options(
+            selectinload(Workout.exercise_entries)
+            .selectinload(Exercise_Entry.set_entries)
+        )
+    ).first()
+    if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
     
-    return convert_workouts_row_to_workout(cursor, workouts_row, current_user.username)
+    return workout
 
 
-@router.put("/workouts/me/{workout_id}", response_model=Workout, response_model_exclude_none=True)
+@router.put("/workouts/me/{workout_id}", response_model=Workout_Read, response_model_exclude_none=True)
 def update_user_workout(
     workout_id: int,
-    workout: Workout,
+    workout_create: Workout_Create,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
-) -> Workout:
-    cursor: Cursor = conn.cursor()
-    workout.id=workout_id
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Read:
+    workout: Workout = get_user_workout(workout_id=workout_id, current_user=current_user, session=session)
 
-    cursor.execute("SELECT * FROM workouts WHERE id = ? AND username = ?", (workout_id, current_user.username))
-    if not cursor.fetchone():
-        raise HTTPException(status_code=404, detail="Workout not found")
-
-    if len(workout.exercise_entries) == 0:
-        raise HTTPException(status_code=400, detail="Empty exercise entries array")
+    validate_workout(session, workout_create)
 
     try:
-        cursor.execute("""
-            UPDATE workouts
-            SET name = ?, description = ?, workout_date = ?, start_time = ?, duration = ?
-            WHERE id = ?
-            """,
-            (workout.name, workout.description, workout.date, workout.start_time, workout.duration, workout_id)
+        workout.exercise_entries.clear()
+
+        session.exec(
+            delete(Exercise_Entry).where(Exercise_Entry.workout_id == workout_id)
         )
 
-        cursor.execute("DELETE FROM workout_exercise_entries WHERE workout_id = ?", (workout_id,))
-
-        insert_workout_exercise_and_set_entries(cursor, workout)
-
-        conn.commit()
+        new_exercise_entries: list[Exercise_Entry] = get_new_exercise_entries(session, workout_create, workout)
+        workout.exercise_entries = new_exercise_entries
+        
+        session.add(workout)
+        session.commit()
     except HTTPException:
-        conn.rollback()
+        session.rollback()
         raise
     except Exception as e:
-        conn.rollback()
+        session.rollback()
         print(e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
-    
-    workout.stats = get_workout_stats(cursor, workout, current_user.username)
+
+    workout.stats = get_workout_stats(session, workout, current_user.username)
     return workout
 
 
@@ -364,63 +344,54 @@ def update_user_workout(
 def delete_user_workout(
     workout_id: int,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
+    session: Annotated[Session, Depends(get_db)]
 ) -> None:
-    cursor: Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM workouts WHERE id = ? AND username = ?", (workout_id, current_user.username))
-    if not cursor.fetchone():
-        raise HTTPException(status_code=404, detail="Workout not found")
+    workout: Workout = get_user_workout(workout_id=workout_id, current_user=current_user, session=session)
     
-    cursor.execute("DELETE FROM workouts WHERE id = ?", (workout_id,))
-    conn.commit()
+    session.delete(workout)
+    session.commit()
 
 
 @router.get("/workouts/me/stats/this-week", response_model=Workout_Stats)
 def get_user_stats_this_week(
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
+    session: Annotated[Session, Depends(get_db)]
 ) -> Workout_Stats:
-    cursor: Cursor = conn.cursor()
-
     date: datetime.date = datetime.date.today()
     day_of_week: int = get_day_of_the_week(int(date.strftime("%Y%m%d")))
     start_of_week: datetime.date = date - datetime.timedelta(days=day_of_week)
     start_of_week_int: int = int(start_of_week.strftime("%Y%m%d"))
 
-    workouts: list[Workout] = get_user_workouts_by_date(cursor, current_user.username, start_date=start_of_week_int)
+    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_week_int)
 
-    stats: Workout_Stats = get_stats(cursor, workouts, current_user.username)
+    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
     return stats
 
 
 @router.get("/workouts/me/stats/this-month", response_model=Workout_Stats)
 def get_user_stats_this_month(
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
+    session: Annotated[Session, Depends(get_db)]
 ) -> Workout_Stats:
-    cursor: Cursor = conn.cursor()
-
     date: int = get_date_today()
     start_of_month = date - get_day(date) + 1
 
-    workouts: list[Workout] = get_user_workouts_by_date(cursor, current_user.username, start_date=start_of_month)
+    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_month)
 
-    stats: Workout_Stats = get_stats(cursor, workouts, current_user.username)
+    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
     return stats
 
 
 @router.get("/workouts/me/stats/this-year", response_model=Workout_Stats)
 def get_user_stats_this_month(
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
+    session: Annotated[Session, Depends(get_db)]
 ) -> Workout_Stats:
-    cursor: Cursor = conn.cursor()
-
     date: int = 20251128
     start_of_year: int = date - create_date(month=get_month(date)-1,day=get_day(date)-1)
     print(start_of_year)
 
-    workouts: list[Workout] = get_user_workouts_by_date(cursor, current_user.username, start_date=start_of_year)
+    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_year)
 
-    stats: Workout_Stats = get_stats(cursor, workouts, current_user.username)
+    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
     return stats
