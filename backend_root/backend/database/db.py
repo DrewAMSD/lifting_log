@@ -1,18 +1,33 @@
-import sqlite3
-from typing import Iterator
+from typing import Generator, Annotated
+from fastapi import Depends
+from sqlmodel import Session, SQLModel, create_engine
+from sqlalchemy import Engine, event
+
+from backend.models import *
 
 
-def get_db_path() -> str:
-    return "backend/database/lifting_log.db"
+sqlite_url: str = "sqlite:///database.db"
+connect_args: dict = {
+    "check_same_thread": False,
+}
+engine: Engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
-def get_db() -> Iterator[sqlite3.Connection]:
-    conn: sqlite3.Connection = sqlite3.connect(get_db_path(), check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON;")
-    conn.execute("PRAGMA journal_mode = WAL;")
-    conn.execute("PRAGMA busy_timeout = 5000;")
-    try:
-        yield conn
-    finally:
-        conn.close()
+def get_db() -> Generator[Session, None, None]:
+    with Session(engine) as session:
+        yield session
+
+
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
+def init_database() -> None:
+    SQLModel.metadata.create_all(engine)
+
+
+if __name__ == "__main__":
+    init_database()

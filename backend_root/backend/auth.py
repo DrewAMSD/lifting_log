@@ -7,10 +7,9 @@ import os
 import jwt
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
-import sqlite3
-from sqlite3 import Connection, Cursor
+from sqlmodel import Session, select
 from backend.models import *
-from backend.database.db import get_db, get_db_path
+from backend.database.db import engine
 
 
 load_dotenv()
@@ -33,34 +32,6 @@ def verify_password(plain_password: str, hashed_password: str):
 
 def get_password_hash(password: str):
     return password_hash.hash(password)
-
-
-def get_user(username: str):
-    conn = sqlite3.connect(get_db_path())
-    conn.row_factory = sqlite3.Row
-    cursor: Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
-    user_row = cursor.fetchone()
-    conn.close()
-    if user_row:
-        user = UserInDB(
-            username=user_row["username"],
-            email=user_row["email"],
-            full_name=user_row["full_name"],
-            disabled=user_row["disabled"],
-            hashed_password=user_row["hashed_password"]
-        )
-        return user
-    return None
-
-
-def authenticate_user(username: str, password: str):
-    user = get_user(username)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
 
 
 def create_access_token(data: dict) -> str:
@@ -91,6 +62,27 @@ def verify_refresh_token(token: str):
     except Exception as e:
         print(e)
         raise HTTPException(status_code=401, detail="Could not validate credentials")
+
+
+def get_user(username: str):
+    with Session(engine) as session:
+        statement = (
+            select(UserInDB)
+            .where(UserInDB.username == username)
+        )
+        user: UserInDB = session.exec(statement).first()
+        if user:
+            return user
+        return None
+
+
+def authenticate_user(username: str, password: str):
+    user = get_user(username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
 
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
