@@ -10,10 +10,10 @@ else
 fi
 
 echo "Checking for database..."
-if [ ! -f ./backend/database/lifting_log.db ];
+if [ ! -f ./backend/database.db ];
 then
 	echo "No database found, generating new one..."
-	python3 -m backend.database.tables
+	python3 -m backend.database
 else
 	echo "Database found!"
 fi

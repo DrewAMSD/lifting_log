@@ -10,9 +10,9 @@ COPY --exclude=*.db . .
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONBUFFERED=1
 
-RUN chmod +x configure_backend.sh start_backend.sh
+RUN chmod +x sqlite_configure.sh start_backend.sh
 
 EXPOSE 8000
 
-ENTRYPOINT ["./configure_backend.sh"]
+ENTRYPOINT ["./sqlite_configure.sh"]
 CMD ["./start_backend.sh"]
