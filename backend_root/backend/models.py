@@ -73,6 +73,7 @@ class Exercise(SQLModel, table=True):
     time: bool = Field(default=False)
 
     exercise_entries: list["Exercise_Entry"] = Relationship(back_populates="exercise")
+    exercise_templates: list["Exercise_Template"] =Relationship(back_populates="exercise")
 
 
 class Workout(SQLModel, table=True):
@@ -126,7 +127,7 @@ class Workout_Template(SQLModel, table=True):
 
     exercise_templates: List["Exercise_Template"] = Relationship(
         back_populates="workout_template",
-        cascade_delete=True
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
 
@@ -135,13 +136,14 @@ class Exercise_Template(SQLModel, table=True):
     workout_template_id: int = Field(foreign_key="workout_template.id", ondelete="CASCADE")
     exercise_id: int = Field(foreign_key="exercise.id")
 
-    exercise_name: Optional[str] = Field(default=None) # todo: how to put name in here (maybe replace with Exercise element instead)
+    exercise_name: Optional[str] = Field(default="") # todo: how to put name in here (maybe replace with Exercise element instead)
     routine_note: Optional[str] = Field(default="")
 
     workout_template: Optional[Workout_Template] = Relationship(back_populates="exercise_templates")
+    exercise: Optional[Exercise] = Relationship(back_populates="exercise_templates")
     set_templates: List["Set_Template"] = Relationship(
         back_populates="exercise_template",
-        cascade_delete=True
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
 

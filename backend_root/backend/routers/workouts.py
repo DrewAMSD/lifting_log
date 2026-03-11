@@ -11,10 +11,6 @@ from backend.database import get_db
 from backend.auth import get_current_active_user
 from backend.routers.exercises import get_exercise
 
-#delete after
-# import sqlite3
-# from sqlite3 import Cursor, Connection, Row
-
 
 router = APIRouter()
 
@@ -138,7 +134,7 @@ def validate_workout(session: Session, workout: Workout) -> None:
                 raise HTTPException(status_code=400, detail="Incorrectly formatted set entry times")
 
 
-def get_new_exercise_entries(session: Session, workout_create: Workout_Create, new_workout: Workout):
+def get_new_exercise_entries(session: Session, workout_create: Workout_Create, new_workout: Workout) -> list[Exercise_Entry]:
     new_exercise_entries: list[Exercise_Entry] = []
     for exercise_entry_create in workout_create.exercise_entries:
         exercise: Exercise = session.get(Exercise, exercise_entry_create.exercise_id)
@@ -317,15 +313,17 @@ def update_user_workout(
     validate_workout(session, workout_create)
 
     try:
+        workout.sqlmodel_update(workout_create.model_dump())
         workout.exercise_entries.clear()
 
         session.exec(
-            delete(Exercise_Entry).where(Exercise_Entry.workout_id == workout_id)
+            delete(Exercise_Entry)
+            .where(Exercise_Entry.workout_id == workout_id)
         )
 
         new_exercise_entries: list[Exercise_Entry] = get_new_exercise_entries(session, workout_create, workout)
         workout.exercise_entries = new_exercise_entries
-        
+
         session.add(workout)
         session.commit()
     except HTTPException:

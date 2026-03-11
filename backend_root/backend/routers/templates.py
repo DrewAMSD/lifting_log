@@ -1,28 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
-from sqlite3 import Connection, Cursor, Row
+from sqlmodel import Session, select, delete
+from sqlalchemy.orm import selectinload
 
 from backend.database import get_db
 from backend.time import is_valid_timestamp
 from backend.auth import get_current_active_user
 from backend.models import *
+from backend.schemas.template import *
 from backend.routers.exercises import get_exercise
 
 
 router = APIRouter()
 
 
-def validate_workout_template(template: Workout_Template) -> None:
-    if len(template.name) == 0:
-        raise HTTPException(status_code=400, detail="Unnamed template")
-    
-    if not template.exercise_templates:
-        raise HTTPException(status_code=400, detail="Template missing exercises")
-
-
-def validate_set_template(set_template: Set_Template, exercise_row: Row) -> None:
+def validate_set_template(set_template: Set_Template, exercise: Exercise) -> None:
     if set_template.reps or (set_template.rep_range_start and set_template.rep_range_end):
-        if not exercise_row["reps"]:
+        if not exercise.reps:
             raise HTTPException(status_code=400, detail="Set template has reps/rep range when exercise does not support reps")
         
     if (not set_template.rep_range_start and set_template.rep_range_end) or (set_template.rep_range_start and not set_template.rep_range_end):
@@ -32,219 +26,182 @@ def validate_set_template(set_template: Set_Template, exercise_row: Row) -> None
         raise HTTPException(status_code=400, detail="Cannot have both reps and rep range")
 
     if (set_template.time):
-        if not exercise_row["time"]:
+        if not exercise.time:
             raise HTTPException(status_code=400, detail="Set template has time when exercise does not support time")
         
         if not (is_valid_timestamp(set_template.time, is_time=True)):
             raise HTTPException(status_code=400, detail="Set template has incorrectly formatted time field")
 
 
-def insert_template_workout(cursor: Cursor, template: Workout_Template, username: str) -> int:
-    cursor.execute("""
-        INSERT INTO template_workouts
-        (name, username)
-        VALUES (?, ?)
-    """, (template.name, username))
-    return cursor.lastrowid
-
-
-def get_exercise_row(cursor: Cursor, exercise_id: int) -> Row:
-    cursor.execute("SELECT * FROM exercises WHERE id = ?",(exercise_id,))
-    exercise_row: Row = cursor.fetchone()
-    if not exercise_row:
-        raise HTTPException(status_code=404, detail=f"Exercise with id {exercise_id} not found")
-    return exercise_row
-
-
-def insert_template_exercise(cursor: Cursor, pos: int, exercise_template: Exercise_Template, template_id: int) -> int:
-    cursor.execute("""
-                INSERT INTO template_exercises
-                (workout_template_id, exercise_id, routine_note, position)
-                VALUES (?, ?, ?, ?)
-            """, (template_id, exercise_template.exercise_id, exercise_template.routine_note, pos))
-    return cursor.lastrowid
-
-
-def insert_template_set(cursor: Cursor, set_pos: int, set_template: Set_Template, exercise_template_id: int) -> None:
-    cursor.execute("""
-        INSERT INTO template_sets
-        (exercise_template_id, reps, rep_range_start, rep_range_end, t, position)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (exercise_template_id, set_template.reps, set_template.rep_range_start, set_template.rep_range_end, set_template.time, set_pos))
-
-
-def insert_template_exercises_and_sets(cursor: Cursor, template: Workout_Template) -> None:
-    for pos,exercise_template in enumerate(template.exercise_templates):
-        exercise_row: Row = get_exercise_row(cursor, exercise_template.exercise_id)
-        
-        exercise_template_id: int = insert_template_exercise(cursor, pos, exercise_template, template.id)
-        exercise_template.exercise_name = exercise_row["name"]
+def validate_workout_template(session: Session, template: Workout_Template_Create) -> None:
+    if len(template.name) == 0:
+        raise HTTPException(status_code=400, detail="Unnamed template")
+    
+    if not template.exercise_templates:
+        raise HTTPException(status_code=400, detail="Template missing exercises")
+    
+    for exercise_template in template.exercise_templates:
+        exercise: Exercise = get_exercise(session, exercise_template.exercise_id)
 
         if not exercise_template.set_templates:
             raise HTTPException(status_code=400, detail="Empty or null set templates array")
         
-        for set_pos,set_template in enumerate(exercise_template.set_templates):
-            validate_set_template(set_template, exercise_row)
-                
-            insert_template_set(cursor, set_pos, set_template, exercise_template_id)
+        for set_template in exercise_template.set_templates:
+            validate_set_template(set_template, exercise)
 
 
-@router.post("/templates/me/", response_model=Workout_Template, response_model_exclude_none=True)
+def get_new_exercise_templates(session: Session, template_create: Workout_Template_Create, new_template: Workout_Template) -> list[Exercise_Template]:
+    new_exercise_templates: list[Exercise_Template] = []
+
+    for exercise_template_create in template_create.exercise_templates:
+        exercise: Exercise = get_exercise(session, exercise_template_create.exercise_id)
+        if not exercise:
+            raise HTTPException(status_code=404, detail="Exercise not found")
+
+        new_exercise_template: Exercise_Template = Exercise_Template(
+            **exercise_template_create.model_dump(exclude={"set_templates"}),
+            exercise_name=exercise.name,
+            workout_template=new_template,
+            exercise=exercise
+        )
+        session.add(new_exercise_template)
+
+        new_set_templates: list[Set_Template] = []
+        for set_template_create in exercise_template_create.set_templates:
+            new_set_template: Set_Template = Set_Template(
+                **set_template_create.model_dump(),
+                exercise_template=new_exercise_template
+            )
+            session.add(new_set_template)
+
+            new_set_templates.append(new_set_template)
+        new_exercise_template.set_templates = new_set_templates
+
+        new_exercise_templates.append(new_exercise_template)
+
+    return new_exercise_templates
+
+
+@router.post("/templates/me/", response_model=Workout_Template_Read, response_model_exclude_none=True)
 def create_user_template(
-    template: Workout_Template,
+    template_create: Workout_Template_Create,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
-) -> Workout_Template:
-    cursor: Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM template_workouts WHERE name = ? AND username = ?",(template.name, current_user.username))
-    if cursor.fetchone():
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Template_Read:
+    old_workout_template: Workout_Template = session.exec(
+        select(Workout_Template)
+        .where(
+            Workout_Template.name == template_create.name,
+            Workout_Template.username == current_user.username
+        )
+    ).first()
+    if old_workout_template:
         raise HTTPException(status_code=400, detail="Template name is currently in use")
 
-    validate_workout_template(template)
+    validate_workout_template(session, template_create)
     
     try:
-        template.id = insert_template_workout(cursor, template, current_user.username)
-        template.username = current_user.username
+        new_template: Workout_Template = Workout_Template(
+            **template_create.model_dump(exclude={"exercise_templates"}),
+            username=current_user.username
+        )
+        session.add(new_template)
 
-        insert_template_exercises_and_sets(cursor, template)
+        new_exercise_templates: list[Exercise_Template] = get_new_exercise_templates(session, template_create, new_template)
 
-        conn.commit()
+        new_template.exercise_templates = new_exercise_templates
+
+        session.commit()
     except HTTPException:
-        conn.rollback()
+        session.rollback()
         raise
     except Exception as e:
-        conn.rollback()
+        session.rollback()
         print(e)
         raise HTTPException(status_code=500, detail="Internal server error")
     
-    return template
+    return new_template
 
 
-def convert_template_sets_row_to_template(template_sets_row: Row) -> Set_Template:
-    return Set_Template(
-        reps=template_sets_row["reps"],
-        rep_range_start=template_sets_row["rep_range_start"],
-        rep_range_end=template_sets_row["rep_range_end"],
-        time=template_sets_row["t"],
-    )
-
-
-def get_set_templates(cursor: Cursor, template_exerciss_row: Row) -> list[Set_Template]:
-    cursor.execute("SELECT * from template_sets WHERE exercise_template_id = ? ORDER BY position ASC", (template_exerciss_row["id"],))
-    template_sets_rows: list[Row] = cursor.fetchall()
-    if not template_sets_rows:
-        raise HTTPException(status_code=404, detail="Template sets not found")
-    
-    set_templates: list[Set_Template] = []
-    for template_sets_row in template_sets_rows:
-        set_templates.append(convert_template_sets_row_to_template(template_sets_row))
-
-    return set_templates
-
-
-def convert_template_exercises_row_to_template(cursor: Cursor, template_exercises_row: Row) -> Exercise_Template:
-    exercise_row: Row = get_exercise_row(cursor, template_exercises_row["exercise_id"])
-    set_templates: list[Set_Template] = get_set_templates(cursor, template_exercises_row)
-
-    return Exercise_Template(
-        exercise_id=template_exercises_row["exercise_id"],
-        exercise_name=exercise_row["name"],
-        routine_note=template_exercises_row["routine_note"],
-        set_templates=set_templates
-    )
-
-
-def get_exercise_templates(cursor: Cursor, template_workouts_row: Row) -> list[Exercise_Template]:
-    cursor.execute("SELECT * FROM template_exercises WHERE workout_template_id = ? ORDER BY position ASC", (template_workouts_row["id"],))
-    template_exercises_rows: list[Row] = cursor.fetchall()
-    if not template_exercises_rows:
-        raise HTTPException(status_code=404, detail="Template missing exercises")
-    
-    exercise_templates: list[Exercise_Template] = []
-    for template_exercises_row in template_exercises_rows:
-        exercise_templates.append(convert_template_exercises_row_to_template(cursor, template_exercises_row))
-
-    return exercise_templates
-
-
-def convert_template_workouts_row_to_template(cursor: Cursor, template_workouts_row: Row) -> Workout_Template:
-    exercise_templates: list[Exercise_Template] = get_exercise_templates(cursor, template_workouts_row)
-
-    return Workout_Template(
-        id=template_workouts_row["id"],
-        name=template_workouts_row["name"],
-        username=template_workouts_row["username"],
-        exercise_templates=exercise_templates
-    )
-
-
-@router.get("/templates/me/", response_model=list[Workout_Template], response_model_exclude_none=True)
+@router.get("/templates/me/", response_model=list[Workout_Template_Read], response_model_exclude_none=True)
 def get_user_templates(
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
-) -> list[Workout_Template]:
-    cursor: Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM template_workouts WHERE username = ?", (current_user.username,))
-    template_workouts_rows: list[Row] = cursor.fetchall()
+    session: Annotated[Session, Depends(get_db)]
+) -> list[Workout_Template_Read]:
+    workout_templates: list[Workout_Template] = session.exec(
+        select(Workout_Template)
+        .where(Workout_Template.username == current_user.username)
+        .options(
+            selectinload(Workout_Template.exercise_templates)
+            .selectinload(Exercise_Template.set_templates)
+        )
+    ).all()
 
-    if not template_workouts_rows:
-        raise HTTPException(status_code=404, detail="User has no templates")
-    
-    templates: list[Workout_Template] = []
-    for template_workouts_row in template_workouts_rows:
-        templates.append(convert_template_workouts_row_to_template(cursor, template_workouts_row))
-    return templates
+    if not workout_templates:
+        workout_templates = []
+
+    return workout_templates
 
 
-@router.get("/templates/me/{template_id}", response_model=Workout_Template, response_model_exclude_none=True)
+@router.get("/templates/me/{template_id}", response_model=Workout_Template_Read, response_model_exclude_none=True)
 def get_user_template(
     template_id: int,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
-) -> Workout_Template:
-    cursor: Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM template_workouts WHERE id = ? and username = ?", (template_id, current_user.username))
-    template_workouts_row: Row = cursor.fetchone()
-    if not template_workouts_row:
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Template_Read:
+    workout_template: Workout_Template = session.exec(
+        select(Workout_Template)
+        .where(
+            Workout_Template.id == template_id,
+            Workout_Template.username == current_user.username
+        )
+    ).first()
+
+    if not workout_template:
         raise HTTPException(status_code=404, detail="Template not found")
     
-    return convert_template_workouts_row_to_template(cursor, template_workouts_row)
+    return workout_template
 
 
-@router.put("/templates/me/{template_id}", response_model=Workout_Template, response_model_exclude_none=True)
+@router.put("/templates/me/{template_id}", response_model=Workout_Template_Read, response_model_exclude_none=True)
 def update_user_template(
     template_id: int,
-    template: Workout_Template,
+    template_create: Workout_Template_Create,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
-) -> Workout_Template:
-    cursor: Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM template_workouts WHERE id = ? AND username = ?", (template_id, current_user.username))
-    if not cursor.fetchone():
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Template_Read:
+    template: Workout_Template = session.exec(
+        select(Workout_Template)
+        .where(
+            Workout_Template.id == template_id,
+            Workout_Template.username == current_user.username
+        )
+    ).first()
+
+    if not template:
         raise HTTPException(status_code=404, detail="Template not found")
     
-    validate_workout_template(template)
+    validate_workout_template(session, template_create)
 
     try:
-        cursor.execute("""
-            UPDATE template_workouts
-            SET name = ?
-            WHERE id = ? AND username = ?
-        """,
-        (template.name, template_id, current_user.username))
-        template.id = template_id
-        template.username = current_user.username
+        template.sqlmodel_update(template_create.model_dump())
+        template.exercise_templates.clear()
 
-        cursor.execute("DELETE FROM template_exercises WHERE workout_template_id = ?", (template.id,))
+        session.exec(
+            delete(Exercise_Template)
+            .where(Exercise_Template.workout_template_id == template.id)
+        )
 
-        insert_template_exercises_and_sets(cursor, template)
+        new_exercise_templates: list[Exercise_Template] = get_new_exercise_templates(session, template_create, template)
+        template.exercise_templates = new_exercise_templates
 
-        conn.commit()
+        session.add(template)
+        session.commit()
     except HTTPException:
-        conn.rollback()
+        session.rollback()
         raise
     except Exception as e:
-        conn.rollback()
+        session.rollback()
         print(e)
         raise HTTPException(status_code=500, detail="Internal server error")
     
@@ -255,12 +212,18 @@ def update_user_template(
 def delete_user_template(
     template_id: int,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    conn: Annotated[Connection, Depends(get_db)]
+    session: Annotated[Session, Depends(get_db)]
 ) -> None:
-    cursor: Cursor = conn.cursor()
-    cursor.execute("SELECT * FROM template_workouts WHERE id = ? AND username = ?", (template_id, current_user.username))
-    if not cursor.fetchone():
+    template: Workout_Template = session.exec(
+        select(Workout_Template)
+        .where(
+            Workout_Template.id == template_id,
+            Workout_Template.username == current_user.username
+        )
+    ).first()
+
+    if not template:
         raise HTTPException(status_code=404, detail="Tempalte not found")
     
-    cursor.execute("DELETE FROM template_workouts WHERE id = ? AND username = ?", (template_id, current_user.username))
-    conn.commit()
+    session.delete(template)
+    session.commit()
