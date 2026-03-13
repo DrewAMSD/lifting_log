@@ -286,6 +286,7 @@ const WorkingOutPage = (): JSX.Element => {
                     }
                     {!workoutState.exercise_entries.length &&
                     <>
+
                         <p>No Exercises?</p>
                         <p>Click 'Add Exercise' to Get Started</p>
                     </>

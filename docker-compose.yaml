@@ -1,10 +1,10 @@
 services:
   api:
     build:
-      context: .
+      context: ./api
       dockerfile: sqlite_conf.Dockerfile
     volumes:
-      - ./database.db:/app/database.db
+      - ./api/database.db:/api/database.db
     ports:
       - "8000:8000"
 
