@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlmodel import Session, select
 
-from backend.models import Muscle
-from backend.database import get_db
+from src.models import Muscle
+from src.database import get_db
 
 
 router = APIRouter()

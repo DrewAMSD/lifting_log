@@ -4,9 +4,9 @@ from datetime import timedelta
 from typing import Annotated
 from sqlmodel import Session, select
 
-from backend.models import *
-from backend.database import get_db
-from backend.auth import *
+from src.models import *
+from src.database import get_db
+from src.auth import *
 
 
 router = APIRouter()

@@ -8,8 +8,8 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlmodel import Session, select
-from backend.models import *
-from backend.database import engine
+from src.models import *
+from src.database import engine
 
 
 load_dotenv()

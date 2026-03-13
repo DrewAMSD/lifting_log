@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from backend.routers import muscles, users, exercises, workouts, templates
+from src.routers import muscles, users, exercises, workouts, templates
 
 app = FastAPI()
 

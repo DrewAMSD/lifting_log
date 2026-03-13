@@ -4,12 +4,12 @@ from sqlmodel import Session, select, delete
 import datetime
 from sqlalchemy.orm import selectinload
 
-from backend.models import *
-from backend.schemas.workout import *
-from backend.time import *
-from backend.database import get_db
-from backend.auth import get_current_active_user
-from backend.routers.exercises import get_exercise
+from src.models import *
+from src.schemas.workout import *
+from src.time import *
+from src.database import get_db
+from src.auth import get_current_active_user
+from src.routers.exercises import get_exercise
 
 
 router = APIRouter()

@@ -1,75 +1,258 @@
-from typing import Generator, Annotated
-from fastapi import Depends
-from sqlmodel import Session, SQLModel, create_engine
-from sqlalchemy import Engine, event
+# after sqlmodel refactor, delete this file
 
-from backend.models import *
-
-
-sqlite_url: str = "sqlite:///database.db"
-connect_args: dict = {
-    "check_same_thread": False,
-}
-engine: Engine = create_engine(sqlite_url, connect_args=connect_args)
+import sqlite3
+from sqlite3 import Connection, Cursor, Row
+from src.models import *
 
 
-def get_db() -> Generator[Session, None, None]:
-    with Session(engine) as session:
-        yield session
+def get_db_path() -> str:
+    return "sqlite:///tables.db"
+
+def create_users_table():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        email TEXT,
+        full_name TEXT,
+        disabled BOOLEAN,
+        hashed_password TEXT NOT NULL
+    )
+    """)
+    conn.commit()
+    conn.close()
 
 
-@event.listens_for(engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+def create_muscles_table():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS muscles (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE
+    )
+    """)
+
+    conn.commit()
+    conn.close()
 
 
-def init_database() -> None:
-    SQLModel.metadata.create_all(engine)
+def populate_muscles_table():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
 
-    # default values
-    with Session(engine) as session:
-        for muscle in MUSCLES:
-            new_muscle: Muscle = Muscle(name=muscle)
-            session.add(new_muscle)
+    muscles: list[str] = MUSCLES
+    for muscle in muscles:
+        cursor.execute("INSERT INTO muscles (name) VALUES (?)", (muscle,))
 
-        for exercise in EXERCISES:
-            new_exercise: Exercise = Exercise(
-                name=exercise["name"],
-                username=None,
-                primary_muscles=exercise["primary_muscles"],
-                secondary_muscles=exercise["secondary_muscles"],
-                description=exercise["description"],
-                weight=exercise["weight"],
-                reps=exercise["reps"],
-                time=exercise["time"]
-            )
-            session.add(new_exercise)
+    conn.commit()
+    conn.close()
 
-        session.commit()
+
+def create_exercises_table():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS exercises (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        username TEXT,
+        description TEXT,
+        weight BOOLEAN NOT NULL DEFAULT 0,
+        reps BOOLEAN NOT NULL DEFAULT 0,
+        time BOOLEAN NOT NULL DEFAULT 0
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def create_exercise_muscles_table():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS exercise_muscles (
+        exercise_id INTEGER NOT NULL,
+        muscle_id INTEGER NOT NULL,
+        is_primary_muscle BOOLEAN NOT NULL,
+        FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE,
+        FOREIGN KEY (muscle_id) REFERENCES muscles (id)
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def insert_exercise_muscles_default(cursor: sqlite3.Cursor, muscle: str, exercise_id: int, is_primary_muscle: bool):
+    cursor.execute("SELECT * FROM muscles WHERE name = ?", (muscle,))
+    muscles_row: sqlite3.Row = cursor.fetchone()
+    muscle_id: int = muscles_row[0]
+    cursor.execute("INSERT INTO exercise_muscles (exercise_id, muscle_id, is_primary_muscle) VALUES (?, ?, ?)",
+                   (exercise_id, muscle_id, is_primary_muscle))
+
+
+def populate_exercise_defaults():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+
+    exercises: list[Exercise] = EXERCISES
+    for exercise in exercises:
+        cursor.execute("INSERT INTO exercises (name, username, description, weight, reps, time) VALUES (?, ?, ?, ?, ?, ?)",
+                       (exercise["name"], exercise["username"], exercise["description"], exercise["weight"], exercise["reps"], exercise["time"]))
+        exercise_id: int = cursor.lastrowid
+        for primary_muscle in exercise["primary_muscles"]:
+            insert_exercise_muscles_default(cursor, primary_muscle, exercise_id, True)
+        for secondary_muscle in exercise["secondary_muscles"]:
+            insert_exercise_muscles_default(cursor, secondary_muscle, exercise_id, False)
+
+    conn.commit()
+    conn.close()
+
+
+def create_workout_tables():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS workouts (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        username TEXT NOT NULL,
+        description TEXT NOT NULL,
+        workout_date INTEGER NOT NULL,
+        start_time TEXT NOT NULL,
+        duration TEXT NOT NULL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS workout_exercise_entries (
+        id INTEGER PRIMARY KEY,
+        workout_id INTEGER NOT NULL,
+        exercise_id INTEGER NOT NULL,
+        description TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        FOREIGN KEY (workout_id) REFERENCES workouts (id) ON DELETE CASCADE,
+        FOREIGN KEY (exercise_id) REFERENCES exercises (id)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS workout_set_entries (
+        id INTEGER PRIMARY KEY,
+        exercise_entry_id INTEGER NOT NULL,
+        weight REAL,
+        reps INTEGER,
+        t TIME,
+        position INTEGER NOT NULL,
+        FOREIGN KEY (exercise_entry_id) REFERENCES workout_exercise_entries (id) ON DELETE CASCADE
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def create_workout_template_tables():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS template_workouts (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        username TEXT NOT NULL
+    )
+    """)
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS template_exercises (
+        id INTEGER PRIMARY KEY,
+        workout_template_id INTEGER NOT NULL,
+        exercise_id INTEGER NOT NULL,
+        routine_note TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        FOREIGN KEY (workout_template_id) REFERENCES template_workouts (id) ON DELETE CASCADE,
+        FOREIGN KEY (exercise_id) REFERENCES exercises (id)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS template_sets (
+        id INTEGER PRIMARY KEY,
+        exercise_template_id INTEGER NOT NULL,
+        reps INTEGER,
+        rep_range_start INTEGER,
+        rep_range_end INTEGER,
+        t TIME,
+        position INTEGER NOT NULL,
+        FOREIGN KEY (exercise_template_id) REFERENCES template_exercises (id) ON DELETE CASCADE
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def create_refresh_store_table():
+    conn: sqlite3.Connection = sqlite3.connect(get_db_path())
+    cursor: sqlite3.Cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS refresh_store (
+        refresh_token TEXT PRIMARY KEY,
+        exp INTEGER NOT NULL,
+        username TEXT NOT NULL
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def create_tables():
+    create_users_table()
+    create_muscles_table()
+    create_exercises_table()
+    create_exercise_muscles_table()
+    create_workout_tables()
+    create_workout_template_tables()
+    create_refresh_store_table()
+    pass
+
+
+def populate_default_data():
+    populate_muscles_table()
+    populate_exercise_defaults()
+    pass
 
 
 MUSCLES: list[str] = [
-    "Chest", 
-    "Triceps", 
-    "Biceps", 
-    "Forearms",
-    "Abdominals", 
-    "Shoulders",
-    "Lats",
-    "Lower Back",
-    "Upper Back",
-    "Quadriceps",
-    "Glutes",
-    "Hamstrings",
-    "Calves",
-    "Adductors",
-    "Abductors",
-    "Neck"
-    ]
+        "Chest", 
+        "Triceps", 
+        "Biceps", 
+        "Forearms",
+        "Abdominals", 
+        "Shoulders",
+        "Lats",
+        "Lower Back",
+        "Upper Back",
+        "Quadriceps",
+        "Glutes",
+        "Hamstrings",
+        "Calves",
+        "Adductors",
+        "Abductors",
+        "Neck"
+        ]
 
-EXERCISES: list[dict] = [
+
+#replace this with a json file holding exercises, and then change this to a method returning a parse of the json file
+EXERCISES: list[Exercise] = [
     {
         "name": "Bench Press(Barbell)",
         "username": None,
@@ -332,5 +515,7 @@ EXERCISES: list[dict] = [
     }
 ]
 
+
 if __name__ == "__main__":
-    init_database()
+    create_tables()
+    populate_default_data()

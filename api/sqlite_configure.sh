@@ -1,10 +1,10 @@
 #!/bin/bash
 
 echo "Checking for secret key..."
-if [ ! -f ./backend/.env ];
+if [ ! -f ./src/.env ];
 then
 	echo "No secret key found, generating new one..."
-	echo "SECRET_KEY=$(openssl rand -hex 32)" > ./backend/.env
+	echo "SECRET_KEY=$(openssl rand -hex 32)" > ./src/.env
 else
 	echo "Secret key found!"
 fi

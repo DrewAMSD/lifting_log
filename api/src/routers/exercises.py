@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Annotated, Optional, List
 from sqlmodel import Session, select
-from backend.auth import get_current_active_user
-from backend.models import *
-from backend.database import get_db
+from src.auth import get_current_active_user
+from src.models import *
+from src.database import get_db
 
 
 router = APIRouter()

@@ -3,12 +3,12 @@ from typing import Annotated
 from sqlmodel import Session, select, delete
 from sqlalchemy.orm import selectinload
 
-from backend.database import get_db
-from backend.time import is_valid_timestamp
-from backend.auth import get_current_active_user
-from backend.models import *
-from backend.schemas.template import *
-from backend.routers.exercises import get_exercise
+from src.database import get_db
+from src.time import is_valid_timestamp
+from src.auth import get_current_active_user
+from src.models import *
+from src.schemas.template import *
+from src.routers.exercises import get_exercise
 
 
 router = APIRouter()
