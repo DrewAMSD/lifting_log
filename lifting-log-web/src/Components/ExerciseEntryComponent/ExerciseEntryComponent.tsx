@@ -2,6 +2,7 @@ import "./ExerciseEntryComponent.css";
 import React, { JSX } from "react";
 import { ExerciseEntry } from "../../types";
 import { Draggable } from "@hello-pangea/dnd";
+import SetEntryComponent from "../SetEntryComponent/SetEntryComponent";
 
 type ExerciseEntryProps = {
     exIdx: number
@@ -56,6 +57,17 @@ const ExerciseEntryComponent = ({ exIdx, exerciseEntry, updateExerciseEntry, del
                     onChange={handleDescriptionChange}
                     maxLength={512}
                 />
+                <div className="exercise-entry-sets-container">
+                {
+                    exerciseEntry.set_entries.map((setEntry, setIdx) => (
+                        <SetEntryComponent 
+                            key={setIdx}
+                            setIdx={setIdx}
+                            setEntry={setEntry}
+                        />
+                    ))
+                }
+                </div>
             </div>
         )}
         </Draggable>
