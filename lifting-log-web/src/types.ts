@@ -99,7 +99,7 @@ export type SetEntry = {
 
 export type ExerciseEntry = {
     exercise_id: number
-    exercise_name?: string
+    exercise_name: string
     description?: string
     routine_note?: string
     set_entries: Array<SetEntry>

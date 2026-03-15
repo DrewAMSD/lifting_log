@@ -136,6 +136,7 @@ const WorkingOutPage = (): JSX.Element => {
     }, [isLoading, startTime]);
 
     useEffect(() => {
+        // get initial workout state
         const workoutStateString: string | null = localStorage.getItem("workoutState");
 
         if (workoutStateString) { // locally saved workout to use
@@ -266,7 +267,7 @@ const WorkingOutPage = (): JSX.Element => {
                         <p className="wo-options-text">Working Out</p>
                         <button 
                             className="wo-options-button"
-                            onClick={() => console.log("Submit workout, remember to input duration in here")}
+                            onClick={() => console.log("Submit workout")}
                         >
                             Submit
                         </button>
@@ -352,6 +353,7 @@ const WorkingOutPage = (): JSX.Element => {
                                             key={exIdx}
                                             exIdx={exIdx}
                                             exerciseEntry={exerciseEntry}
+                                            exercise={getExerciseByName(exerciseEntry.exercise_name)}
                                             updateExerciseEntry={updateExerciseEntry}
                                             deleteExerciseEntry={deleteExerciseEntry}
                                         />
@@ -363,7 +365,7 @@ const WorkingOutPage = (): JSX.Element => {
                         </Droppable>
                     </DragDropContext>
                     <button 
-                        className="edit-template-add-exercise-button"
+                        className="wo-add-exercise-button"
                         onClick={() => {
                             setIsSelectingExercise(true)
                         }}

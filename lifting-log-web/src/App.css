@@ -1,3 +1,8 @@
+body {
+    background-color: rgb(0, 0, 0);
+    overflow-x: hidden;
+}
+
 .route-container {
     height: 93dvh;
     max-height: 93dvh;

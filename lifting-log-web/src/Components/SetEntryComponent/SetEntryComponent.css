@@ -1,0 +1,36 @@
+.set-entry-container {
+    display: flex;
+    flex-direction: row;
+    padding: 5px;
+}
+
+.set-entry-item {
+    text-align: center;
+    align-content: center;
+    font-size: 14px;
+}
+
+.set-entry-item-header {
+    color: rgb(216, 216, 216);
+}
+
+.set-entry-index {
+    min-width: 30px;
+    width: 30px;
+    color: rgb(216, 216, 216);
+}
+
+.set-entry-weight {
+    min-width: 80px;
+    width: 25%;
+}
+
+.set-entry-reps {
+    min-width: 70px;
+    width: 20%;
+}
+
+.set-entry-time {
+    min-width: 100px;
+    width: 25%;
+}

@@ -3,6 +3,9 @@
     border: 1px solid rgb(53, 53, 53);
     border-radius: 10px;
     padding: 10px;
+    align-items: center;
+    max-width: 600px;
+    width: 80%;
 }
 
 .exercise-entry-header {
@@ -11,17 +14,38 @@
 }
 
 .exercise-entry-name {
-    font-size: 20px;
+    font-size: larger;
     color: rgb(35, 94, 255);
     margin-left: 0;
+    width: 80%;
+}
+
+.exercise-entry-name:hover {
+    opacity: 0.8;
 }
 
 .exercise-entry-routine-note {
-    font-size: 16px;
+    font-size: medium;
     margin-left: 0;
+    width: 90%;
+}
+
+.exercise-entry-description {
+    width: 90%;
+    font-size: medium;
+    margin-top: 4px;
 }
 
 .exercise-entry-sets-container {
     display: flex;
     flex-direction: column;
+}
+
+.exercise-entry-add-set-button {
+    height: 34px;
+    font-size: 16px;
+    width: 100%;
+    margin-top: 10px;
+    background-color: rgb(56, 56, 56);
+    border-color: rgb(56, 56, 56);
 }
