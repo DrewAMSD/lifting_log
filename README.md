@@ -35,6 +35,9 @@ Can interact with FastAPI endpoitns on localhost:8000, or use localhost:8000/doc
 # move into root directory of web app
 cd lifting-log-web
 
+# install project dependencies (must have Node installed)
+npm install
+
 # start web server locally
 npm run dev
 ```
