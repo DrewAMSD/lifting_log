@@ -124,6 +124,7 @@ const SetTemplateElement = ({ exIdx, setIdx, setTemplate, isReps, isRepRange, is
                 className="edit-template-set-row-item input-default" 
                 value={setTemplate.reps || ""}
                 placeholder="0"
+                maxLength={20}
                 onChange={handleRepsChange}
             />}
             
@@ -135,6 +136,7 @@ const SetTemplateElement = ({ exIdx, setIdx, setTemplate, isReps, isRepRange, is
                     className="rep-range input-default" 
                     value={setTemplate.rep_range_start || ""}
                     placeholder="0"
+                    maxLength={20}
                     onChange={handleRepRangeStartChange}
                 />
                 -
@@ -144,6 +146,7 @@ const SetTemplateElement = ({ exIdx, setIdx, setTemplate, isReps, isRepRange, is
                     className="rep-range input-default" 
                     value={setTemplate.rep_range_end || ""}
                     placeholder="0"
+                    maxLength={20}
                     onChange={handleRepRangeEndChange}
                 />
             </p>}
@@ -249,6 +252,7 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, exercise, updateExer
                 placeholder="Routine Note"
                 value={exerciseTemplate.routine_note}
                 onChange={handleRoutineNoteChange}
+                maxLength={512}
             />
             <hr className="line"/>
             <div className="edit-template-set">
@@ -540,6 +544,7 @@ const EditTemplatePage = (): JSX.Element => {
                     onChange={handleWorkoutTemplateNameChange}
                     placeholder="Template Name"
                     value={workoutTemplate.name}
+                    maxLength={50}
                 />
                 <hr className="line"/>
                 <DragDropContext

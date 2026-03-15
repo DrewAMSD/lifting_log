@@ -10,7 +10,7 @@ else
 fi
 
 echo "Checking for database..."
-if [ ! -f ./database.db ];
+if [ ! -f ./database/database.db ];
 then
 	echo "No database found, generating new one..."
 	python3 -m backend.database

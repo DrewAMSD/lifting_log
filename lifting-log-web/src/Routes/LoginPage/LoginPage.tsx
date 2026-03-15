@@ -163,6 +163,7 @@ const LoginPage = (): JSX.Element => {
                         type="text" 
                         onChange={(event) => {setUsername(event.target.value)}} 
                         placeholder="username"
+                        maxLength={20}
                         required
                     />
                 </label>
@@ -171,7 +172,8 @@ const LoginPage = (): JSX.Element => {
                     <input 
                         type="password" 
                         onChange={(event) => {setPassword(event.target.value)}}
-                        placeholder="Enter your password"  
+                        placeholder="Enter your password"
+                        maxLength={20}
                         required  
                     />
                 </label>
@@ -180,7 +182,8 @@ const LoginPage = (): JSX.Element => {
                     <input 
                         type="text" 
                         onChange={(event) => {setEmail(event.target.value)}}
-                        placeholder="email"  
+                        placeholder="email"
+                        maxLength={255}
                         required
                     />
                 </label>
@@ -189,7 +192,8 @@ const LoginPage = (): JSX.Element => {
                     <input 
                         type="text" 
                         onChange={(event) => {setFullName(event.target.value)}}
-                        placeholder="full name"  
+                        placeholder="full name"
+                        maxLength={50}
                         required  
                     />
                 </label>

@@ -4,6 +4,7 @@ import { useAuth } from "../../AuthProvider";
 import { WorkoutTemplate, Workout, ExerciseEntry, SetEntry, Exercise } from "../../types";
 import { NavigateFunction, useNavigate } from "react-router";
 import { ExerciseSelect, FetchExercises } from "../../Components/ExerciseSelect/ExerciseSelect";
+import ExerciseEntryComponent from "../../Components/ExerciseEntryComponent/ExerciseEntryComponent"
 
 const getDuration = (startTime: number): string => {
     const currentTime: number = Math.floor(Date.now() / 1000); // in seconds
@@ -20,15 +21,6 @@ const getDuration = (startTime: number): string => {
     ;
     return durationString;
 }
-
-const ExerciseEntryElement = (): JSX.Element => {
-
-    return (
-        <div className="wo-exercise-entry-container">
-            Exercise Entry
-        </div>
-    );
-};
 
 const WorkingOutPage = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
@@ -293,9 +285,11 @@ const WorkingOutPage = (): JSX.Element => {
                     }
                     <div className="wo-exercise-entries-container">
                     {
-                        workoutState.exercise_entries.map((exerciseEntry, eIdx) => (
-                            <ExerciseEntryElement 
-                                key={eIdx}
+                        workoutState.exercise_entries.map((exerciseEntry, exIdx) => (
+                            <ExerciseEntryComponent 
+                                key={exIdx}
+                                exIdx={exIdx}
+                                exerciseEntry={exerciseEntry}
                             />
                         ))
                     }

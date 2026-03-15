@@ -6,7 +6,7 @@ from sqlalchemy import Engine, event
 from src.models import *
 
 
-sqlite_url: str = "sqlite:///database.db"
+sqlite_url: str = "sqlite:///database/database.db"
 connect_args: dict = {
     "check_same_thread": False,
 }

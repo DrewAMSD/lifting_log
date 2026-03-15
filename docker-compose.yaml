@@ -4,7 +4,7 @@ services:
       context: ./api
       dockerfile: sqlite_conf.Dockerfile
     volumes:
-      - ./api/database.db:/api/database.db
+      - ./api/database:/api/database
     ports:
       - "8000:8000"
 
