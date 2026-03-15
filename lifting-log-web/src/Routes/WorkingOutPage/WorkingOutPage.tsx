@@ -326,18 +326,17 @@ const WorkingOutPage = (): JSX.Element => {
                                 return;
                             }
 
-                            console.log("update dropped item");
-                            // setWorkoutTemplate((prevWorkoutTemplate) => {
-                            //     const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
-                            //     const exerciseTemplateToMove: ExerciseTemplate = newExerciseTemplates[source.index];
-                            //     newExerciseTemplates.splice(source.index, 1);
-                            //     newExerciseTemplates.splice(destination.index, 0, exerciseTemplateToMove);
+                            setWorkoutState((prevWorkoutState) => {
+                                const newExerciseEntries: Array<ExerciseEntry> = [...prevWorkoutState.exercise_entries];
+                                const exerciseEntryToMove: ExerciseEntry = newExerciseEntries[source.index];
+                                newExerciseEntries.splice(source.index, 1);
+                                newExerciseEntries.splice(destination.index, 0, exerciseEntryToMove);
 
-                            //     return {
-                            //         ...prevWorkoutTemplate,
-                            //         exercise_templates: newExerciseTemplates
-                            //     };
-                            // });
+                                return {
+                                    ...prevWorkoutState,
+                                    exercise_entries: newExerciseEntries
+                                };
+                            });
                         }}
                     >
                         <Droppable droppableId="exercise-entry-droppable">

@@ -52,7 +52,7 @@ const ExerciseEntryComponent = ({ exIdx, exerciseEntry, updateExerciseEntry, del
                     type="text"
                     className="input-default"
                     value={exerciseEntry.description}
-                    placeholder="description"
+                    placeholder="description" // potential: get previous time this exercise was done and put as placeholder here
                     onChange={handleDescriptionChange}
                     maxLength={512}
                 />
