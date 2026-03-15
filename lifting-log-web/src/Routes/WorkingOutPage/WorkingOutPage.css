@@ -32,7 +32,7 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    /* background-color: rgb(37, 37, 37); */
+    background-color: rgb(0, 0, 0);
     border: 1px solid rgb(53, 53, 53);
     position: absolute;
     top: 10dvh;
@@ -91,11 +91,4 @@
     flex-direction: column;
     padding: 4px 0px 4px 0%;
     gap: 10px;
-}
-
-.wo-exercise-entry-container {
-    background-color: rgb(37, 37, 37);
-    border: 1px solid rgb(53, 53, 53);
-    border-radius: 10px;
-    padding: 10px;
 }

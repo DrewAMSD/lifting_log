@@ -233,10 +233,9 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, exercise, updateExer
             ref={provided.innerRef}
         >
             <div className="edit-template-exercise-header">
-                {/* <p className="edit-template-exercise-index">{exIdx+1}. </p> */}
                 <p 
                     className="edit-template-exercise-name"
-                    {...provided.dragHandleProps}
+                    {...provided.dragHandleProps} // can move to parent div if I want entire div to be drag handle
                 >
                     {exerciseTemplate.exercise_name}
                 </p>

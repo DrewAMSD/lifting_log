@@ -4,7 +4,8 @@ import { useAuth } from "../../AuthProvider";
 import { WorkoutTemplate, Workout, ExerciseEntry, SetEntry, Exercise } from "../../types";
 import { NavigateFunction, useNavigate } from "react-router";
 import { ExerciseSelect, FetchExercises } from "../../Components/ExerciseSelect/ExerciseSelect";
-import ExerciseEntryComponent from "../../Components/ExerciseEntryComponent/ExerciseEntryComponent"
+import ExerciseEntryComponent from "../../Components/ExerciseEntryComponent/ExerciseEntryComponent";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 
 const getDuration = (startTime: number): string => {
     const currentTime: number = Math.floor(Date.now() / 1000); // in seconds
@@ -34,6 +35,31 @@ const WorkingOutPage = (): JSX.Element => {
     const [startTime, setStartTime] = useState<number>(0);
     // workout state
     const [workoutState, setWorkoutState] = useState<Workout>({} as Workout);
+
+    const updateExerciseEntry = (exIdx: number, newExerciseEntry: ExerciseEntry): void => {
+        setWorkoutState(prevWorkoutState => ({
+            ...prevWorkoutState,
+            exercise_entries: prevWorkoutState.exercise_entries.map((prevExerciseEntry, i) => (
+                i === exIdx ? {
+                    ...prevExerciseEntry,
+                    description: newExerciseEntry.description,
+                    set_entries: newExerciseEntry.set_entries.map(newSetEntry => ({
+                        ...newSetEntry
+                    }))
+                } :
+                prevExerciseEntry
+            ))
+        }));
+    };
+
+    const deleteExerciseEntry = (exIdx: number): void => {
+        const newExerciseEntries: Array<ExerciseEntry> = workoutState.exercise_entries;
+        newExerciseEntries.splice(exIdx, 1);
+        setWorkoutState(prevWorkoutState => ({
+            ...prevWorkoutState,
+            exercise_entries: newExerciseEntries
+        }));
+    };
 
     const getExerciseByName = (exerciseName: string): Exercise => {
         let l: number = 0;
@@ -283,17 +309,60 @@ const WorkingOutPage = (): JSX.Element => {
                         <p>Click 'Add Exercise' to Get Started</p>
                     </>
                     }
-                    <div className="wo-exercise-entries-container">
-                    {
-                        workoutState.exercise_entries.map((exerciseEntry, exIdx) => (
-                            <ExerciseEntryComponent 
-                                key={exIdx}
-                                exIdx={exIdx}
-                                exerciseEntry={exerciseEntry}
-                            />
-                        ))
-                    }
-                    </div>
+                    <DragDropContext
+                        onDragEnd={result => {
+                            const { destination, source, draggableId } = result;
+
+                            // User dropped item outside of droppable
+                            if (!destination) {
+                                return;
+                            }
+
+                            // User droppped item back into same droppable at same position
+                            if (
+                                destination.droppableId === source.droppableId &&
+                                destination.index === source.index
+                            ) {
+                                return;
+                            }
+
+                            console.log("update dropped item");
+                            // setWorkoutTemplate((prevWorkoutTemplate) => {
+                            //     const newExerciseTemplates: Array<ExerciseTemplate> = [...workoutTemplate.exercise_templates];
+                            //     const exerciseTemplateToMove: ExerciseTemplate = newExerciseTemplates[source.index];
+                            //     newExerciseTemplates.splice(source.index, 1);
+                            //     newExerciseTemplates.splice(destination.index, 0, exerciseTemplateToMove);
+
+                            //     return {
+                            //         ...prevWorkoutTemplate,
+                            //         exercise_templates: newExerciseTemplates
+                            //     };
+                            // });
+                        }}
+                    >
+                        <Droppable droppableId="exercise-entry-droppable">
+                            {provided => (
+                                <div 
+                                    className="wo-exercise-entries-container"
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                >
+                                {
+                                    workoutState.exercise_entries.map((exerciseEntry, exIdx) => (
+                                        <ExerciseEntryComponent 
+                                            key={exIdx}
+                                            exIdx={exIdx}
+                                            exerciseEntry={exerciseEntry}
+                                            updateExerciseEntry={updateExerciseEntry}
+                                            deleteExerciseEntry={deleteExerciseEntry}
+                                        />
+                                    ))
+                                }
+                                {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
                     <button 
                         className="edit-template-add-exercise-button"
                         onClick={() => {

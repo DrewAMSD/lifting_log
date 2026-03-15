@@ -1,0 +1,22 @@
+.exercise-entry-container {
+    background-color: rgb(37, 37, 37);
+    border: 1px solid rgb(53, 53, 53);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.exercise-entry-header {
+    display: flex;
+    flex-direction: row;
+}
+
+.exercise-entry-name {
+    font-size: 20px;
+    color: rgb(35, 94, 255);
+    margin-left: 0;
+}
+
+.exercise-entry-routine-note {
+    font-size: 16px;
+    margin-left: 0;
+}

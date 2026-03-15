@@ -1,6 +1,6 @@
 from typing import Generator, Annotated
 from fastapi import Depends
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
 from sqlalchemy import Engine, event
 
 from src.models import *
@@ -30,22 +30,26 @@ def init_database() -> None:
 
     # default values
     with Session(engine) as session:
-        for muscle in MUSCLES:
-            new_muscle: Muscle = Muscle(name=muscle)
-            session.add(new_muscle)
+        # populate muscles table if it doesn't have any values
+        if session.exec(select(Muscle)).first() is None:
+            for muscle in MUSCLES:
+                new_muscle: Muscle = Muscle(name=muscle)
+                session.add(new_muscle)
 
-        for exercise in EXERCISES:
-            new_exercise: Exercise = Exercise(
-                name=exercise["name"],
-                username=None,
-                primary_muscles=exercise["primary_muscles"],
-                secondary_muscles=exercise["secondary_muscles"],
-                description=exercise["description"],
-                weight=exercise["weight"],
-                reps=exercise["reps"],
-                time=exercise["time"]
-            )
-            session.add(new_exercise)
+        # populate default exercises into table if it is empty
+        if session.exec(select(Exercise)).first() is None:
+            for exercise in EXERCISES:
+                new_exercise: Exercise = Exercise(
+                    name=exercise["name"],
+                    username=None,
+                    primary_muscles=exercise["primary_muscles"],
+                    secondary_muscles=exercise["secondary_muscles"],
+                    description=exercise["description"],
+                    weight=exercise["weight"],
+                    reps=exercise["reps"],
+                    time=exercise["time"]
+                )
+                session.add(new_exercise)
 
         session.commit()
 
