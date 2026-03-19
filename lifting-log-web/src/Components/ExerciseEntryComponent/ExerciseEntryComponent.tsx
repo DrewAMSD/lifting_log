@@ -11,9 +11,10 @@ type ExerciseEntryProps = {
     exercise: Exercise
     updateExerciseEntry: (exIdx: number, newExerciseEntry: ExerciseEntry) => void
     deleteExerciseEntry: (exIdx: number) => void
+    updateSetEntry: (exIdx: number, setIdx: number, newSetEntry: SetEntry) => void
 }
 
-const ExerciseEntryComponent = ({ exIdx, exerciseEntry, exercise, updateExerciseEntry, deleteExerciseEntry }: ExerciseEntryProps): JSX.Element => {
+const ExerciseEntryComponent = ({ exIdx, exerciseEntry, exercise, updateExerciseEntry, deleteExerciseEntry, updateSetEntry }: ExerciseEntryProps): JSX.Element => {
 
     const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
         const newExerciseEntry: ExerciseEntry = exerciseEntry;
@@ -93,10 +94,12 @@ const ExerciseEntryComponent = ({ exIdx, exerciseEntry, exercise, updateExercise
                     exerciseEntry.set_entries.map((setEntry, setIdx) => (
                         <SetEntryComponent 
                             key={setIdx}
+                            exIdx={exIdx}
                             setIdx={setIdx}
                             setEntry={setEntry}
                             exercise={exercise}
                             handleDeleteSetEntry={handleDeleteSetEntry}
+                            updateSetEntry={updateSetEntry}
                         />
                     ))
                 }

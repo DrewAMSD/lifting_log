@@ -34,3 +34,10 @@
     min-width: 100px;
     width: 25%;
 }
+
+.set-entry-time-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}

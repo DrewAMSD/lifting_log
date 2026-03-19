@@ -171,7 +171,8 @@ const SetTemplateElement = ({ exIdx, setIdx, setTemplate, isReps, isRepRange, is
                         <option value={i} key={i}>{i}</option>
                     ))}
                 </select>
-            </div>}
+            </div>
+            }
             <button 
                 className="delete-button"
                 onClick={() => handleDeleteSet(setIdx)}

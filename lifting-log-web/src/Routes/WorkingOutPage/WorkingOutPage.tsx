@@ -61,6 +61,30 @@ const WorkingOutPage = (): JSX.Element => {
         }));
     };
 
+    const updateSetEntry = (exIdx: number, setIdx: number, newSetEntry: SetEntry): void => {
+        setWorkoutState(prevWorkoutState => ({
+            ...prevWorkoutState,
+            exercise_entries: prevWorkoutState.exercise_entries.map((prevExerciseEntry, i) => (
+                i === exIdx ? {
+                    ...prevExerciseEntry,
+                    set_entries: prevExerciseEntry.set_entries.map((prevSetEntry, j) => (
+                        j === setIdx ? {
+                            ...prevSetEntry,
+                            previous: newSetEntry.previous,
+                            weight: newSetEntry.weight,
+                            reps: newSetEntry.reps,
+                            time: newSetEntry.time,
+                            placeholder: newSetEntry.placeholder,
+                            submitted: newSetEntry.submitted
+                        } :
+                        prevSetEntry
+                    ))
+                } :
+                prevExerciseEntry
+            ))
+        }));
+    };
+
     const getExerciseByName = (exerciseName: string): Exercise => {
         let l: number = 0;
         let r: number = exercises.length-1;
@@ -356,6 +380,7 @@ const WorkingOutPage = (): JSX.Element => {
                                             exercise={getExerciseByName(exerciseEntry.exercise_name)}
                                             updateExerciseEntry={updateExerciseEntry}
                                             deleteExerciseEntry={deleteExerciseEntry}
+                                            updateSetEntry={updateSetEntry}
                                         />
                                     ))
                                 }
