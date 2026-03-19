@@ -90,7 +90,7 @@ const ExerciseEntryComponent = ({ exIdx, exerciseEntry, exercise, updateExercise
                         {exercise.reps && <p className="set-entry-item set-entry-item-header set-entry-reps">Reps</p>}
                         {exercise.time && <p className="set-entry-item set-entry-item-header set-entry-time">Time</p>}
                         <p className="set-entry-item set-entry-submit">✓</p>
-                        <p className="set-entry-item set-entry-delete-button">D</p>
+                        <p className="set-entry-item set-entry-delete">D</p>
                     </div>
                     {
                         exerciseEntry.set_entries.map((setEntry, setIdx) => (

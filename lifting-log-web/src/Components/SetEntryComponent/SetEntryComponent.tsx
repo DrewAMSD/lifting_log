@@ -20,11 +20,13 @@ const SetEntryComponent = ({ exIdx, setIdx, setEntry, exercise, handleDeleteSetE
     const second: string = (setEntry.time ? setEntry.time.substring(6, 8) : "00");
 
     const handleUpdateWeight = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        let val: string = event.target.value;
+
         let newWeight = setEntry.weight || 0;
-        if (!Number.isNaN(event.target.value)) {
-            newWeight = parseInt(event.target.value);
+        if (!Number.isNaN(val)) {
+            newWeight = parseInt(val);
         }
-        if (setEntry.submitted && event.target.value === "") {
+        if (setEntry.submitted && val === "") {
             newWeight = 0
         }
 
@@ -91,7 +93,7 @@ const SetEntryComponent = ({ exIdx, setIdx, setEntry, exercise, handleDeleteSetE
         const newSetEntry: SetEntry = {
             ...setEntry,
             submitted: newSubmitValue,
-            weight: setEntry.weight || 0
+            weight: exercise.weight ? (setEntry.weight || 0) : undefined
         }
         updateSetEntry(exIdx, setIdx, newSetEntry);
     };
@@ -110,7 +112,7 @@ const SetEntryComponent = ({ exIdx, setIdx, setEntry, exercise, handleDeleteSetE
             {/* Change these to inputs later */}
             {exercise.weight && 
                 <input 
-                    type="number"
+                    type="text"
                     inputMode="numeric"
                     className="set-entry-item set-entry-weight input-default" 
                     value={setEntry.weight || ""}
@@ -134,19 +136,31 @@ const SetEntryComponent = ({ exIdx, setIdx, setEntry, exercise, handleDeleteSetE
                 <div 
                     className="set-entry-item set-entry-time set-entry-time-container"
                 >
-                    <select defaultValue={hour} onChange={handleHourChange}>
+                    <select 
+                        className="set-entry-select"
+                        defaultValue={hour} 
+                        onChange={handleHourChange}
+                    >
                         {select0To23.map((i) => (
                             <option value={i} key={i}>{i}</option>
                         ))}
                     </select>
                     :
-                    <select defaultValue={minute} onChange={handleMinuteChange}>
+                    <select 
+                        className="set-entry-select"
+                        defaultValue={minute} 
+                        onChange={handleMinuteChange}
+                    >
                         {select0To59.map((i) => (
                             <option value={i} key={i}>{i}</option>
                         ))}
                     </select>
                     :
-                    <select defaultValue={second} onChange={handleSecondChange}>
+                    <select 
+                        className="set-entry-select"
+                        defaultValue={second}
+                        onChange={handleSecondChange}
+                    >
                         {select0To59.map((i) => (
                             <option value={i} key={i}>{i}</option>
                         ))}

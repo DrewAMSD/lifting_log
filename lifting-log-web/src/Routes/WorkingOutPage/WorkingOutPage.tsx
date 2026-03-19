@@ -1,7 +1,7 @@
 import { JSX, useState, useEffect } from "react";
 import "./WorkingOutPage.css";
 import { useAuth } from "../../AuthProvider";
-import { WorkoutTemplate, Workout, ExerciseEntry, SetEntry, Exercise } from "../../types";
+import { WorkoutTemplate, Workout, ExerciseEntry, SetEntry, Exercise, HTTPException } from "../../types";
 import { NavigateFunction, useNavigate } from "react-router";
 import { ExerciseSelect, FetchExercises } from "../../Components/ExerciseSelect/ExerciseSelect";
 import ExerciseEntryComponent from "../../Components/ExerciseEntryComponent/ExerciseEntryComponent";
@@ -15,9 +15,9 @@ const getDuration = (startTime: number): string => {
     const seconds: number = durationInSeconds % 60;
     const durationString: string =
         hours.toString().padStart(2, "0")+
-        "-"+
+        ":"+
         minutes.toString().padStart(2, "0")+
-        "-"+
+        ":"+
         seconds.toString().padStart(2, "0")
     ;
     return durationString;
@@ -83,6 +83,66 @@ const WorkingOutPage = (): JSX.Element => {
                 prevExerciseEntry
             ))
         }));
+    };
+
+    const submitWorkout = async (): Promise<void> => {
+        if (workoutState.name.length == 0) {
+            setMessage("Please Name Your Workout");
+            return;
+        }
+
+        // keep only sets that were submitted in workout
+        const exerciseEntriesToSubmit: Array<ExerciseEntry> = [];
+        for (const exerciseEntry of workoutState.exercise_entries) {
+            const setEntriesToSubmit: Array<SetEntry> = [];
+            for (const setEntry of exerciseEntry.set_entries) {
+                if (setEntry.submitted) {
+                    setEntriesToSubmit.push(setEntry);
+                }
+            }
+            if (setEntriesToSubmit.length > 0) {
+                exerciseEntriesToSubmit.push({
+                    ...exerciseEntry,
+                    set_entries: setEntriesToSubmit
+                })
+            }
+        }
+        if (exerciseEntriesToSubmit.length == 0) {
+            setMessage("You must complete a set to submit a workout");
+            return;
+        }
+
+        const workoutToSubmit: Workout = {
+            ...workoutState,
+            exercise_entries: exerciseEntriesToSubmit
+        }
+
+        try {
+            const token: string = await getToken();
+
+            const fetchUrl: string = serverUrl+"/workouts/me";
+            const fetchRequest = {
+                method: (workoutState.id !== undefined ? "PUT" : "POST"),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer "+token
+                },
+                body: JSON.stringify(workoutToSubmit)
+            };
+
+            const response = await fetch(fetchUrl, fetchRequest);
+
+            if (response.ok) {
+                //  change this later
+                setMessage("success");
+            } else {
+                const httpException: HTTPException = await response.json() as HTTPException;
+                setMessage(httpException.detail);
+            }
+        }
+        catch (error: unknown) {
+            console.error("Error: "+error);
+        }
     };
 
     const getExerciseByName = (exerciseName: string): Exercise => {
@@ -198,7 +258,7 @@ const WorkingOutPage = (): JSX.Element => {
                     name: workoutTemplateToUse.name,
                     date: dateInteger,
                     start_time: currentTime,
-                    duration: "00-00-00",
+                    duration: "00:00:00",
                     exercise_entries: workoutTemplateToUse.exercise_templates.map((exerciseTemplate) => {             
                         const exerciseEntry: ExerciseEntry = {
                             exercise_id: exerciseTemplate.exercise_id,
@@ -237,7 +297,7 @@ const WorkingOutPage = (): JSX.Element => {
                     name: "",
                     date: dateInteger,
                     start_time: currentTime,
-                    duration: "00-00-00",
+                    duration: "00:00:00",
                     exercise_entries: []
                 };
                 setWorkoutState(emptyWorkout);
@@ -291,7 +351,7 @@ const WorkingOutPage = (): JSX.Element => {
                         <p className="wo-options-text">Working Out</p>
                         <button 
                             className="wo-options-button"
-                            onClick={() => console.log("Submit workout")}
+                            onClick={submitWorkout}
                         >
                             Submit
                         </button>
