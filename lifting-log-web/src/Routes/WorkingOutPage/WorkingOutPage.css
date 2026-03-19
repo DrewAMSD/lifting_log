@@ -101,3 +101,44 @@
     margin-top: 20px;
     margin-bottom: 20px;
 }
+
+.workout-submit-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.workout-description {
+    width: 90%;
+    font-size: medium;
+    margin-top: 4px;
+    padding: 10px;
+    background-color: rgb(70, 70, 70);
+    border: solid 1px rgb(70, 70, 70);
+    border-radius: 10px;
+    resize: none;
+    height: 12lh;
+}
+
+.workout-submit-buttons-container {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.workout-cancel-submit-button {
+    font-size: x-large;
+    min-width: 120px;
+    height: 40px;
+    background-color: rgb(70, 70, 70);
+    border-color: rgb(70, 70, 70);
+}
+
+.workout-submit-button {
+    font-size: x-large;
+    min-width: 120px;
+    height: 40px;
+}

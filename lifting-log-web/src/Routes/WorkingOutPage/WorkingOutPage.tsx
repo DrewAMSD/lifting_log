@@ -28,6 +28,7 @@ const WorkingOutPage = (): JSX.Element => {
     const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [message, setMessage] = useState<string>("");
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     // exercise fields
     const [isSelectingExercise, setIsSelectingExercise] = useState<boolean>(false);
     const [exercises, setExercises] = useState<Array<Exercise>>([]);
@@ -86,7 +87,7 @@ const WorkingOutPage = (): JSX.Element => {
     };
 
     const submitWorkout = async (): Promise<void> => {
-        if (workoutState.name.length == 0) {
+        if (isSubmitting && workoutState.name.length == 0) {
             setMessage("Please Name Your Workout");
             return;
         }
@@ -107,8 +108,13 @@ const WorkingOutPage = (): JSX.Element => {
                 })
             }
         }
-        if (exerciseEntriesToSubmit.length == 0) {
+        if (!isSubmitting && exerciseEntriesToSubmit.length == 0) {
             setMessage("You must complete a set to submit a workout");
+            return;
+        }
+        if (!isSubmitting) {
+            setMessage("");
+            setIsSubmitting(true);
             return;
         }
 
@@ -133,7 +139,7 @@ const WorkingOutPage = (): JSX.Element => {
             const response = await fetch(fetchUrl, fetchRequest);
 
             if (response.ok) {
-                //  change this later
+                //  change this later (navigate to workout view)
                 setMessage("success");
             } else {
                 const httpException: HTTPException = await response.json() as HTTPException;
@@ -336,6 +342,57 @@ const WorkingOutPage = (): JSX.Element => {
                         selectExercise={selectExercise}
                     />
                 ) : (
+                isSubmitting ? (
+                    <div className="workout-submit-container">
+                        <div>
+                            <input 
+                                type="text"
+                                className="input-default wo-name"
+                                value={workoutState.name}
+                                placeholder={"Name Workout"}
+                                maxLength={50}
+                                onChange={(e) => {
+                                    setWorkoutState(prev => ({
+                                        ...prev,
+                                        name: e.target.value
+                                    }))
+                                }}
+                            />
+                            <hr className="line line-light "/>
+                        </div>
+                        {message &&
+                            <p className="error-message">{message}</p>
+                        }
+                        <textarea
+                            className="input-default workout-description"
+                            value={workoutState.description}
+                            placeholder="description" // potential: get previous time this exercise was done and put as placeholder here
+                            onChange={(e) => {
+                                setWorkoutState(prevWorkoutState => ({
+                                    ...prevWorkoutState,
+                                    description: e.target.value
+                                }));
+                            }}
+                            maxLength={512}
+                        />
+                        <div className="workout-submit-buttons-container">
+                            <button
+                                className="workout-cancel-submit-button"
+                                onClick={() => {
+                                    setIsSubmitting(false);
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="workout-submit-button"
+                                onClick={submitWorkout}
+                            >
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                ) : (
                 <>
                     <div className="wo-options">
                         <button 
@@ -371,19 +428,6 @@ const WorkingOutPage = (): JSX.Element => {
                         </div>
                     </div>
                     <hr className="header-divider" />
-                    <input 
-                        type="text"
-                        className="input-default wo-name"
-                        value={workoutState.name}
-                        placeholder={"Name Workout"}
-                        onChange={(e) => {
-                            setWorkoutState(prev => ({
-                                ...prev,
-                                name: e.target.value
-                            }))
-                        }}
-                    />
-                    <hr className="line line-light "/>
                     {message &&
                         <p className="error-message">{message}</p>
                     }
@@ -458,7 +502,7 @@ const WorkingOutPage = (): JSX.Element => {
                         Add Exercise
                     </button>
                 </>
-                ))
+                )))
             }
         </div>
     )
