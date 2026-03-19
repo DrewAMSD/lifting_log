@@ -311,7 +311,7 @@ const WorkingOutPage = (): JSX.Element => {
                         </div>
                     </div>
                     <hr className="header-divider" />
-                    {/* <input 
+                    <input 
                         type="text"
                         className="input-default wo-name"
                         value={workoutState.name}
@@ -322,8 +322,8 @@ const WorkingOutPage = (): JSX.Element => {
                                 name: e.target.value
                             }))
                         }}
-                    /> */}
-                    {/* <hr className="line line-light "/> */}
+                    />
+                    <hr className="line line-light "/>
                     {message &&
                         <p className="error-message">{message}</p>
                     }

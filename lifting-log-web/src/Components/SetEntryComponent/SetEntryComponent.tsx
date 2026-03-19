@@ -20,9 +20,12 @@ const SetEntryComponent = ({ exIdx, setIdx, setEntry, exercise, handleDeleteSetE
     const second: string = (setEntry.time ? setEntry.time.substring(6, 8) : "00");
 
     const handleUpdateWeight = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        let newWeight = setEntry.reps || 0;
+        let newWeight = setEntry.weight || 0;
         if (!Number.isNaN(event.target.value)) {
             newWeight = parseInt(event.target.value);
+        }
+        if (setEntry.submitted && event.target.value === "") {
+            newWeight = 0
         }
 
         const newSetEntry: SetEntry = {
@@ -87,26 +90,27 @@ const SetEntryComponent = ({ exIdx, setIdx, setEntry, exercise, handleDeleteSetE
         const newSubmitValue = setEntry.submitted ? !setEntry.submitted : true;
         const newSetEntry: SetEntry = {
             ...setEntry,
-            submitted: newSubmitValue
+            submitted: newSubmitValue,
+            weight: setEntry.weight || 0
         }
         updateSetEntry(exIdx, setIdx, newSetEntry);
     };
 
     return (
-        <div 
-            className="set-entry-container"
+        <div
+            className="set-entry-container"   
             style={{
                 backgroundColor: (setIdx % 2 == 0) ? 
                 (setEntry.submitted ? "rgb(30, 151, 0)" : "transparent") : 
                 (setEntry.submitted ? "rgb(35, 173, 0)" : "rgb(60, 60, 60)"),
                 // opacity: setEntry.submitted ? 0.5 : 1
-            }}            
+            }}         
         >
             <p className="set-entry-item set-entry-index">{setIdx + 1}</p>
             {/* Change these to inputs later */}
             {exercise.weight && 
                 <input 
-                    type="text"
+                    type="number"
                     inputMode="numeric"
                     className="set-entry-item set-entry-weight input-default" 
                     value={setEntry.weight || ""}
@@ -150,6 +154,7 @@ const SetEntryComponent = ({ exIdx, setIdx, setEntry, exercise, handleDeleteSetE
             </div>
             }
             <button
+            className="set-entry-item set-entry-submit"
                 style={{
                     backgroundColor: (setEntry.submitted ? "green" : "rgb(75, 75, 75)"),
                     border: 0
@@ -159,7 +164,7 @@ const SetEntryComponent = ({ exIdx, setIdx, setEntry, exercise, handleDeleteSetE
                 ✓
             </button>
             <button 
-                className="delete-button"
+                className="set-entry-delete-button"
                 onClick={() => handleDeleteSetEntry(setIdx)}
             >
                 D

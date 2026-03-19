@@ -84,25 +84,27 @@ const ExerciseEntryComponent = ({ exIdx, exerciseEntry, exercise, updateExercise
                     maxLength={512}
                 />
                 <div className="exercise-entry-sets-container">
-                <div className="set-entry-container">
-                    <p className="set-entry-item set-entry-index">Set</p>
-                    {exercise.weight && <p className="set-entry-item set-entry-item-header set-entry-weight">Weight</p>}
-                    {exercise.reps && <p className="set-entry-item set-entry-item-header set-entry-reps">Reps</p>}
-                    {exercise.time && <p className="set-entry-item set-entry-item-header set-entry-time">Time</p>}
-                </div>
-                {
-                    exerciseEntry.set_entries.map((setEntry, setIdx) => (
-                        <SetEntryComponent 
-                            key={setIdx}
-                            exIdx={exIdx}
-                            setIdx={setIdx}
-                            setEntry={setEntry}
-                            exercise={exercise}
-                            handleDeleteSetEntry={handleDeleteSetEntry}
-                            updateSetEntry={updateSetEntry}
-                        />
-                    ))
-                }
+                    <div className="set-entry-container">
+                        <p className="set-entry-item set-entry-index">Set</p>
+                        {exercise.weight && <p className="set-entry-item set-entry-item-header set-entry-weight">Weight</p>}
+                        {exercise.reps && <p className="set-entry-item set-entry-item-header set-entry-reps">Reps</p>}
+                        {exercise.time && <p className="set-entry-item set-entry-item-header set-entry-time">Time</p>}
+                        <p className="set-entry-item set-entry-submit">✓</p>
+                        <p className="set-entry-item set-entry-delete-button">D</p>
+                    </div>
+                    {
+                        exerciseEntry.set_entries.map((setEntry, setIdx) => (
+                            <SetEntryComponent 
+                                key={setIdx}
+                                exIdx={exIdx}
+                                setIdx={setIdx}
+                                setEntry={setEntry}
+                                exercise={exercise}
+                                handleDeleteSetEntry={handleDeleteSetEntry}
+                                updateSetEntry={updateSetEntry}
+                            />
+                        ))
+                    }
                 </div>
                 <button
                     className="exercise-entry-add-set-button"
