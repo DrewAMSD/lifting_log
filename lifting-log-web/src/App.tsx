@@ -9,6 +9,7 @@ import LoginPage from './Routes/LoginPage/LoginPage';
 import Settings from "./Routes/Settings/Settings";
 import NotFound from './Routes/NotFound/NotFound';
 import EditTemplatePage from './Routes/EditTemplatePage/EditTemplatePage';
+import ViewWorkout from './Routes/ViewWorkout/ViewWorkout';
 import { AuthProvider, ProtectedRoute } from './AuthProvider';
 
 function App(): JSX.Element {
@@ -29,6 +30,13 @@ function App(): JSX.Element {
                       <Home />
                     </ProtectedRoute>
                   }
+                />
+
+                <Route path="/view-workout" element={
+                  <ProtectedRoute>
+                    <ViewWorkout />
+                  </ProtectedRoute>
+                }
                 />
 
                 <Route path="/workout">
