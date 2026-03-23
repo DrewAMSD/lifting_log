@@ -111,6 +111,9 @@ def validate_workout(session: Session, workout: Workout) -> None:
     if not is_valid_timestamp(workout.duration, is_time=True):
         raise HTTPException(status_code=400, detail="Incorrectly formatted duration")
 
+    if not workout.name:
+        raise HTTPException(status_code=400, detail="Workout is unnamed")
+
     # exercise entries
     if len(workout.exercise_entries) == 0:
         raise HTTPException(status_code=400, detail="Empty exercise entries array")

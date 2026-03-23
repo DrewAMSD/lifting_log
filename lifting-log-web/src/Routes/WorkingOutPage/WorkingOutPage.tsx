@@ -141,8 +141,9 @@ const WorkingOutPage = (): JSX.Element => {
             if (response.ok) {
                 localStorage.removeItem("workoutState");
                 localStorage.removeItem("templateToEdit");
+                localStorage.setItem("workoutToView", JSON.stringify(workoutState));
 
-                navigate("/view-workout");
+                navigate("/workout/view-workout");
             } else {
                 const httpException: HTTPException = await response.json() as HTTPException;
                 setMessage(httpException.detail);

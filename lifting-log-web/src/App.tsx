@@ -32,12 +32,6 @@ function App(): JSX.Element {
                   }
                 />
 
-                <Route path="/view-workout" element={
-                  <ProtectedRoute>
-                    <ViewWorkout />
-                  </ProtectedRoute>
-                }
-                />
 
                 <Route path="/workout">
                   <Route index element={
@@ -57,6 +51,12 @@ function App(): JSX.Element {
                         <WorkingOutPage /> 
                       </ProtectedRoute>
                     }
+                  />
+                  <Route path="view-workout" element={
+                    <ProtectedRoute>
+                      <ViewWorkout />
+                    </ProtectedRoute>
+                  }
                   />
                 </Route>
 
