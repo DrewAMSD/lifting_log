@@ -139,8 +139,10 @@ const WorkingOutPage = (): JSX.Element => {
             const response = await fetch(fetchUrl, fetchRequest);
 
             if (response.ok) {
-                //  change this later (navigate to workout view)
-                setMessage("success");
+                localStorage.removeItem("workoutState");
+                localStorage.removeItem("templateToEdit");
+
+                navigate("/view-workout");
             } else {
                 const httpException: HTTPException = await response.json() as HTTPException;
                 setMessage(httpException.detail);
