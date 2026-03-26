@@ -1,0 +1,48 @@
+.workout-preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 88%;
+    background-color: rgb(29, 29, 29);
+    border: solid 1px rgb(49, 49, 49);
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.workout-preview-container:hover {
+    transform: scale(1.05);
+    transition: 0.2s;
+    transition-delay: 0.05;
+}
+
+.workout-preview-container:active {
+    opacity: 0.8;
+}
+
+.workout-preview-name {
+    font-size: x-large;
+    margin: 0;
+}
+
+.workout-preview-date-container {
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+}
+
+.workout-preview-date {
+    font-size: medium;
+    margin-left: 0;
+    color: rgb(160, 160, 160);
+}
+
+.workout-preview-duration-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.workout-preview-duration {
+    font-size: medium;
+    margin-left: 0;
+    color: rgb(160, 160, 160);
+}

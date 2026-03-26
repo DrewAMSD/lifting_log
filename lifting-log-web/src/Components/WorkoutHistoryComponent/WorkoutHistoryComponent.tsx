@@ -2,10 +2,12 @@ import "./WorkoutHistoryComponent.css"
 import { JSX, useState, useEffect } from "react"
 import { useAuth } from "../../AuthProvider";
 import { Workout, HTTPException } from "../../types";
-import WorkoutPreview from "../WorkoutPreview/WorkoutPreview";
+import WorkoutPreviewCard from "../WorkoutPreviewCard/WorkoutPreviewCard";
+import { NavigateFunction, useNavigate } from "react-router";
 
 const WorkoutHistoryComponent = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
+    const navigate: NavigateFunction = useNavigate();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [message, setMessage] = useState<string>("");
     const [workouts, setWorkouts] = useState<Array<Workout>>([]);
@@ -27,6 +29,7 @@ const WorkoutHistoryComponent = (): JSX.Element => {
 
                 if (response.ok) {
                     const workoutsPayload: Array<Workout> = data as Array<Workout>;
+                    workoutsPayload.sort((a, b) => b.date - a.date); // sort from most recent date descending
                     setWorkouts(workoutsPayload);
                 } else {
                     const httpException: HTTPException = data as HTTPException;
@@ -52,6 +55,7 @@ const WorkoutHistoryComponent = (): JSX.Element => {
                 <div>Loading...</div>
             ) : (
             <>
+                {/* TODO: add filtering by date (potentially other workout attributes as well) */}
                 {message && <p>{message}</p>}
                 {
                     workouts.length === 0 ? (
@@ -61,9 +65,13 @@ const WorkoutHistoryComponent = (): JSX.Element => {
                     </>
                     ) : (
                     workouts.map(workout => (
-                        <WorkoutPreview 
+                        <WorkoutPreviewCard
                             key={workout.id} 
                             workout={workout}
+                            onSelect={() => {
+                                localStorage.setItem("workoutToView", JSON.stringify(workout));
+                                navigate("/workout/view-workout");
+                            }}
                         />
                     )))
                 }

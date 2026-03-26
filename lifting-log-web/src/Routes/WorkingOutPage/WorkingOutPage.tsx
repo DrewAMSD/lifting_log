@@ -251,7 +251,8 @@ const WorkingOutPage = (): JSX.Element => {
             // current date as int
             const year: number = currentDate.getFullYear();
             const month: number = currentDate.getMonth() + 1;
-            const day: number = currentDate.getDay() + 1;
+            const day: number = currentDate.getDate();
+            console.log(day);
             const dateInteger: number = (year * 10000) + (month * 100) + day;
             // current time
             const hours: number = currentDate.getHours();

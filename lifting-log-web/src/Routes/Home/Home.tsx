@@ -7,6 +7,7 @@ const Home = (): JSX.Element => {
 
     return (
         <div className="route-container" id="home">
+            <p>Home Page</p>
             <WorkoutHistoryComponent />
         </div>
     );

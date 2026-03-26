@@ -177,6 +177,8 @@ const AuthProvider = ({ children }: ChildrenProps): JSX.Element => {
                 if (!response.ok) {
                     const httpException: HTTPException = await response.json() as HTTPException;
                     console.error("HttpException: ", httpException.detail);
+                } else {
+                    localStorage.clear();
                 }
             }
         } 
