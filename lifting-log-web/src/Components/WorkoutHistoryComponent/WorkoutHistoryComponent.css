@@ -1,0 +1,9 @@
+#wh-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    width: 100%;
+    padding: 10px;
+    align-items: center;
+    gap: 4px;
+}
