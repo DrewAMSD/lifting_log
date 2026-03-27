@@ -3,10 +3,10 @@
     flex-direction: column;
     align-items: flex-start;
     width: 88%;
-    background-color: rgb(29, 29, 29);
+    background-color: rgb(15, 15, 15);
     border: solid 1px rgb(49, 49, 49);
     border-radius: 10px;
-    padding: 4px;
+    padding: 8px;
 }
 
 .workout-preview-container:hover {
@@ -33,7 +33,7 @@
 .workout-preview-date {
     font-size: medium;
     margin-left: 0;
-    color: rgb(160, 160, 160);
+    color: rgb(211, 211, 211);
 }
 
 .workout-preview-duration-container {
@@ -44,5 +44,14 @@
 .workout-preview-duration {
     font-size: medium;
     margin-left: 0;
-    color: rgb(160, 160, 160);
+    color: rgb(211, 211, 211);
+}
+
+.workout-preview-stat {
+    color: white;
+}
+
+.workout-preview-ex-entry {
+    color: rgb(211, 211, 211);
+    font-size: medium;
 }

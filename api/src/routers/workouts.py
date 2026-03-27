@@ -211,7 +211,7 @@ def create_workout(
     return workout_response
 
 
-def get_user_workouts_by_date(session: Session, username: str, start_date: int = None, end_date: int = None) -> list[Workout]:
+def get_user_workouts_by_date(session: Session, username: str, start_date: int = None, end_date: int = None) -> list[Workout_Read]:
     if start_date:
         if not is_valid_timestamp(start_date, is_date=True):
             raise HTTPException(status_code=400, detail="Invalid start date")

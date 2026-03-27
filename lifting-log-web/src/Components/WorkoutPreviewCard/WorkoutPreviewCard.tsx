@@ -33,11 +33,20 @@ const WorkoutPreviewCard = ({ workout, onSelect }: WorkoutPreviewProps): JSX.Ele
             </div>
             <div className="workout-preview-duration-container">
                 {hours !== 0 && <p className="workout-preview-duration">{hours} Hr, </p>}
-                <p className="workout-preview-duration">{minutes} Min, </p>
-                <p className="workout-preview-duration">{seconds} Sec</p>
+                {minutes !== 0 ? (
+                        <p className="workout-preview-duration">{minutes} Min</p>
+                    ) : (
+                        <p className="workout-preview-duration">{seconds} Sec</p>
+                    )
+                }
+                
             </div>
             <hr className="line line-light"/>
-            <p>more stuff here</p>
+            {
+                workout.exercise_entries.map((exercistEntry, exIdx) => (
+                    <p className="workout-preview-ex-entry" key={exIdx}>- {exercistEntry.set_entries.length} {exercistEntry.set_entries.length === 1 ? "set" : "sets"} {exercistEntry.exercise_name}</p>
+                ))
+            }
         </div>
     )
 };

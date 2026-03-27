@@ -30,6 +30,7 @@ const WorkoutHistoryComponent = (): JSX.Element => {
                 if (response.ok) {
                     const workoutsPayload: Array<Workout> = data as Array<Workout>;
                     workoutsPayload.sort((a, b) => b.date - a.date); // sort from most recent date descending
+                    console.log(workoutsPayload);
                     setWorkouts(workoutsPayload);
                 } else {
                     const httpException: HTTPException = data as HTTPException;
