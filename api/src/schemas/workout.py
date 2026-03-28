@@ -3,6 +3,7 @@ from typing import Optional, List
 
 
 class Workout_Stats(SQLModel):
+    workout_count: Optional[int] = None
     exercise_count: Optional[int] = None
     sets: Optional[int] = None
     reps: Optional[int] = None

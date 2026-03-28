@@ -33,24 +33,24 @@ export type User = {
 };
 
 export type SetTemplate = {
-    reps?: number
-    rep_range_start?: number
-    rep_range_end?: number
-    time?: string
+  reps?: number
+  rep_range_start?: number
+  rep_range_end?: number
+  time?: string
 }
 
 export type ExerciseTemplate = {
-    exercise_id: number
-    exercise_name: string
-    routine_note: string
-    set_templates: Array<SetTemplate>
+  exercise_id: number
+  exercise_name: string
+  routine_note: string
+  set_templates: Array<SetTemplate>
 }
 
 export type WorkoutTemplate = {
-    id?: number,
-    name: string,
-    username?: string,
-    exercise_templates: Array<ExerciseTemplate>
+  id?: number,
+  name: string,
+  username?: string,
+  exercise_templates: Array<ExerciseTemplate>
 }
 
 export type Exercise = {
@@ -78,40 +78,41 @@ export type ExerciseToAdd = {
 }
 
 export type WorkoutStats = {
-    exercise_count: number
-    sets: number
-    reps: number
-    volume: number
-    distributions: {
-        set_distribution: Record<string, Record<string, number>>,
-        muscle_distribution: Record<string, number>
-    }
+  workout_count: number
+  exercise_count: number
+  sets: number
+  reps: number
+  volume: number
+  distributions: {
+    set_distribution: Record<string, Record<string, number>>,
+    muscle_distribution: Record<string, number>
+  }
 }
 
 export type SetEntry = {
-    previous?: string
-    weight?: number
-    reps?: number
-    time?: string
-    placeholder?: string
-    submitted?: boolean
+  previous?: string
+  weight?: number
+  reps?: number
+  time?: string
+  placeholder?: string
+  submitted?: boolean
 }
 
 export type ExerciseEntry = {
-    exercise_id: number
-    exercise_name: string
-    description?: string
-    routine_note?: string
-    set_entries: Array<SetEntry>
+  exercise_id: number
+  exercise_name: string
+  description?: string
+  routine_note?: string
+  set_entries: Array<SetEntry>
 }
 
 export type Workout = {
-    id?: number
-    name: string
-    description?: string
-    date: number
-    start_time: string
-    duration: string
-    stats?: WorkoutStats
-    exercise_entries: Array<ExerciseEntry>
+  id?: number
+  name: string
+  description?: string
+  date: number
+  start_time: string
+  duration: string
+  stats?: WorkoutStats
+  exercise_entries: Array<ExerciseEntry>
 }

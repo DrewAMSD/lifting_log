@@ -58,6 +58,7 @@ def get_distributions(session: Session, workouts: list[Workout], username: str =
 
 
 def get_stats(session: Session, workouts: list[Workout], username: str = None) -> Workout_Stats:
+    workout_count: int = len(workouts)
     exercise_count: int = sum(
         len(workout.exercise_entries) 
         for workout in workouts
@@ -82,6 +83,7 @@ def get_stats(session: Session, workouts: list[Workout], username: str = None) -
     distributions: dict = get_distributions(session, workouts, username)
 
     return Workout_Stats(
+        workout_count=workout_count,
         exercise_count=exercise_count,
         sets=sets,
         reps=reps,
