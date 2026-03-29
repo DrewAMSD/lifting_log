@@ -44,6 +44,10 @@ def get_distributions(session: Session, workouts: list[Workout], username: str =
                     else:
                         set_distribution[secondary_muscle]["secondary"] += to_add
                     total_muscle_sets += to_add
+    
+    if total_muscle_sets == 0:
+        return {"set_distribution": {}, "muscle_distribution": {}}
+
     muscle_distribution: dict[str, int] = {}
     for muscle,sets in set_distribution.items():
         percentage: int = (int) (100 * (sets["primary"] + sets["secondary"]) / total_muscle_sets)
@@ -209,7 +213,7 @@ def create_workout(
     if not workout_response:
         raise HTTPException(status_code=404, detail="Failed to retrieve created workout")
 
-    workout_response.stats = get_workout_stats(session, workout, current_user.username)
+    workout_response.stats = get_workout_stats(session, workout_response, current_user.username)
     return workout_response
 
 
@@ -283,6 +287,63 @@ def get_user_workouts(
     return get_user_workouts_by_date(session, current_user.username, start_date=None, end_date=None)
 
 
+@router.get("/workouts/me/stats", response_model=Workout_Stats)
+def get_user_stats_by_query(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_db)],
+    start_date: Optional[int] = None,
+    end_date: Optional[int] = None
+) -> Workout_Stats:
+    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_date, end_date=end_date)
+
+    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
+    return stats
+
+
+@router.get("/workouts/me/stats/this-week", response_model=Workout_Stats)
+def get_user_stats_this_week(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Stats:
+    date: datetime.date = datetime.date.today()
+    day_of_week: int = get_day_of_the_week(int(date.strftime("%Y%m%d")))
+    start_of_week: datetime.date = date - datetime.timedelta(days=day_of_week)
+    start_of_week_int: int = int(start_of_week.strftime("%Y%m%d"))
+
+    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_week_int)
+
+    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
+    return stats
+
+
+@router.get("/workouts/me/stats/this-month", response_model=Workout_Stats)
+def get_user_stats_this_month(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Stats:
+    date: int = get_date_today()
+    start_of_month = date - get_day(date) + 1
+
+    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_month)
+
+    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
+    return stats
+
+
+@router.get("/workouts/me/stats/this-year", response_model=Workout_Stats)
+def get_user_stats_this_year(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[Session, Depends(get_db)]
+) -> Workout_Stats:
+    date: int = get_date_today()
+    start_of_year: int = date - create_date(month=get_month(date)-1,day=get_day(date)-1)
+
+    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_year)
+
+    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
+    return stats
+
+
 @router.get("/workouts/me/{workout_id}", response_model=Workout_Read, response_model_exclude_none=True)
 def get_user_workout(
     workout_id: int,
@@ -353,48 +414,3 @@ def delete_user_workout(
     
     session.delete(workout)
     session.commit()
-
-
-@router.get("/workouts/me/stats/this-week", response_model=Workout_Stats)
-def get_user_stats_this_week(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    session: Annotated[Session, Depends(get_db)]
-) -> Workout_Stats:
-    date: datetime.date = datetime.date.today()
-    day_of_week: int = get_day_of_the_week(int(date.strftime("%Y%m%d")))
-    start_of_week: datetime.date = date - datetime.timedelta(days=day_of_week)
-    start_of_week_int: int = int(start_of_week.strftime("%Y%m%d"))
-
-    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_week_int)
-
-    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
-    return stats
-
-
-@router.get("/workouts/me/stats/this-month", response_model=Workout_Stats)
-def get_user_stats_this_month(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    session: Annotated[Session, Depends(get_db)]
-) -> Workout_Stats:
-    date: int = get_date_today()
-    start_of_month = date - get_day(date) + 1
-
-    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_month)
-
-    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
-    return stats
-
-
-@router.get("/workouts/me/stats/this-year", response_model=Workout_Stats)
-def get_user_stats_this_month(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    session: Annotated[Session, Depends(get_db)]
-) -> Workout_Stats:
-    date: int = 20251128
-    start_of_year: int = date - create_date(month=get_month(date)-1,day=get_day(date)-1)
-    print(start_of_year)
-
-    workouts: list[Workout] = get_user_workouts_by_date(session, current_user.username, start_date=start_of_year)
-
-    stats: Workout_Stats = get_stats(session, workouts, current_user.username)
-    return stats

@@ -8,7 +8,7 @@ def create_date(year: int = 0, month: int = 0, day: int = 0) -> int:
 
 
 def get_date_today() -> int:
-    today: datetime.date = datetime.date.today()
+    today: datetime.date = datetime.datetime.now().date()
     date: int = int(today.strftime("%Y%m%d"))
     return date
 # above here should probably be refactored, plus parts of workout router
@@ -134,6 +134,7 @@ def get_day_of_the_week(date: int) -> int:
     if year_code == -1 or month_code == -1 or century_code == -1 or date_number == -1 or leap_year_modifier == -1:
         return -1
     
+
     # 0-6, 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     day_of_week: int = (year_code + month_code + century_code + date_number - leap_year_modifier) % days_in_a_week
     return day_of_week

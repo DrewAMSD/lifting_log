@@ -13,7 +13,15 @@ const WeeklyOverview = (): JSX.Element => {
             try {
                 const token: string = await getToken();
 
-                const response: Response = await fetch(serverUrl+"/workouts/me/stats/this-week", {
+                const date: Date = new Date();
+                const dayOfWeek: number = (date.getDay() || 7) - 1; // 0 is for sunday -> 7, now we have 0 = Monday, ..., 6 = Sunday
+                date.setHours(-24 * dayOfWeek);
+                const year: number = date.getFullYear();
+                const month: number = date.getMonth() + 1;
+                const day: number = date.getDate();
+                const dateInteger: number = (year * 10000) + (month * 100) + day;
+
+                const response: Response = await fetch(serverUrl+"/workouts/me/stats?start_date="+dateInteger, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -25,7 +33,7 @@ const WeeklyOverview = (): JSX.Element => {
 
                 if (response.ok) {
                     const workoutStatsPayload: WorkoutStats = data as WorkoutStats;
-
+                    console.log(workoutStatsPayload);
                     setWorkoutStats(workoutStatsPayload);
                 }
                 else {
@@ -50,7 +58,10 @@ const WeeklyOverview = (): JSX.Element => {
             isLoading ? (
                 <div>Loading...</div>
             ) : (
-                <div>{workoutStats.workout_count}</div>
+                <div>
+                    {workoutStats.workout_count}
+                    {workoutStats.reps}
+                </div>
             )
         }
     </>
