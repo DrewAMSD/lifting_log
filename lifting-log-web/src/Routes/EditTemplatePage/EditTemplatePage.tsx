@@ -198,6 +198,10 @@ const ExerciseTemplateElement = ({ exIdx, exerciseTemplate, exercise, updateExer
     };
 
     const handleDeleteSet = (setIdx: number): void => {
+        if (exerciseTemplate.set_templates.length === 1) {
+            return;
+        }
+
         const newSetTemplates: Array<SetTemplate> = exerciseTemplate.set_templates;
         newSetTemplates.splice(setIdx, 1);
         const newExerciseTemplate: ExerciseTemplate = {

@@ -1,12 +1,14 @@
 import { JSX, useEffect, useState } from "react";
 import "./WeeklyOverview.css";
 import { useAuth } from "../../AuthProvider";
-import { HTTPException, WorkoutStats } from "../../types";
+import { HTTPException, SetDistributionEntry, WorkoutStats } from "../../types";
+import { BarChart, Bar, XAxis, YAxis, LabelList, Legend } from 'recharts';
 
 const WeeklyOverview = (): JSX.Element => {
     const { serverUrl, user, getToken } = useAuth();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [workoutStats, setWorkoutStats] = useState<WorkoutStats>({} as WorkoutStats);
+    const [setDistribution, setSetDistribution] = useState<Array<SetDistributionEntry>>([]);
 
     useEffect(() => {
         const fetchWorkoutStats = async (): Promise<void> => {
@@ -33,7 +35,19 @@ const WeeklyOverview = (): JSX.Element => {
 
                 if (response.ok) {
                     const workoutStatsPayload: WorkoutStats = data as WorkoutStats;
+                    
+                    // convert set distribution to our format
+                    const setDistributionPayload: Array<SetDistributionEntry> = Object.entries(workoutStatsPayload.distributions.set_distribution)
+                        .map(([muscle, sets]) => ({
+                            muscle: muscle,
+                            primary: Number(sets["primary"]),
+                            secondary: Number(sets["secondary"]),
+                            total: Number(sets["primary"]) + Number(sets["secondary"]) // can potentially use on bar chart if I want to list total
+                        } as SetDistributionEntry))
+                        .sort((a, b) => a.muscle.localeCompare(b.muscle));
+
                     setWorkoutStats(workoutStatsPayload);
+                    setSetDistribution(setDistributionPayload);
                 }
                 else {
                     const httpException: HTTPException = data as HTTPException;
@@ -83,7 +97,37 @@ const WeeklyOverview = (): JSX.Element => {
                     </div>
                 </div>
 
-                <p>next</p>
+
+                <BarChart 
+                    data={setDistribution}
+                    style={{
+                        width: "100%",
+                        height: 300,
+                        maxWidth: 800,
+                        aspectRatio: 1.618
+                    }}
+                    responsive
+                >
+                    <Legend verticalAlign="top" />
+                    <XAxis dataKey="muscle" angle={-90} height={100} dy={45}/>
+                    <YAxis 
+                        width={40}
+                        label={{
+                            position: 'insideTopLeft',
+                            value: 'Total Sets',
+                            angle: -90,
+                            dy: 140
+                        }} 
+                    />
+
+                    <Bar dataKey="primary" stackId="a" fill="#378ADD">
+                        <LabelList dataKey="primary" position="insideTop" style={{ fill: "#000000", fontSize: 11 }} />
+                    </Bar>
+                    <Bar dataKey="secondary" stackId="a" fill="#9FE1CB">
+                        <LabelList dataKey="secondary" position="insideTop" style={{ fill: "#000000", fontSize: 11 }} />
+                        {/* <LabelList dataKey="total" position="top" style={{ fill: "white", fontSize: 11 }} /> */}
+                    </Bar>
+                </BarChart>
             </div>
             )
         }

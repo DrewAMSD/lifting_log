@@ -62,6 +62,8 @@ const WorkoutPage = (): JSX.Element => {
                         <button 
                             className="workout-page-button"
                             onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                                localStorage.removeItem("workoutState");
+                                localStorage.removeItem("templateToUse");
                                 navigate("/workout/working-out");
                             }}
                         >

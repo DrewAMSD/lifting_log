@@ -68,9 +68,7 @@ MUSCLES: list[str] = [
     "Glutes",
     "Hamstrings",
     "Calves",
-    "Adductors",
-    "Abductors",
-    "Neck"
+    "Other"
     ]
 
 EXERCISES: list[dict] = [

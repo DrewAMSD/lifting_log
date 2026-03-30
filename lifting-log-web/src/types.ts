@@ -77,6 +77,13 @@ export type ExerciseToAdd = {
   time: boolean
 }
 
+export type SetDistributionEntry = {
+  muscle: string
+  primary: number
+  secondary: number
+  total: number
+}
+
 export type WorkoutStats = {
   workout_count: number
   exercise_count: number

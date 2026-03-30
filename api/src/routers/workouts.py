@@ -10,6 +10,7 @@ from src.time import *
 from src.database import get_db
 from src.auth import get_current_active_user
 from src.routers.exercises import get_exercise
+from src.database import MUSCLES
 
 
 router = APIRouter()
@@ -18,6 +19,13 @@ router = APIRouter()
 def get_distributions(session: Session, workouts: list[Workout], username: str = None) -> dict:
     set_distribution: dict[str, dict[str, float]] = {}
     total_muscle_sets: float = 0.0
+
+    for MUSCLE in MUSCLES:
+        set_distribution[MUSCLE] = {
+            "primary": 0.0,
+            "secondary": 0.0
+        }
+
     for workout in workouts:
         for exercise_entry in workout.exercise_entries:
             for_workout: bool = True
@@ -25,24 +33,12 @@ def get_distributions(session: Session, workouts: list[Workout], username: str =
             
             for primary_muscle in exercise.primary_muscles:
                 to_add: float = 1.0 * len(exercise_entry.set_entries)
-                if not primary_muscle in set_distribution:
-                    set_distribution[primary_muscle] = {
-                        "primary": to_add,
-                        "secondary": 0.0
-                    }
-                else:
-                    set_distribution[primary_muscle]["primary"] += to_add
+                set_distribution[primary_muscle]["primary"] += to_add
                 total_muscle_sets += to_add
             if exercise.secondary_muscles:
                 for secondary_muscle in exercise.secondary_muscles:
                     to_add: float = 0.5 * len(exercise_entry.set_entries)
-                    if not secondary_muscle in set_distribution:
-                        set_distribution[secondary_muscle] = {
-                            "primary": 0.0,
-                            "secondary": to_add
-                        }
-                    else:
-                        set_distribution[secondary_muscle]["secondary"] += to_add
+                    set_distribution[secondary_muscle]["secondary"] += to_add
                     total_muscle_sets += to_add
     
     if total_muscle_sets == 0:
