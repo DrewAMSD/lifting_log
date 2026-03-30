@@ -33,7 +33,6 @@ const WeeklyOverview = (): JSX.Element => {
 
                 if (response.ok) {
                     const workoutStatsPayload: WorkoutStats = data as WorkoutStats;
-                    console.log(workoutStatsPayload);
                     setWorkoutStats(workoutStatsPayload);
                 }
                 else {
@@ -58,10 +57,34 @@ const WeeklyOverview = (): JSX.Element => {
             isLoading ? (
                 <div>Loading...</div>
             ) : (
-                <div>
-                    {workoutStats.workout_count}
-                    {workoutStats.reps}
+            <div id="weekly-overview-container">
+                <p id="weekly-overview-header">Weekly Overview:</p>
+
+                <div id="weekly-overview-summary-container">
+                    <div className="weekly-overview-summary-col">
+                        <p className="weekly-overview-summary-col-item title">Workouts</p>
+                        <p className="weekly-overview-summary-col-item">{workoutStats.workout_count}</p>
+                    </div>
+                    <div className="weekly-overview-summary-col">
+                        <p className="weekly-overview-summary-col-item title">Exercises</p>
+                        <p className="weekly-overview-summary-col-item">{workoutStats.exercise_count}</p>
+                    </div>
+                    <div className="weekly-overview-summary-col">
+                        <p className="weekly-overview-summary-col-item title">Sets</p>
+                        <p className="weekly-overview-summary-col-item">{workoutStats.sets}</p>
+                    </div>
+                    <div className="weekly-overview-summary-col">
+                        <p className="weekly-overview-summary-col-item title">Reps</p>
+                        <p className="weekly-overview-summary-col-item">{workoutStats.reps}</p>
+                    </div>
+                    <div className="weekly-overview-summary-col">
+                        <p className="weekly-overview-summary-col-item title">Volume</p>
+                        <p className="weekly-overview-summary-col-item">{workoutStats.volume}</p>
+                    </div>
                 </div>
+
+                <p>next</p>
+            </div>
             )
         }
     </>
