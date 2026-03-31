@@ -84,6 +84,11 @@ export type SetDistributionEntry = {
   total: number
 }
 
+export type MuscleDistributionEntry = {
+    muscle: string
+    percent: number
+}
+
 export type WorkoutStats = {
   workout_count: number
   exercise_count: number

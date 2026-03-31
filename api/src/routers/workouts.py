@@ -271,8 +271,17 @@ def get_user_workouts_by_date(session: Session, username: str, start_date: int =
     workouts: list[Workout] = session.exec(statement).all()
     if not workouts:
         return []
+    
+    workouts_read: list[Workout_Read] = []
+    for workout in workouts:
+        workout_read: Workout_Read = Workout_Read(
+            **workout.dict(exclude={"exercise_entries", "stats"}),
+            exercise_entries=[Exercise_Entry_Read.from_orm(e) for e in workout.exercise_entries],
+            stats=get_workout_stats(session, workout, username)
+        )
+        workouts_read.append(workout_read)
 
-    return workouts
+    return workouts_read
 
 
 @router.get("/workouts/me/", response_model=list[Workout_Read], response_model_exclude_none=True)

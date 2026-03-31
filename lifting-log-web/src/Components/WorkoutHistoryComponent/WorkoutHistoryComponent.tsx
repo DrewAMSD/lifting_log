@@ -104,7 +104,7 @@ const WorkoutHistoryComponent = (): JSX.Element => {
                 <div>Loading...</div>
             ) : (
             <>
-                <p className="workout-history-header">Workout History:</p>
+                <p className="workout-history-header">Workout History</p>
                 {/* TODO: add filtering by date (potentially other workout attributes as well) */}
                 {message && <p>{message}</p>}
                 <div id="workout-history-date-filter-container">

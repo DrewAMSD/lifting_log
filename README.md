@@ -27,7 +27,7 @@ docker compose up
 # Alternatively: cd into ./api and run docker file manually
 ```
 
-Can interact with FastAPI endpoitns on localhost:8000, or use localhost:8000/docs for a user interface.
+Can interact with FastAPI endpoints on localhost:8000, or use localhost:8000/docs for a user interface.
 
 4. Start web
 

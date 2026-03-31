@@ -72,7 +72,7 @@ const WeeklyOverview = (): JSX.Element => {
                 <div>Loading...</div>
             ) : (
             <div id="weekly-overview-container">
-                <p id="weekly-overview-header">Weekly Overview:</p>
+                <p id="weekly-overview-header">Weekly Overview</p>
 
                 <div id="weekly-overview-summary-container">
                     <div className="weekly-overview-summary-col">

@@ -141,7 +141,8 @@ const WorkingOutPage = (): JSX.Element => {
             if (response.ok) {
                 localStorage.removeItem("workoutState");
                 localStorage.removeItem("templateToEdit");
-                localStorage.setItem("workoutToView", JSON.stringify(workoutState));
+                const savedWorkout: Workout = await response.json() as Workout;
+                localStorage.setItem("workoutToView", JSON.stringify(savedWorkout));
 
                 navigate("/workout/view-workout");
             } else {

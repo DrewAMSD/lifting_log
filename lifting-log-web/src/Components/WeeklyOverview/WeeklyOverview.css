@@ -17,6 +17,7 @@
     flex-direction: row;
     align-content: space-around;
     margin-bottom: 20px;
+    justify-content: center;
 }
 
 .weekly-overview-summary-col {
