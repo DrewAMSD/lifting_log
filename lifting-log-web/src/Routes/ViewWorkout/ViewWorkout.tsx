@@ -3,6 +3,7 @@ import "./ViewWorkout.css"
 import { useNavigate, NavigateFunction } from "react-router";
 import { Workout, SetDistributionEntry, MuscleDistributionEntry } from "../../types";
 import { BarChart, Bar, XAxis, YAxis, LabelList, Legend } from 'recharts';
+import ViewExerciseEntry from "../../Components/ViewExerciseEntry/ViewExerciseEntry";
 
 type MuscleAndSetDistributionEntry = {
     muscle: string
@@ -74,7 +75,21 @@ const ViewWorkout = (): JSX.Element => {
                     >
                         Back
                     </button>
-                    <p>{workout.name}</p>
+                    <button
+                        onClick={() => {
+                            localStorage.setItem("workoutState", JSON.stringify(workout));
+                            navigate("/workout/working-out");
+                        }}
+                    >
+                        Reopen Workout
+                    </button>
+
+                    <div className="workout-view-header-container">
+                        <p className="workout-view-name">{workout.name}</p>
+                        {workout.description &&
+                            <p className="workout-view-description">{workout.description}</p>
+                        }
+                    </div>
 
                     {workout.stats && 
                     <>
@@ -99,36 +114,50 @@ const ViewWorkout = (): JSX.Element => {
                     
                         <BarChart 
                             data={distribution}
+                            layout="vertical"
                             style={{
                                 width: "100%",
-                                height: 300,
+                                height: 260,
                                 maxWidth: 800,
                                 aspectRatio: 1.618,
                                 marginTop: 10
                             }}
                             responsive
                         >
-                            <Legend verticalAlign="top" wrapperStyle={{ top: -10 }} />
-                            <XAxis dataKey="muscle" angle={-90} height={100} dy={45}/>
+                            {/* <Legend verticalAlign="top" wrapperStyle={{ top: -10 }} /> */}
+                            <XAxis 
+                                type="number" 
+                                // label={{
+                                //     value: 'Muscle Distribution',
+                                //     position: 'insideTopLeft',
+                                //     dy: 20
+                                // }}
+                            />
                             <YAxis 
-                                width={70}
-                                label={{
-                                    position: 'insideTopLeft',
-                                    value: 'Set Distribution',
-                                    angle: -90,
-                                    dy: 140
-                                }} 
+                                type="category"
+                                dataKey="muscle"
+                                width={80}
                             />
 
-                            <Bar dataKey="total" stackId="a" fill="#378ADD">
-                                <LabelList dataKey="total" position="insideTop" style={{ fill: "#000000", fontSize: 11 }} />
-                                <LabelList dataKey="percent" position="top" style={{ fill: "#FFFFFF", fontSize: 11 }} formatter={(val) => val+"%"} />
+                            <Bar dataKey="percent" stackId="a" fill="#378ADD">
+                                {/* <LabelList dataKey="total" position="insideLeft" style={{ fill: "#FFFFFF", fontSize: 11 }} /> */}
+                                <LabelList dataKey="percent" position="center" style={{ fill: "#FFFFFF", fontSize: 11 }} formatter={(val) => val+"%"} />
                             </Bar>
                         </BarChart>
                     </>
                     }
 
-                    
+                    <div className="view-workout-exercise-entries-container">
+                        {
+                            workout.exercise_entries.map((exerciseEntry, eIdx) => (
+                                <ViewExerciseEntry 
+                                    key={eIdx}
+                                    eIdx={eIdx}
+                                    exerciseEntry={exerciseEntry}
+                                />
+                            ))
+                        }
+                    </div>
                 </div>
                 )
             }

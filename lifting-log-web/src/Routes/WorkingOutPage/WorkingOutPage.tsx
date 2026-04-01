@@ -126,7 +126,7 @@ const WorkingOutPage = (): JSX.Element => {
         try {
             const token: string = await getToken();
 
-            const fetchUrl: string = serverUrl+"/workouts/me";
+            const fetchUrl: string = serverUrl+(workoutState.id !== undefined ? "/workouts/me/"+workoutState.id : "/workouts/me");
             const fetchRequest = {
                 method: (workoutState.id !== undefined ? "PUT" : "POST"),
                 headers: {
@@ -243,9 +243,22 @@ const WorkingOutPage = (): JSX.Element => {
                 (parseInt(currentWorkoutState.duration.substring(6, 8)))
             );
             setStartTime(newStartTime);
-            setWorkoutState(currentWorkoutState);
-        }
-        else { // need to create new workout
+            
+            if (!currentWorkoutState.id) {
+                setWorkoutState(currentWorkoutState);
+            } else {
+                setWorkoutState({
+                    ...currentWorkoutState,
+                    exercise_entries: currentWorkoutState.exercise_entries.map(exerciseEntry => ({
+                        ...exerciseEntry,
+                        set_entries: exerciseEntry.set_entries.map(setEntry => ({
+                            ...setEntry,
+                            submitted: true
+                        }))
+                    }))
+                });
+            }
+        } else { // need to create new workout
             const currentDate: Date = new Date();
             const newStartTime: number = Math.floor(currentDate.getTime() / 1000);
             setStartTime(newStartTime); // seconds
