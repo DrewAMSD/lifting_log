@@ -4,6 +4,32 @@
     gap: 8px;
 }
 
+#user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #222222;
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 10px;
+    max-width: 400px;
+    width: 60%;
+    margin: 10px;
+    gap: 8px;
+}
+
+.user-info-item {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-info-text {
+    font-size: large;
+}
+
 .sign-out-b {
     font-size: 24px;
 }
@@ -12,4 +38,43 @@
     background-color: rgb(170, 0, 0);
     border-color: rgb(170, 0, 0);
     font-size: 24px;
+}
+
+#settings-confirming-container {
+    height: 60dvh;
+    width: 100dvw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+#settings-confirming-buttons-container {
+    display: flex;
+    flex-direction: row;
+    max-width: 400px;
+    width: 60%;
+    justify-content: space-between;
+}
+
+.settings-confirming-button {
+    padding: 4px;
+    font-size: large;
+    height: 40px;
+    width: 100px;
+}
+
+#cancel-delete {
+    background-color: rgb(41, 41, 41);
+    border-color: rgb(41, 41, 41);
+}
+
+#confirm-delete {
+    background-color: rgb(184, 0, 0);
+    border-color: rgb(184, 0, 0);
+}
+
+#confirming-text {
+    font-size: x-large;
 }

@@ -7,6 +7,12 @@
     margin-bottom: 20px;
 }
 
+#reopen-workout-button {
+    margin-top: 10px;
+    font-size: x-large;
+    padding: 10px;
+}
+
 .workout-view-header-container {
     display: flex;
     flex-direction: column;

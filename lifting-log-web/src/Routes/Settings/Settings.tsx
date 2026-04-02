@@ -13,6 +13,7 @@ type UserMetaData = {
 const Settings = (): JSX.Element => {
     const { serverUrl, user, logoutUser, deleteUser, getToken } = useAuth();
     const [userMetaData, setUserMetaData] = useState<UserMetaData>({} as UserMetaData);
+    const [isConfirming, setIsConfirming] = useState<boolean>(false);
     
     useEffect(() => {
         const fetchUserMetaData = async (): Promise<void> => {
@@ -48,11 +49,48 @@ const Settings = (): JSX.Element => {
 
     return (
         <div className="route-container" id="settings">
-            <div>{userMetaData.username}</div>
-            <div>{userMetaData.email}</div>
-            <div>{userMetaData.full_name}</div>
-            <button className="sign-out-b" onClick={logoutUser}>Click to Sign Out</button>
-            <button className="delete-account-b" onClick={deleteUser}>Click to Delete Account</button>
+            {
+                isConfirming ? (
+                    <div id="settings-confirming-container">
+                        <p id="confirming-text">Are you sure you want to delete your account?</p>
+                        <div id="settings-confirming-buttons-container">
+                            <button
+                                className="settings-confirming-button"
+                                id="cancel-delete"
+                                onClick={() => setIsConfirming(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="settings-confirming-button"
+                                id="confirm-delete"
+                                onClick={deleteUser}
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div id="user-info">
+                            <div className="user-info-item">
+                                <p className="user-info-text">User:</p>
+                                <p className="user-info-text">{userMetaData.username}</p>
+                            </div>
+                            <div className="user-info-item">
+                                <p className="user-info-text">Email:</p>
+                                <p className="user-info-text">{userMetaData.email}</p>
+                            </div>
+                            <div className="user-info-item">
+                                <p className="user-info-text">Full Name:</p>
+                                <p className="user-info-text">{userMetaData.full_name}</p>
+                            </div>
+                        </div>
+                        <button className="sign-out-b" onClick={logoutUser}>Click to Sign Out</button>
+                        <button className="delete-account-b" onClick={() => setIsConfirming(true)}>Click to Delete Account</button>
+                    </>
+                )
+            }
         </div>
     );
 }

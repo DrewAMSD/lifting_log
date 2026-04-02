@@ -71,11 +71,7 @@ const ViewWorkout = (): JSX.Element => {
                 ) : (
                 <div className="route-container">
                     <button
-                        onClick={() => navigate("/")}
-                    >
-                        Back
-                    </button>
-                    <button
+                        id="reopen-workout-button"
                         onClick={() => {
                             localStorage.setItem("workoutState", JSON.stringify(workout));
                             navigate("/workout/working-out");
@@ -118,9 +114,10 @@ const ViewWorkout = (): JSX.Element => {
                             style={{
                                 width: "100%",
                                 height: 260,
-                                maxWidth: 800,
+                                maxWidth: "80%",
                                 aspectRatio: 1.618,
-                                marginTop: 10
+                                marginTop: 10,
+                                marginRight: 30
                             }}
                             responsive
                         >
