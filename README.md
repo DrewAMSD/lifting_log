@@ -2,6 +2,9 @@
 
 Web app to track workouts, create workout templates, and view workout statistics to stay on top of fitness goals.
 
+<img width="1006" height="938" alt="Screenshot from 2026-07-30 14-53-14" src="https://github.com/user-attachments/assets/ea981b8e-0af5-434f-9768-ea6053b407c2" />
+
+
 ## Running app locally
 
 1. Clone the repository
