@@ -13,7 +13,7 @@ echo "Checking for database..."
 if [ ! -f ./database/database.db ];
 then
 	echo "No database found, generating new one..."
-	python3 -m backend.database
+	python3 -m src.database
 else
 	echo "Database found!"
 fi
